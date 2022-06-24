@@ -38,8 +38,11 @@
 #include "util/supervector/arch/x86/types.hpp"
 #elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
 #include "util/supervector/arch/arm/types.hpp"
+<<<<<<< HEAD
+=======
 #elif defined(ARCH_PPC64EL)
 #include "util/supervector/arch/ppc64el/types.hpp"
+>>>>>>> develop
 #endif
 
 #if defined(HAVE_SIMD_512_BITS)
@@ -86,6 +89,7 @@ using m128_t  = SuperVector<16>;
 using m256_t  = SuperVector<32>;
 using m512_t  = SuperVector<64>;
 using m1024_t = SuperVector<128>;
+using m2048_t = SuperVector<256>;
 
 // struct for inferring what underlying types to use
 template <int T>
@@ -164,6 +168,8 @@ public:
     typename BaseVector<16>::type ALIGN_ATTR(BaseVector<16>::size) v128[SIZE / BaseVector<16>::size];
     typename BaseVector<32>::type ALIGN_ATTR(BaseVector<32>::size) v256[SIZE / BaseVector<32>::size];
     typename BaseVector<64>::type ALIGN_ATTR(BaseVector<64>::size) v512[SIZE / BaseVector<64>::size];
+<<<<<<< HEAD
+=======
 
 #if defined(ARCH_ARM32) || defined(ARCH_AARCH64) || defined(ARCH_PPC64EL)
     uint64x2_t ALIGN_ATTR(BaseVector<16>::size) u64x2[SIZE / BaseVector<16>::size];
@@ -176,6 +182,7 @@ public:
     int8x16_t  ALIGN_ATTR(BaseVector<16>::size) s8x16[SIZE / BaseVector<16>::size];
 #endif
 
+>>>>>>> develop
     uint64_t u64[SIZE / sizeof(uint64_t)];
     int64_t  s64[SIZE / sizeof(int64_t)];
     uint32_t u32[SIZE / sizeof(uint32_t)];
@@ -189,12 +196,20 @@ public:
   } u;
 
   constexpr SuperVector() {};
+<<<<<<< HEAD
+  constexpr SuperVector(SuperVector const &other)
+=======
   SuperVector(SuperVector const &other)
+>>>>>>> develop
   :u(other.u) {};
   SuperVector(typename base_type::type const v);
 
   template<typename T>
+<<<<<<< HEAD
+  SuperVector(T const other);
+=======
   SuperVector(T other);
+>>>>>>> develop
 
   SuperVector(SuperVector<SIZE/2> const lo, SuperVector<SIZE/2> const hi);
   SuperVector(previous_type const lo, previous_type const hi);
@@ -367,8 +382,11 @@ struct Unroller<End, End>
 #include "util/supervector/arch/x86/impl.cpp"
 #elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
 #include "util/supervector/arch/arm/impl.cpp"
+<<<<<<< HEAD
+=======
 #elif defined(ARCH_PPC64EL)
 #include "util/supervector/arch/ppc64el/impl.cpp"
+>>>>>>> develop
 #endif
 #endif
 
