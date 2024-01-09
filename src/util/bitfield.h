@@ -138,8 +138,8 @@ public:
 
     /// Flip all bits.
     void flip() {
-        for (auto &e : bits) {
-            e = ~e;
+        for (size_t i = 0; i < size(); i++) {
+            flip(i);
         }
         clear_trailer();
     }

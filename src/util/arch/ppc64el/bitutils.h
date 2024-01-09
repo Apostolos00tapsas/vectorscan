@@ -201,7 +201,7 @@ u64a pext64_impl(u64a x, u64a mask) {
 }
 
 static really_inline
-u64a pdep64(u64a x, u64a mask) {
+u64a pdep64_impl(u64a x, u64a mask) {
     return pdep64_impl_c(x, mask);
 }
 

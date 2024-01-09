@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2023, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -667,7 +668,7 @@ TEST(SimdUtilsTest, movq) {
     ASSERT_EQ(0, memcmp(cmp, &r, sizeof(r)));
 
 #if defined(HAVE_SIMD_128_BITS)
-#if defined(ARCH_IA32) || defined(ARCH_X86_64)
+#if defined(ARCH_IA32) || defined(ARCH_X86_64) || defined(VS_SIMDE_BACKEND)
     simd = _mm_set_epi64x(~0LL, 0x123456789abcdef);
 #elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
     int64x2_t a = { 0x123456789abcdefLL, ~0LL };

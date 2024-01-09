@@ -1,8 +1,12 @@
 # About Vectorscan
 
 A fork of Intel's Hyperscan, modified to run on more platforms. Currently ARM NEON/ASIMD
-is 100% functional, and Power VSX are in development. ARM SVE2 support is in ongoing with
+and Power VSX are 100% functional. ARM SVE2 support is in ongoing with
 access to hardware now. More platforms will follow in the future.
+Further more, starting 5.4.12 there is now a [SIMDe](https://github.com/simd-everywhere/simde)
+port, which can be either used for platforms without official SIMD support,
+as SIMDe can emulate SIMD instructions, or as an alternative backend for existing architectures,
+for reference and comparison purposes.
 
 Vectorscan will follow Intel's API and internal algorithms where possible, but will not
 hesitate to make code changes where it is thought of giving better performance or better
@@ -147,6 +151,11 @@ Common options for Cmake are:
 ## Other options
 
 * `SANITIZE=[address|memory|undefined]` (experimental) Use `libasan` sanitizer to detect possible bugs. For now only `address` is tested. This will eventually be integrated in the CI.
+
+## SIMDe options
+
+* `SIMDE_BACKEND=[On|Off]` Enable SIMDe backend. If this is chosen all native (SSE/AVX/AVX512/Neon/SVE/VSX) backends will be disabled and a SIMDe SSE4.2 emulation backend will be enabled. This will enable Vectorscan to build and run on architectures without SIMD.
+* `SIMDE_NATIVE=[On|Off]` Enable SIMDe native emulation of x86 SSE4.2 intrinsics on the building platform. That is, SSE4.2 intrinsics will be emulated using Neon on an Arm platform, or VSX on a Power platform, etc.
 
 ## Build
 

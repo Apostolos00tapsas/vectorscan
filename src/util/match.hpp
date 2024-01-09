@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
- * Copyright (c) 2020-2021, VectorCamp PC
+ * Copyright (c) 2020-2023, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -49,12 +49,16 @@ const u8 *first_zero_match_inverted(const u8 *buf, SuperVector<S> v, u16 const l
 template <u16 S>
 const u8 *last_zero_match_inverted(const u8 *buf, SuperVector<S> v, u16 len = S);
 
+#if defined(VS_SIMDE_BACKEND)
+#include "util/arch/x86/match.hpp"
+#else
 #if defined(ARCH_IA32) || defined(ARCH_X86_64)
 #include "util/arch/x86/match.hpp"
 #elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
 #include "util/arch/arm/match.hpp"
 #elif defined(ARCH_PPC64EL)
 #include "util/arch/ppc64el/match.hpp"
+#endif
 #endif
 
 #endif // MATCH_HPP

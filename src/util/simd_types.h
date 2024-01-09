@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2023, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -34,7 +35,16 @@
 #include "util/intrinsics.h"
 #include "ue2common.h"
 
-#if defined(ARCH_IA32) || defined(ARCH_X86_64)
+#if defined(VS_SIMDE_BACKEND)
+#define VECTORSIZE 16
+#define SIMDE_ENABLE_NATIVE_ALIASES
+#if !defined(VS_SIMDE_NATIVE)
+#define SIMDE_NO_NATIVE
+#endif
+#include <simde/x86/sse4.2.h>
+typedef simde__m128i m128;
+#define HAVE_SIMD_128_BITS
+#elif defined(ARCH_IA32) || defined(ARCH_X86_64)
 #include "util/arch/x86/simd_types.h"
 #elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
 #include "util/arch/arm/simd_types.h"
@@ -42,9 +52,6 @@
 #include "util/arch/ppc64el/simd_types.h"
 #endif
 
-#if !defined(m128) && !defined(HAVE_SIMD_128_BITS)
-typedef struct ALIGN_DIRECTIVE {u64a hi; u64a lo;} m128;
-#endif
 
 #if !defined(m256) && !defined(HAVE_SIMD_256_BITS)
 typedef struct ALIGN_AVX_DIRECTIVE {m128 lo; m128 hi;} m256;

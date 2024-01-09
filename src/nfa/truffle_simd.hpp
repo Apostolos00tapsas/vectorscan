@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
- * Copyright (c) 2020-2021, VectorCamp PC
+ * Copyright (c) 2020-2023, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -45,12 +45,16 @@ template <uint16_t S>
 static really_inline
 const SuperVector<S> blockSingleMask(SuperVector<S> shuf_mask_lo_highclear, SuperVector<S> shuf_mask_lo_highset, SuperVector<S> chars);
 
+#if defined(VS_SIMDE_BACKEND)
+#include "x86/truffle.hpp"
+#else
 #if defined(ARCH_IA32) || defined(ARCH_X86_64)
 #include "x86/truffle.hpp"
 #elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
 #include "arm/truffle.hpp"
 #elif defined(ARCH_PPC64EL)
 #include "ppc64el/truffle.hpp"
+#endif
 #endif
 
 template <uint16_t S>

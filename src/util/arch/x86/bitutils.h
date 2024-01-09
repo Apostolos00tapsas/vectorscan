@@ -282,8 +282,13 @@ u64a pext64_impl(u64a x, u64a mask) {
 
 #if defined(HAVE_BMI2) && defined(ARCH_64_BIT)
 static really_inline
-u64a pdep64(u64a x, u64a mask) {
+u64a pdep64_impl(u64a x, u64a mask) {
     return _pdep_u64(x, mask);
+}
+#else
+static really_inline
+u64a pdep64_impl(u64a x, u64a mask) {
+    return pdep64_impl_c(x, mask);
 }
 #endif
 

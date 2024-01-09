@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
- * Copyright (c) 2020-2021, VectorCamp PC
+ * Copyright (c) 2020-2023, VectorCamp PC
  * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,12 +52,16 @@ template <uint16_t S>
 static really_inline
 SuperVector<S> blockDoubleMask(SuperVector<S> mask1_lo, SuperVector<S> mask1_hi, SuperVector<S> mask2_lo, SuperVector<S> mask2_hi, SuperVector<S> chars);
 
+#if defined(VS_SIMDE_BACKEND)
+#include "x86/shufti.hpp"
+#else
 #if defined(ARCH_IA32) || defined(ARCH_X86_64)
 #include "x86/shufti.hpp"
-#elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
+#elif (defined(ARCH_ARM32) || defined(ARCH_AARCH64))
 #include "arm/shufti.hpp"
 #elif defined(ARCH_PPC64EL)
 #include "ppc64el/shufti.hpp"
+#endif
 #endif
 
 template <uint16_t S>

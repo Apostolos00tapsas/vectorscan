@@ -376,7 +376,7 @@ really_inline SuperVector<16> SuperVector<16>::vshl_64 (uint8_t const N) const
 template <>
 really_inline SuperVector<16> SuperVector<16>::vshl_128(uint8_t const N) const
 {
-#if defined(HAVE__BUILTIN_CONSTANT_P)
+#if defined(HAVE__BUILTIN_CONSTANT_P) && !defined(VS_SIMDE_BACKEND)
     if (__builtin_constant_p(N)) {
         return {_mm_slli_si128(u.v128[0], N)};
     }
@@ -451,7 +451,7 @@ really_inline SuperVector<16> SuperVector<16>::vshr_64 (uint8_t const N) const
 template <>
 really_inline SuperVector<16> SuperVector<16>::vshr_128(uint8_t const N) const
 {
-#if defined(HAVE__BUILTIN_CONSTANT_P)
+#if defined(HAVE__BUILTIN_CONSTANT_P) && !defined(VS_SIMDE_BACKEND)
     if (__builtin_constant_p(N)) {
         return {_mm_srli_si128(u.v128[0], N)};
     }
@@ -472,7 +472,7 @@ really_inline SuperVector<16> SuperVector<16>::vshr(uint8_t const N) const
 template <>
 really_inline SuperVector<16> SuperVector<16>::operator>>(uint8_t const N) const
 {
-#if defined(HAVE__BUILTIN_CONSTANT_P)
+#if defined(HAVE__BUILTIN_CONSTANT_P) && !defined(VS_SIMDE_BACKEND)
     if (__builtin_constant_p(N)) {
         return {_mm_srli_si128(u.v128[0], N)};
     }
@@ -483,7 +483,7 @@ really_inline SuperVector<16> SuperVector<16>::operator>>(uint8_t const N) const
 template <>
 really_inline SuperVector<16> SuperVector<16>::operator<<(uint8_t const N) const
 {
-#if defined(HAVE__BUILTIN_CONSTANT_P)
+#if defined(HAVE__BUILTIN_CONSTANT_P) && !defined(VS_SIMDE_BACKEND)
     if (__builtin_constant_p(N)) {
         return {_mm_slli_si128(u.v128[0], N)};
     }

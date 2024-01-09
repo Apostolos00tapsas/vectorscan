@@ -214,16 +214,22 @@ u64a compress64_impl_c(u64a x, u64a m) {
 }
 
 static really_inline
-m128 compress128_impl_c(m128 xvec, m128 mvec) {
-    u64a ALIGN_ATTR(16) x[2];
-    u64a ALIGN_ATTR(16) m[2];
-    store128(x, xvec);
-    store128(m, mvec);
+m128 compress128_impl_c(m128 x, m128 m) {
+    m128 one = set1_2x64(1);
+    m128 bitset = one;
+    m128 vres = zeroes128();
+    while (isnonzero128(m)) {
+	m128 mm = sub_2x64(zeroes128(), m);
+	m128 tv = and128(x, m);
+	tv = and128(tv, mm);
 
-    compress64_impl_c(x[0], m[0]);
-    compress64_impl_c(x[1], m[1]);
-
-    return xvec;
+	m128 mask = not128(eq64_m128(tv, zeroes128()));
+	mask = and128(bitset, mask);
+        vres = or128(vres, mask);
+	m = and128(m, sub_2x64(m, one));
+        bitset = lshift64_m128(bitset, 1);
+    }
+    return vres;
 }
 
 static really_inline
@@ -303,16 +309,20 @@ u64a expand64_impl_c(u64a x, u64a m) {
 }
 
 static really_inline
-m128 expand128_impl_c(m128 xvec, m128 mvec) {
-    u64a ALIGN_ATTR(16) x[2];
-    u64a ALIGN_ATTR(16) m[2];
-    store128(x, xvec);
-    store128(m, mvec);
-
-    expand64_impl_c(x[0], m[0]);
-    expand64_impl_c(x[1], m[1]);
-
-    return xvec;
+m128 expand128_impl_c(m128 x, m128 m) {
+    m128 one = set1_2x64(1);
+    m128 bb = one;
+    m128 res = zeroes128();
+    while (isnonzero128(m)) {
+	m128 xm = and128(x, bb);
+        m128 mm = sub_2x64(zeroes128(), m);
+        m128 mask = not128(eq64_m128(xm, zeroes128()));
+	mask = and128(mask, and128(m,mm));
+        res = or128(res, mask);
+        m = and128(m, sub_2x64(m, one));
+        bb = lshift64_m128(bb, 1);
+    }
+    return res;
 }
 
 /* returns the first set bit after begin (if not ~0U). If no bit is set after

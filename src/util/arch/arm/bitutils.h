@@ -203,6 +203,11 @@ u64a pext64_impl(u64a x, u64a mask) {
     return pext64_impl_c(x, mask);
 }
 
+static really_inline
+u64a pdep64_impl(u64a x, u64a mask) {
+    return pdep64_impl_c(x, mask);
+}
+
 /* compilers don't reliably synthesize the 32-bit ANDN instruction here,
  * so we force its generation.
  */

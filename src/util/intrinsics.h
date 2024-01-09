@@ -74,8 +74,6 @@
 #  endif
 #elif defined(USE_PPC64EL_ALTIVEC_H)
 #include <altivec.h>
-#else
-#error no intrinsics file
 #endif
 
 #endif // INTRINSICS_H

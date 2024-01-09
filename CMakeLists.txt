@@ -35,6 +35,13 @@ if(${RAGEL} STREQUAL "RAGEL-NOTFOUND")
     message(FATAL_ERROR "Ragel state machine compiler not found")
 endif()
 
+# Add ccache to speed builds
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif(CCACHE_FOUND)
+
 # Build type check
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -119,15 +126,22 @@ endif()
 # Detect OS and if Fat Runtime is available
 include (${CMAKE_MODULE_PATH}/osdetection.cmake)
 
-if (ARCH_IA32 OR ARCH_X86_64)
+if(SIMDE_BACKEND)
+    include (${CMAKE_MODULE_PATH}/simde.cmake)
+elseif (ARCH_IA32 OR ARCH_X86_64)
     include (${CMAKE_MODULE_PATH}/cflags-x86.cmake)
-    set(ARCH_FLAG march)
 elseif (ARCH_ARM32 OR ARCH_AARCH64)
     include (${CMAKE_MODULE_PATH}/cflags-arm.cmake)
-    set(ARCH_FLAG march)
 elseif (ARCH_PPC64EL)
     include (${CMAKE_MODULE_PATH}/cflags-ppc64le.cmake)
+else ()
+    message(FATAL_ERROR "Unsupported platform")
+endif ()
+
+if (ARCH_PPC64EL)
     set(ARCH_FLAG mcpu)
+else ()
+    set(ARCH_FLAG march)
 endif ()
 
 # Detect Native arch flags if requested
@@ -239,8 +253,11 @@ set (hs_exec_common_SRCS
     src/util/arch/common/cpuid_flags.h
     src/util/multibit.c
     )
-
-if (ARCH_IA32 OR ARCH_X86_64)
+if (SIMDE_BACKEND)
+set (hs_exec_common_SRCS
+    ${hs_exec_common_SRCS}
+    src/util/arch/simde/cpuid_flags.c)
+elseif (ARCH_IA32 OR ARCH_X86_64)
 set (hs_exec_common_SRCS
     ${hs_exec_common_SRCS}
     src/util/arch/x86/cpuid_flags.c
@@ -398,7 +415,12 @@ set (hs_exec_SRCS
     src/database.h
 )
 
-if (ARCH_IA32 OR ARCH_X86_64)
+if (SIMDE_BACKEND)
+set (hs_exec_SRCS
+    ${hs_exec_SRCS}
+    src/nfa/vermicelli_simd.cpp
+    src/util/supervector/arch/x86/impl.cpp)
+elseif (ARCH_IA32 OR ARCH_X86_64)
 set (hs_exec_SRCS
     ${hs_exec_SRCS}
     src/nfa/vermicelli_simd.cpp

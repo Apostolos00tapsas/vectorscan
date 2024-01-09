@@ -34,6 +34,9 @@
 #include <cstdio>
 #include <type_traits>
 
+#if defined(VS_SIMDE_BACKEND)
+#include "util/supervector/arch/x86/types.hpp"
+#else
 #if defined(ARCH_IA32) || defined(ARCH_X86_64)
 #include "util/supervector/arch/x86/types.hpp"
 #elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
@@ -41,6 +44,7 @@
 #elif defined(ARCH_PPC64EL)
 #include "util/supervector/arch/ppc64el/types.hpp"
 #endif
+#endif // VS_SIMDE_BACKEND
 
 #if defined(HAVE_SIMD_512_BITS)
 using Z_TYPE = u64a;
@@ -57,7 +61,7 @@ using Z_TYPE = u32;
 #define DOUBLE_LOAD_MASK(l)        (((1ULL) << (l)) - 1ULL)
 #define SINGLE_LOAD_MASK(l)        (((1ULL) << (l)) - 1ULL)
 #elif defined(HAVE_SIMD_128_BITS)
-#if defined(ARCH_ARM32) || defined(ARCH_AARCH64)
+#if !defined(VS_SIMDE_BACKEND) && (defined(ARCH_ARM32) || defined(ARCH_AARCH64))
 using Z_TYPE = u64a;
 #define Z_BITS 64
 #define Z_POSSHIFT 2
@@ -175,7 +179,7 @@ public:
     typename BaseVector<32>::type ALIGN_ATTR(BaseVector<32>::size) v256[SIZE / BaseVector<32>::size];
     typename BaseVector<64>::type ALIGN_ATTR(BaseVector<64>::size) v512[SIZE / BaseVector<64>::size];
 
-#if defined(ARCH_ARM32) || defined(ARCH_AARCH64) || defined(ARCH_PPC64EL)
+#if !defined(VS_SIMDE_BACKEND) && (defined(ARCH_ARM32) || defined(ARCH_AARCH64) || defined(ARCH_PPC64EL))
     uint64x2_t ALIGN_ATTR(BaseVector<16>::size) u64x2[SIZE / BaseVector<16>::size];
     int64x2_t ALIGN_ATTR(BaseVector<16>::size) s64x2[SIZE / BaseVector<16>::size];
     uint32x4_t ALIGN_ATTR(BaseVector<16>::size) u32x4[SIZE / BaseVector<16>::size];
@@ -382,12 +386,16 @@ struct Unroller<End, End>
 };
 
 #if defined(HS_OPTIMIZE)
+#if defined(VS_SIMDE_BACKEND)
+#include "util/supervector/arch/x86/impl.cpp"
+#else
 #if defined(ARCH_IA32) || defined(ARCH_X86_64)
 #include "util/supervector/arch/x86/impl.cpp"
 #elif defined(ARCH_ARM32) || defined(ARCH_AARCH64)
 #include "util/supervector/arch/arm/impl.cpp"
 #elif defined(ARCH_PPC64EL)
 #include "util/supervector/arch/ppc64el/impl.cpp"
+#endif
 #endif
 #endif
 

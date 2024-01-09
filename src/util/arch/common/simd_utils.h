@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015-2020, Intel Corporation
- * Copyright (c) 2020-2021, VectorCamp PC
+ * Copyright (c) 2020-2023, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,7 +41,7 @@
 
 #include <string.h> // for memcpy
 
-#if !defined(HAVE_SIMD_128_BITS)
+#if !defined(HAVE_SIMD_128_BITS) && !defined(VS_SIMDE_BACKEND)
 #error "You need at least a 128-bit capable SIMD engine!"
 #endif // HAVE_SIMD_128_BITS
 
@@ -88,7 +88,7 @@ static inline void print_m128_2x64(const char *label, m128 vec) {
 #define print_m128_2x64(label, vec) ;
 #endif
 
-#if !defined(ARCH_IA32) && !defined(ARCH_X86_64)
+#if !defined(ARCH_IA32) && !defined(ARCH_X86_64) && !defined(VS_SIMDE_BACKEND)
 #define ZEROES_8 0, 0, 0, 0, 0, 0, 0, 0
 #define ZEROES_31 ZEROES_8, ZEROES_8, ZEROES_8, 0, 0, 0, 0, 0, 0, 0
 #define ZEROES_32 ZEROES_8, ZEROES_8, ZEROES_8, ZEROES_8
@@ -455,7 +455,6 @@ static really_inline int isnonzero384(m384 a) {
     return isnonzero128(or128(or128(a.lo, a.mid), a.hi));
 }
 
-#if defined(HAVE_SIMD_128_BITS) && !defined(ARCH_IA32) && !defined(ARCH_X86_64)
 /**
  * "Rich" version of diff384(). Takes two vectors a and b and returns a 12-bit
  * mask indicating which 32-bit words contain differences.
@@ -464,7 +463,6 @@ static really_inline
 u32 diffrich384(m384 a, m384 b) {
     return diffrich128(a.lo, b.lo) | (diffrich128(a.mid, b.mid) << 4) | (diffrich128(a.hi, b.hi) << 8);
 }
-#endif
 
 /**
  * "Rich" version of diff384(), 64-bit variant. Takes two vectors a and b and
