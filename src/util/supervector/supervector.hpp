@@ -138,7 +138,7 @@ struct BaseVector<64>
   static constexpr u16  previous_size = 32;
 };
 
-// 128 bit implementation
+// 256 bit implementation
 template <>
 struct BaseVector<32>
 {

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
  * Copyright (c) 2020, 2021, VectorCamp PC
+ * Copyright (c) 2023, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,7 +38,17 @@
 #include "util/bitutils.h"
 
 #include "truffle_simd.hpp"
+#ifdef HAVE_SVE
+const u8 *truffleExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
+                      const u8 *buf_end) {
+    return truffleExecSVE(mask_lo, mask_hi, buf, buf_end);
+}
 
+const u8 *rtruffleExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
+                       const u8 *buf_end) {
+    return rtruffleExecSVE(mask_lo, mask_hi, buf, buf_end);
+}
+#else
 const u8 *truffleExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
                       const u8 *buf_end) {
     return truffleExecReal<VECTORSIZE>(mask_lo, mask_hi, buf, buf_end);
@@ -47,3 +58,4 @@ const u8 *rtruffleExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
                        const u8 *buf_end) {
     return rtruffleExecReal<VECTORSIZE>(mask_lo, mask_hi, buf, buf_end);
 }
+#endif //HAVE_SVE
