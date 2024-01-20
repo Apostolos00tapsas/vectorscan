@@ -59,6 +59,7 @@ add_executable(unit-hyperscan ${unit_hyperscan_SOURCES})
 target_link_libraries(unit-hyperscan hs expressionutil)
 
 if (NOT FAT_RUNTIME AND BUILD_STATIC_LIBS)
+set(BUILD_UNIT_INTERNAL TRUE)
 set(unit_internal_SOURCES
     ${gtest_SOURCES}
     internal/bitfield.cpp
@@ -128,6 +129,8 @@ endif(NOT RELEASE_BUILD)
 add_executable(unit-internal ${unit_internal_SOURCES})
 set_target_properties(unit-internal PROPERTIES COMPILE_FLAGS "${HS_CXX_FLAGS}")
 target_link_libraries(unit-internal hs corpusomatic)
+else()
+set(BUILD_UNIT_INTERNAL FALSE)
 endif (NOT FAT_RUNTIME AND BUILD_STATIC_LIBS)
 
 if (BUILD_CHIMERA)
@@ -146,7 +149,7 @@ if (BUILD_CHIMERA)
     #
     # build target to run unit tests
     #
-    if (NOT RELEASE_BUILD)
+    if (BUILD_UNIT_INTERNAL)
     add_custom_target(
         unit
         COMMAND bin/unit-internal
@@ -168,7 +171,7 @@ else()
     #
     # build target to run unit tests
     #
-    if (NOT RELEASE_BUILD)
+    if (BUILD_UNIT_INTERNAL)
     add_custom_target(
         unit
         COMMAND bin/unit-internal
@@ -179,10 +182,9 @@ else()
     else ()
     add_custom_target(
         unit
-        COMMAND bin/unit-internal
         COMMAND bin/unit-hyperscan
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        DEPENDS unit-internal unit-hyperscan
+        DEPENDS unit-hyperscan
     )
     endif()
 endif()

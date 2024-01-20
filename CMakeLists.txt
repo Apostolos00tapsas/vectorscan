@@ -23,11 +23,10 @@ INCLUDE (CheckLibraryExists)
 INCLUDE (CheckSymbolExists)
 include (CMakeDependentOption)
 include (GNUInstallDirs)
-include (${CMAKE_MODULE_PATH}/platform.cmake)
 include (${CMAKE_MODULE_PATH}/boost.cmake)
 include (${CMAKE_MODULE_PATH}/ragel.cmake)
 
-find_package(PkgConfig REQUIRED)
+find_package(PkgConfig QUIET)
 
 find_program(RAGEL ragel)
 
@@ -122,6 +121,10 @@ if (RELEASE_BUILD)
     set(HS_OPTIMIZE ON)
     add_definitions(-DNDEBUG)
 endif()
+
+# Architecture detection
+
+include (${CMAKE_MODULE_PATH}/platform.cmake)
 
 # Detect OS and if Fat Runtime is available
 include (${CMAKE_MODULE_PATH}/osdetection.cmake)

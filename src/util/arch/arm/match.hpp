@@ -102,26 +102,16 @@ const u8 *last_zero_match_inverted<16>(const u8 *buf, SuperVector<16> mask, u16 
 
 #ifdef HAVE_SVE
 
-
+// Return the index of the first lane with an active predicate.
+// Assumes pred is not svpfalse()
 static really_inline
-uint64_t last_non_zero_real(svuint8_t mask) {
-	const svuint64_t leading_zeros = svclz_x(svptrue_b64(), svreinterpret_u64(mask));
+uint64_t index_first_predicate(const svbool_t pred) {
 
-        uint64_t last_active_lane;
+    const svuint8_t indices = svindex_u8(0, 1);
+    const svbool_t single_lane_mask = svpnext_b8(pred, svpfalse());
+    const uint64_t lane_index = svlastb(single_lane_mask, indices);
 
-        svbool_t remaining_mask = svptrue_b64();
-        uint64_t i = 0;
-        while(svptest_any(svptrue_b64(), remaining_mask)) {
-            svbool_t single_lane_mask = svpnext_b64(remaining_mask, svpfalse());
-            remaining_mask = sveor_z(svptrue_b64(), remaining_mask, single_lane_mask);
-            uint64_t active_element = svlastb(single_lane_mask, leading_zeros);
-            if(active_element<64) {
-                uint64_t lane_index = (i+1)*8 - (active_element/8) - 1;
-                last_active_lane = lane_index;
-            }
-            i++;
-        }
-        return last_active_lane;
+    return lane_index;
 }
 
 /*
@@ -129,10 +119,10 @@ uint64_t last_non_zero_real(svuint8_t mask) {
  */
 static really_inline
 uint64_t last_non_zero(const size_t vector_size_int_8, svuint8_t mask) {
-    const svbool_t result_pred = svcmpne(svptrue_b8(), mask, 0);
+    const svbool_t non_zero = svcmpne(svptrue_b8(), mask, 0);
 
-    if (svptest_any(svptrue_b8(), result_pred)) {
-        return last_non_zero_real(mask);
+    if (svptest_any(svptrue_b8(), non_zero)) {
+        return vector_size_int_8 - 1 - index_first_predicate(svrev_b8(non_zero));
     } else {
         return vector_size_int_8;
     }
@@ -143,18 +133,10 @@ uint64_t last_non_zero(const size_t vector_size_int_8, svuint8_t mask) {
  */
 static really_inline
 uint64_t first_non_zero(const size_t vector_size_int_8, svuint8_t mask) {
-    const svbool_t result_pred = svcmpne(svptrue_b8(), mask, 0);
+    const svbool_t non_zero = svcmpne(svptrue_b8(), mask, 0);
 
-    if (svptest_any(svptrue_b8(), result_pred)) {
-
-        // We don't have a CTZ instruction but we can work around by reversing the lane order
-        const svuint64_t rev_large_res = svreinterpret_u64(svrev(mask));
-	// Now each pack of 8 leading 0 means one empty lane. So if we have 18 leading 0,
-        // that means the third lane have a matching character.
-	uint64_t first_active_lane = last_non_zero_real(svreinterpret_u8(rev_large_res));
-        // We reversed the lanes, so we reverse back the index
-	first_active_lane = (vector_size_int_8-1) - first_active_lane;
-        return first_active_lane;
+    if (svptest_any(svptrue_b8(), non_zero)) {
+        return index_first_predicate(non_zero);
     } else {
         return vector_size_int_8;
     }

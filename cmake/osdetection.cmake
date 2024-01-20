@@ -6,7 +6,12 @@ if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
     set(FREEBSD true)
 endif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
 
-option(FAT_RUNTIME "Build a library that supports multiple microarchitectures" OFF)
+if (ARCH_IA32 OR ARCH_X86_64)
+  option(FAT_RUNTIME "Build a library that supports multiple microarchitectures" ON)
+else()
+  option(FAT_RUNTIME "Build a library that supports multiple microarchitectures" OFF)
+endif()
+
 if (FAT_RUNTIME)
     message("Checking Fat Runtime Requirements...")
     if (NOT LINUX)
