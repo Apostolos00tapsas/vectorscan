@@ -2024,7 +2024,7 @@ unique_ptr<Component> parse(const char *ptr, ParseMode &globalMode) {
         // Ensure that all references are valid.
         checkReferences(*rootSeq, groupIndex, groupNames);
 
-        return std::move(rootSeq);
+        return rootSeq;
     } catch (LocatedParseError &error) {
         if (ts >= ptr && ts <= pe) {
             error.locate(ts - ptr);

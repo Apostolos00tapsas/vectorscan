@@ -270,7 +270,7 @@ unique_ptr<raw_report_info> sheng_build_strat::gatherReports(
         *isSingleReport = 0;
     }
 
-    return std::move(ri);
+    return ri;
 }
 
 u32 sheng_build_strat::max_allowed_offset_accel() const {

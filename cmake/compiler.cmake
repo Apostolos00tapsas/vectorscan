@@ -6,6 +6,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS CLANGCXX_MINVER)
         message(FATAL_ERROR "A minimum of clang++ ${CLANGCXX_MINVER} is required for C++17 support")
     endif()
+    string (REGEX REPLACE "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$" "\\1" CLANG_MAJOR_VERSION "${CMAKE_CXX_COMPILER_VERSION}")
 endif()
 
 # compiler version checks TODO: test more compilers

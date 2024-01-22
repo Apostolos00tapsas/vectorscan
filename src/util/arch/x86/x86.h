@@ -64,7 +64,7 @@
 #define HAVE_SIMD_512_BITS
 #endif
 
-#if defined(__AVX512VBMI__) && defined(BUILD_AVX512)
+#if defined(__AVX512VBMI__) && defined(BUILD_AVX512VBMI)
 #define HAVE_AVX512VBMI
 #endif
 

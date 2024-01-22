@@ -2430,7 +2430,6 @@ TEST(HyperscanArgChecks, ExpandNoTo) {
     err = hs_compress_stream(stream1, buf, sizeof(buf), &used);
     ASSERT_EQ(HS_SUCCESS, err);
 
-    hs_stream_t *stream2;
     err = hs_expand_stream(db, nullptr, buf, used);
     ASSERT_EQ(HS_INVALID, err);
 

@@ -29,6 +29,10 @@ if(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-array-bounds")
 endif()
 
+if(CMAKE_COMPILER_IS_CLANG AND ARCH_PPC64EL)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pass-failed")
+endif()
+
 add_definitions(-DGTEST_HAS_PTHREAD=0 -DSRCDIR=${PROJECT_SOURCE_DIR})
 
 set(unit_hyperscan_SOURCES

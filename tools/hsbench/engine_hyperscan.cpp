@@ -174,7 +174,7 @@ unique_ptr<EngineStream> EngineHyperscan::streamOpen(EngineContext &ectx,
         return nullptr;
     }
     stream->sn = streamId;
-    return std::move(stream);
+    return stream;
 }
 
 void EngineHyperscan::streamClose(unique_ptr<EngineStream> stream,

@@ -62,8 +62,6 @@ using boost::adaptors::map_values;
 
 namespace ue2 {
 
-static const size_t MAX_ACCEL_STRING_LEN = 16;
-
 #if defined(DEBUG) || defined(DUMP_SUPPORT)
 static UNUSED
 string dumpMask(const vector<u8> &v) {

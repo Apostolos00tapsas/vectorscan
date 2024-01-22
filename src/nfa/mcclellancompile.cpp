@@ -462,7 +462,7 @@ unique_ptr<raw_report_info> mcclellan_build_strat::gatherReports(
         *isSingleReport = 0;
     }
 
-    return std::move(ri);
+    return ri;
 }
 
 u32 raw_report_info_impl::getReportListSize() const {
@@ -620,7 +620,7 @@ bytecode_ptr<NFA> mcclellanCompile16(dfa_info &info, const CompileContext &cc,
     u8 alphaShift = info.getAlphaShift();
     assert(alphaShift <= 8);
 
-    u16 count_real_states;
+    u16 count_real_states{0};
     u16 wide_limit;
     if (!allocateFSN16(info, &count_real_states, &wide_limit)) {
         DEBUG_PRINTF("failed to allocate state numbers, %zu states total\n",

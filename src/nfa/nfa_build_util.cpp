@@ -347,7 +347,6 @@ template<> struct NFATraits<LBR_NFA_VERM16> {
     UNUSED static const char *name;
     static const NFACategory category = NFA_OTHER;
     static const u32 stateAlign = 8;
-    static const bool fast = true;
     static const nfa_dispatch_fn has_accel;
     static const nfa_dispatch_fn has_repeats;
     static const nfa_dispatch_fn has_repeats_other_than_firsts;
@@ -363,7 +362,6 @@ template<> struct NFATraits<LBR_NFA_NVERM16> {
     UNUSED static const char *name;
     static const NFACategory category = NFA_OTHER;
     static const u32 stateAlign = 8;
-    static const bool fast = true;
     static const nfa_dispatch_fn has_accel;
     static const nfa_dispatch_fn has_repeats;
     static const nfa_dispatch_fn has_repeats_other_than_firsts;

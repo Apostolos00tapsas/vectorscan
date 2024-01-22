@@ -136,7 +136,7 @@ void dumpLimexReachMasks(u32 model_size, const u8 *reach, u32 reachCount,
     for (u32 i = 0; i < reachCount; i++) {
         char tmp_common[100];
         const u8 *row = reach + (i * (model_size/8));
-        sprintf(tmp_common, "reach mask %u ", i);
+        snprintf(tmp_common, sizeof(tmp_common), "reach mask %u ", i);
         dumpMask(f, tmp_common, row, model_size);
     }
 }
