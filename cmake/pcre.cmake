@@ -30,7 +30,7 @@ if (PCRE_BUILD_SOURCE)
     #if PCRE_MAJOR != ${PCRE_REQUIRED_MAJOR_VERSION} || PCRE_MINOR < ${PCRE_REQUIRED_MINOR_VERSION}
     #error Incorrect pcre version
     #endif
-    main() {}" CORRECT_PCRE_VERSION)
+    int main(void) {return 0;}" CORRECT_PCRE_VERSION)
     set (CMAKE_REQUIRED_INCLUDES "${saved_INCLUDES}")
 
     if (NOT CORRECT_PCRE_VERSION)
