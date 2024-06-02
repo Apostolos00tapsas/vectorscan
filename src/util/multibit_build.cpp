@@ -256,7 +256,7 @@ void mmbBuildInitRangePlan(u32 total_bits, u32 begin, u32 end,
     /* handle the multilevel case */
     s32 ks = mmbit_keyshift(total_bits);
     u32 level = 0;
-    assert(sizeof(MMB_TYPE) == sizeof(u64a));
+    assert(sizeof(MMB_TYPE) == sizeof(u64a)); // cppcheck-suppress duplicateExpression
 
     if (begin == end) {
         add_scatter(&out->p_u64a, 0, 0);

@@ -43,8 +43,8 @@ struct NFA;
 static really_inline
 const struct NFA *getSmwrNfa(const struct SmallWriteEngine *smwr) {
     assert(smwr);
-    const struct NFA *n
-        = (const struct NFA *)((const char *)smwr + sizeof(*smwr));
+    // cppcheck-suppress cstyleCast
+    const struct NFA *n= (const struct NFA *)((const char *)smwr + sizeof(*smwr));
     assert(ISALIGNED_CL(n));
     return n;
 }

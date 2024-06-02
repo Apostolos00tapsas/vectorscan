@@ -148,7 +148,7 @@ void runVectoredTest(match_event_handler cb_func) {
 static
 int rescan_block_cb(unsigned, unsigned long long, unsigned long long, unsigned,
                     void *ctx) {
-    RescanContext *rctx = (RescanContext *)ctx;
+    RescanContext *rctx = reinterpret_cast<RescanContext *>(ctx);
     rctx->matches++;
 
     const string data = "___foo___bar_";
@@ -168,7 +168,7 @@ TEST(ScratchInUse, Block) {
 static
 int rescan_stream_cb(unsigned, unsigned long long, unsigned long long, unsigned,
                      void *ctx) {
-    RescanContext *rctx = (RescanContext *)ctx;
+    RescanContext *rctx = reinterpret_cast<RescanContext *>(ctx);
     rctx->matches++;
 
     const string data = "___foo___bar_";
@@ -197,7 +197,7 @@ TEST(ScratchInUse, Streaming) {
 static
 int rescan_vector_cb(unsigned, unsigned long long, unsigned long long, unsigned,
                     void *ctx) {
-    RescanContext *rctx = (RescanContext *)ctx;
+    RescanContext *rctx = reinterpret_cast<RescanContext *>(ctx);
     rctx->matches++;
 
     const string data1 = "___foo_";
@@ -221,7 +221,7 @@ TEST(ScratchInUse, Vectored) {
 static
 int rescan_realloc_cb(unsigned, unsigned long long, unsigned long long,
                       unsigned, void *ctx) {
-    RescanContext *rctx = (RescanContext *)ctx;
+    RescanContext *rctx = reinterpret_cast<RescanContext *>(ctx);
     rctx->matches++;
 
     auto db = makeDatabase("another db", 0, HS_MODE_BLOCK);
@@ -251,7 +251,7 @@ TEST(ScratchInUse, ReallocScratchVector) {
 static
 int rescan_free_cb(unsigned, unsigned long long, unsigned long long,
                       unsigned, void *ctx) {
-    RescanContext *rctx = (RescanContext *)ctx;
+    RescanContext *rctx = reinterpret_cast<RescanContext *>(ctx);
     rctx->matches++;
 
     hs_error_t err = hs_free_scratch(rctx->scratch);

@@ -454,18 +454,27 @@ void findForwardAccelScheme(const vector<AccelString> &lits,
 #endif // HAVE_SVE2
 
     if (-1 !=
-        shuftiBuildMasks(cr, (u8 *)&aux->shufti.lo, (u8 *)&aux->shufti.hi)) {
+        shuftiBuildMasks(cr, reinterpret_cast<u8 *>(&aux->shufti.lo), reinterpret_cast<u8 *>(&aux->shufti.hi))) {
         DEBUG_PRINTF("built shufti for %s (%zu chars, offset %u)\n",
                      describeClass(cr).c_str(), cr.count(), min_offset);
         aux->shufti.accel_type = ACCEL_SHUFTI;
         aux->shufti.offset = verify_u8(min_offset);
         return;
     }
-
-    truffleBuildMasks(cr, (u8 *)&aux->truffle.mask1, (u8 *)&aux->truffle.mask2);
+#if defined(CAN_USE_WIDE_TRUFFLE)
+    if(CAN_USE_WIDE_TRUFFLE) {
+        aux->truffle.accel_type = ACCEL_TRUFFLE_WIDE;
+        truffleBuildMasksWide(cr, reinterpret_cast<u8 *>(&aux->truffle.mask));
+    } else
+#endif
+    {
+        aux->truffle.accel_type = ACCEL_TRUFFLE;
+        truffleBuildMasks(cr,
+                          reinterpret_cast<u8 *>(&aux->truffle.mask_lo),
+                          reinterpret_cast<u8 *>(&aux->truffle.mask_hi));
+    }
     DEBUG_PRINTF("built truffle for %s (%zu chars, offset %u)\n",
                  describeClass(cr).c_str(), cr.count(), min_offset);
-    aux->truffle.accel_type = ACCEL_TRUFFLE;
     aux->truffle.offset = verify_u8(min_offset);
 }
 

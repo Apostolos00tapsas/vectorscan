@@ -57,15 +57,14 @@ extern const hs_compile_error_t hs_badalloc = {
 namespace ue2 {
 
 hs_compile_error_t *generateCompileError(const string &err, int expression) {
-    hs_compile_error_t *ret =
-        (struct hs_compile_error *)hs_misc_alloc(sizeof(hs_compile_error_t));
+    hs_compile_error_t *ret = static_cast<struct hs_compile_error *>(hs_misc_alloc(sizeof(hs_compile_error_t)));
     if (ret) {
         hs_error_t e = hs_check_alloc(ret);
         if (e != HS_SUCCESS) {
             hs_misc_free(ret);
             return const_cast<hs_compile_error_t *>(&hs_badalloc);
         }
-        char *msg = (char *)hs_misc_alloc(err.size() + 1);
+        char *msg = static_cast<char *>(hs_misc_alloc(err.size() + 1));
         if (msg) {
             e = hs_check_alloc(msg);
             if (e != HS_SUCCESS) {

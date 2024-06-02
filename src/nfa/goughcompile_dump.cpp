@@ -145,6 +145,7 @@ void dump_var_mapping(const GoughGraph &g, const string &base,
             fprintf(f, "\tuses:");
             vector<u32> used_id;
             for (const GoughSSAVar *var : used) {
+                // cppcheck-suppress useStlAlgorithm
                 used_id.emplace_back(var->slot);
             }
             for (const u32 &id : used_id) {
@@ -167,6 +168,7 @@ void dump_var_mapping(const GoughGraph &g, const string &base,
             fprintf(f, "\tuses:");
             vector<u32> used_id;
             for (const GoughSSAVar *var : used) {
+                // cppcheck-suppress useStlAlgorithm
                 used_id.emplace_back(var->slot);
             }
             for (const u32 &id : used_id) {

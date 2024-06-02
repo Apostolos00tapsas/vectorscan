@@ -4,7 +4,7 @@
 Performance Considerations
 ##########################
 
-Hyperscan supports a wide range of patterns in all three scanning modes. It is
+Vectorscan supports a wide range of patterns in all three scanning modes. It is
 capable of extremely high levels of performance, but certain patterns can
 reduce performance markedly.
 
@@ -25,7 +25,7 @@ For example, caseless matching of :regexp:`/abc/` can be written as:
 * :regexp:`/(?i)abc(?-i)/`
 * :regexp:`/abc/i`
 
-Hyperscan is capable of handling all these constructs. Unless there is a
+Vectorscan is capable of handling all these constructs. Unless there is a
 specific reason otherwise, do not rewrite patterns from one form to another.
 
 As another example, matching of :regexp:`/foo(bar|baz)(frotz)?/` can be
@@ -41,24 +41,24 @@ Library usage
 
 .. tip:: Do not hand-optimize library usage.
 
-The Hyperscan library is capable of dealing with small writes, unusually large
+The Vectorscan library is capable of dealing with small writes, unusually large
 and small pattern sets, etc. Unless there is a specific performance problem
-with some usage of the library, it is best to use Hyperscan in a simple and
+with some usage of the library, it is best to use Vectorscan in a simple and
 direct fashion. For example, it is unlikely for there to be much benefit in
 buffering input to the library into larger blocks unless streaming writes are
 tiny (say, 1-2 bytes at a time).
 
-Unlike many other pattern matching products, Hyperscan will run faster with
+Unlike many other pattern matching products, Vectorscan will run faster with
 small numbers of patterns and slower with large numbers of patterns in a smooth
 fashion (as opposed to, typically, running at a moderate speed up to some fixed
 limit then either breaking or running half as fast).
 
-Hyperscan also provides high-throughput matching with a single thread of
-control per core; if a database runs at 3.0 Gbps in Hyperscan it means that a
+Vectorscan also provides high-throughput matching with a single thread of
+control per core; if a database runs at 3.0 Gbps in Vectorscan it means that a
 3000-bit block of data will be scanned in 1 microsecond in a single thread of
 control, not that it is required to scan 22 3000-bit blocks of data in 22
 microseconds. Thus, it is not usually necessary to buffer data to supply
-Hyperscan with available parallelism.
+Vectorscan with available parallelism.
 
 ********************
 Block-based matching
@@ -72,7 +72,7 @@ accumulated before processing, it should be scanned in block rather than in
 streaming mode.
 
 Unnecessary use of streaming mode reduces the number of optimizations that can
-be applied in Hyperscan and may make some patterns run slower.
+be applied in Vectorscan and may make some patterns run slower.
 
 If there is a mixture of 'block' and 'streaming' mode patterns, these should be
 scanned in separate databases except in the case that the streaming patterns
@@ -107,7 +107,7 @@ Allocate scratch ahead of time
 
 Scratch allocation is not necessarily a cheap operation. Since it is the first
 time (after compilation or deserialization) that a pattern database is used,
-Hyperscan performs some validation checks inside :c:func:`hs_alloc_scratch` and
+Vectorscan performs some validation checks inside :c:func:`hs_alloc_scratch` and
 must also allocate memory.
 
 Therefore, it is important to ensure that :c:func:`hs_alloc_scratch` is not
@@ -329,7 +329,7 @@ Consequently, :regexp:`/foo.*bar/L` with a check on start of match values after
 the callback is considerably more expensive and general than
 :regexp:`/foo.{300}bar/`.
 
-Similarly, the :c:member:`hs_expr_ext::min_length` extended parameter can be
+Similarly, the :cpp:member:`hs_expr_ext::min_length` extended parameter can be
 used to specify a lower bound on the length of the matches for a pattern. Using
 this facility may be more lightweight in some circumstances than using the SOM
 flag and post-confirming match length in the calling application.

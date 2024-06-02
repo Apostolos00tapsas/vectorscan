@@ -264,7 +264,7 @@ const u8 *shuftiDoubleExecReal(m128 mask1_lo, m128 mask1_hi, m128 mask2_lo, m128
 const u8 *shuftiExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
                       const u8 *buf_end) {
   if (buf_end - buf < VECTORSIZE) {
-    return shuftiFwdSlow((const u8 *)&mask_lo, (const u8 *)&mask_hi, buf, buf_end);
+    return shuftiFwdSlow(reinterpret_cast<const u8 *>(&mask_lo), reinterpret_cast<const u8 *>(&mask_hi), buf, buf_end);
   }
   return shuftiExecReal<VECTORSIZE>(mask_lo, mask_hi, buf, buf_end);
 }
@@ -272,7 +272,7 @@ const u8 *shuftiExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
 const u8 *rshuftiExec(m128 mask_lo, m128 mask_hi, const u8 *buf,
                        const u8 *buf_end) {
     if (buf_end - buf < VECTORSIZE) {
-      return shuftiRevSlow((const u8 *)&mask_lo, (const u8 *)&mask_hi, buf, buf_end);
+      return shuftiRevSlow(reinterpret_cast<const u8 *>(&mask_lo), reinterpret_cast<const u8 *>(&mask_hi), buf, buf_end);
     }
     return rshuftiExecReal<VECTORSIZE>(mask_lo, mask_hi, buf, buf_end);
 }

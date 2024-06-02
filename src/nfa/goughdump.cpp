@@ -59,14 +59,14 @@ namespace ue2 {
 static
 void goughGetTransitions(const NFA *n, u16 s, u16 *t) {
     assert(isGoughType(n->type));
-    const mcclellan *m = (const mcclellan *)getImplNfa(n);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(n));
     const mstate_aux *aux = getAux(n, s);
     const u32 as = m->alphaShift;
     const char *sher_base
-        = (const char *)m - sizeof(struct NFA) + m->sherman_offset;
+        = reinterpret_cast<const char *>(m) - sizeof(struct NFA) + m->sherman_offset;
 
     if (n->type == GOUGH_NFA_8) {
-        const u8 *succ_table = (const u8 *)((const char *)m + sizeof(mcclellan));
+        const u8 *succ_table = reinterpret_cast<const u8 *>(reinterpret_cast<const char *>(m) + sizeof(mcclellan));
         for (u16 c = 0; c < N_CHARS; c++) {
             t[c] = succ_table[((u32)s << as) + m->remap[c]];
         }
@@ -76,14 +76,14 @@ void goughGetTransitions(const NFA *n, u16 s, u16 *t) {
         if (s >= m->sherman_limit) {
             const char *state_base
                 = findShermanState(m, sher_base, m->sherman_limit, s);
-            base_s = *(const u16 *)(state_base + SHERMAN_DADDY_OFFSET);
+            base_s = *(reinterpret_cast<const u16 *>(state_base + SHERMAN_DADDY_OFFSET));
         }
 
-        const u16 *succ_table = (const u16 *)((const char *)m
+        const u16 *succ_table = reinterpret_cast<const u16 *>(reinterpret_cast<const char *>(m)
                                               + sizeof(mcclellan));
         for (u16 c = 0; c < N_CHARS; c++) {
             const u8 *addr
-                = (const u8*)(succ_table + (((u32)base_s << as) + m->remap[c]));
+                = reinterpret_cast<const u8*>(succ_table + (((u32)base_s << as) + m->remap[c]));
             t[c] = unaligned_load_u16(addr);
             t[c] &= STATE_MASK;
         }
@@ -91,15 +91,15 @@ void goughGetTransitions(const NFA *n, u16 s, u16 *t) {
         if (s >= m->sherman_limit) {
             const char *state_base
                 = findShermanState(m, sher_base, m->sherman_limit, s);
-            u8 len = *(const u8 *)(SHERMAN_LEN_OFFSET + state_base);
-            const u8 *chars = (const u8 *)state_base + SHERMAN_CHARS_OFFSET;
+            u8 len = *(reinterpret_cast<const u8 *>(SHERMAN_LEN_OFFSET + state_base));
+            const u8 *chars = reinterpret_cast<const u8 *>(state_base) + SHERMAN_CHARS_OFFSET;
             const u16 *states
-                = (const u16 *)(state_base + SHERMAN_STATES_OFFSET(len));
+                = reinterpret_cast<const u16 *>(state_base + SHERMAN_STATES_OFFSET(len));
 
             for (u8 i = 0; i < len; i++) {
                 for (u16 c = 0; c < N_CHARS; c++) {
                     if (m->remap[c] != chars[i]) {
-                        t[c] = unaligned_load_u16((const u8*)&states[i])
+                        t[c] = unaligned_load_u16(reinterpret_cast<const u8*>(&states[i]))
                              & STATE_MASK;
                     }
                 }
@@ -116,14 +116,14 @@ void describeNode(const NFA *n, const mcclellan *m, u16 i, FILE *f) {
 
     bool isSherman = m->sherman_limit && i >= m->sherman_limit;
     const char *sher_base
-        = (const char *)m - sizeof(NFA) + m->sherman_offset;
+        = reinterpret_cast<const char *>(m) - sizeof(NFA) + m->sherman_offset;
 
     fprintf(f, "%u [ width = 1, fixedsize = true, fontsize = 12, "
             "label = \"%u%s\" ]; \n", i, i, isSherman ? "w":"");
 
     if (aux->accel_offset) {
         dumpAccelDot(f, i,
-          &((const gough_accel *)((const char *)m + aux->accel_offset))->accel);
+          &(reinterpret_cast<const gough_accel *>(reinterpret_cast<const char *>(m) + aux->accel_offset))->accel);
     }
 
     if (aux->accept_eod) {
@@ -151,7 +151,7 @@ void describeNode(const NFA *n, const mcclellan *m, u16 i, FILE *f) {
         const char *sherman_state
             = findShermanState(m, sher_base, m->sherman_limit, i);
         fprintf(f, "%u [ fillcolor = lightblue style=filled ];\n", i);
-        u16 daddy = *(const u16 *)(sherman_state + SHERMAN_DADDY_OFFSET);
+        u16 daddy = *(reinterpret_cast<const u16 *>(sherman_state + SHERMAN_DADDY_OFFSET));
         if (daddy) {
             fprintf(f, "%u -> %u [ color=royalblue style=dashed weight=0.1]\n",
                     i, daddy);
@@ -197,7 +197,7 @@ void dump_programs(FILE *f, const NFA *nfa,
     for (set<pair<pair<u32, u32>, u32 > >::const_iterator it
              = prog_dump.begin(); it != prog_dump.end(); ++it) {
         assert(it->second);
-        const gough_ins *p = (const gough_ins *)((const u8 *)nfa + it->second);
+        const gough_ins *p = reinterpret_cast<const gough_ins *>(reinterpret_cast<const u8 *>(nfa) + it->second);
         dump_program(f, it->first, p);
     }
 }
@@ -205,17 +205,17 @@ void dump_programs(FILE *f, const NFA *nfa,
 static
 void dumpTransitions(const NFA *nfa, FILE *f,
                      set<pair<pair<u32, u32>, u32 > > *prog_dump) {
-    const mcclellan *m = (const mcclellan *)getImplNfa(nfa);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(nfa));
     const gough_info *g = get_gough(m);
     u32 alphaSize = 1U << m->alphaShift;
-    const u32 *prog_offset_table = (const u32 *)(g + 1);
+    const u32 *prog_offset_table = reinterpret_cast<const u32 *>(g + 1);
 
     for (u16 i = 0; i < m->state_count; i++) {
         fprintf(f, "%05hu", i);
         const mstate_aux *aux = getAux(nfa, i);
 
         if (aux->accel_offset) {
-            dumpAccelText(f, (const union AccelAux *)((const char *)m +
+            dumpAccelText(f, reinterpret_cast<const union AccelAux *>(reinterpret_cast<const char *>(m) +
                                                       aux->accel_offset));
         }
 
@@ -263,7 +263,7 @@ void dumpTransitions(const NFA *nfa, FILE *f,
 static
 void nfaExecGough8_dumpDot(const struct NFA *nfa, FILE *f) {
     assert(nfa->type == GOUGH_NFA_8);
-    const mcclellan *m = (const mcclellan *)getImplNfa(nfa);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(nfa));
 
     dumpDotPreambleDfa(f);
 
@@ -284,7 +284,7 @@ static
 void nfaExecGough8_dumpText(const struct NFA *nfa, FILE *f) {
 
     assert(nfa->type == GOUGH_NFA_8);
-    const mcclellan *m = (const mcclellan *)getImplNfa(nfa);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(nfa));
 
     fprintf(f, "gough 8\n");
     fprintf(f, "report: %u, states %u, length %u\n", m->arb_report,
@@ -308,7 +308,7 @@ void nfaExecGough8_dumpText(const struct NFA *nfa, FILE *f) {
 static
 void nfaExecGough16_dumpDot(const struct NFA *nfa, FILE *f) {
     assert(nfa->type == GOUGH_NFA_16);
-    const mcclellan *m = (const mcclellan *)getImplNfa(nfa);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(nfa));
 
     dumpDotPreambleDfa(f);
 
@@ -328,7 +328,7 @@ void nfaExecGough16_dumpDot(const struct NFA *nfa, FILE *f) {
 static
 void nfaExecGough16_dumpText(const struct NFA *nfa, FILE *f) {
     assert(nfa->type == GOUGH_NFA_16);
-    const mcclellan *m = (const mcclellan *)getImplNfa(nfa);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(nfa));
     //    const gough_info *h = get_gough(m);
 
     fprintf(f, "gough 16\n");
@@ -336,7 +336,7 @@ void nfaExecGough16_dumpText(const struct NFA *nfa, FILE *f) {
             m->state_count, m->length);
     fprintf(f, "astart: %hu, fstart: %hu\n", m->start_anchored,
             m->start_floating);
-    fprintf(f, "single accept: %d\n", !!(int)m->flags & MCCLELLAN_FLAG_SINGLE);
+    fprintf(f, "single accept: %d\n", !!(m->flags & MCCLELLAN_FLAG_SINGLE));
     fprintf(f, "sherman_limit: %u, sherman_end: %u\n", m->sherman_limit,
             m->sherman_end);
 

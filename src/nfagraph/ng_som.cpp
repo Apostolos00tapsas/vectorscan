@@ -545,6 +545,7 @@ bool finalRegion(const NGHolder &g,
                  const unordered_map<NFAVertex, u32> &regions,
                  NFAVertex v) {
     u32 region = regions.at(v);
+    // cppcheck-suppress useStlAlgorithm
     for (auto w : adjacent_vertices_range(v, g)) {
         if (w != g.accept && w != g.acceptEod && regions.at(w) != region) {
             return false;
@@ -876,18 +877,18 @@ bool beginsWithDotStar(const NGHolder &g) {
     // We can ignore the successors of start, as matches that begin there will
     // necessarily have a SOM of 0.
 
-    set<NFAVertex> succ;
-    insert(&succ, adjacent_vertices(g.startDs, g));
-    succ.erase(g.startDs);
+    set<NFAVertex> a_succ;
+    insert(&a_succ, adjacent_vertices(g.startDs, g));
+    a_succ.erase(g.startDs);
 
-    for (auto v : succ) {
+    for (auto v : a_succ) {
         // We want 'dot' states that aren't virtual starts.
         if (g[v].char_reach.all() &&
                 !g[v].assert_flags) {
             hasDot = true;
             set<NFAVertex> dotsucc;
             insert(&dotsucc, adjacent_vertices(v, g));
-            if (dotsucc != succ) {
+            if (dotsucc != a_succ) {
                 DEBUG_PRINTF("failed dot-star succ check\n");
                 return false;
             }
@@ -1177,7 +1178,7 @@ void expandGraph(NGHolder &g, unordered_map<NFAVertex, u32> &regions,
 }
 
 static
-bool doTreePlanningIntl(NGHolder &g,
+bool doTreePlanningIntl(const NGHolder &g,
             const unordered_map<NFAVertex, u32> &regions,
             const map<u32, region_info> &info,
             map<u32, region_info>::const_iterator picked, u32 bad_region,
@@ -1292,8 +1293,8 @@ bool doTreePlanningIntl(NGHolder &g,
         DEBUG_PRINTF("add mapped reporters for region %u\n", it->first);
         addMappedReporterVertices(it->second, g, copy_to_orig,
                                   plan.back().reporters);
-    } while (it->second.optional && it != info.rend() &&
-             (++it)->first > furthest->first);
+    } while (it != info.rend() && it->second.optional && 
+            (++it)->first > furthest->first);
 
     return true;
 }
@@ -1408,7 +1409,7 @@ bool doSomPlanning(NGHolder &g, bool stuck_in,
 
     /* Need to verify how far the lock covers */
     u32 bad_region;
-    NGHolder *ap_pref = plan.back().prefix.get();
+    const NGHolder *ap_pref = plan.back().prefix.get();
     NGHolder ap_temp;
     if (hasBigCycles(*ap_pref)) {
         fillRoughMidfix(&ap_temp, g, regions, info, picked);
@@ -1551,7 +1552,7 @@ bool doSomPlanning(NGHolder &g, bool stuck_in,
         DEBUG_PRINTF("region %u contributes reporters to last plan\n",
                      it->first);
         addReporterVertices(it->second, g, plan.back().reporters);
-    } while (it->second.optional && it != info.rend() &&
+    } while (it != info.rend() && it->second.optional &&
              (++it)->first > furthest->first);
 
     DEBUG_PRINTF("done!\n");
@@ -1855,7 +1856,7 @@ bool doSomRevNfa(NG &ng, NGHolder &g, const CompileContext &cc) {
 }
 
 static
-u32 doSomRevNfaPrefix(NG &ng, const ExpressionInfo &expr, NGHolder &g,
+u32 doSomRevNfaPrefix(NG &ng, const ExpressionInfo &expr, const NGHolder &g,
                       const CompileContext &cc) {
     depth maxWidth = findMaxWidth(g);
 
@@ -2011,7 +2012,7 @@ void setReportOnHaigPrefix(RoseBuild &rose, NGHolder &h) {
 }
 
 static
-bool tryHaig(RoseBuild &rose, NGHolder &g,
+bool tryHaig(RoseBuild &rose, const NGHolder &g,
              const unordered_map<NFAVertex, u32> &regions,
              som_type som, u32 somPrecision,
              map<u32, region_info>::const_iterator picked,
@@ -2331,6 +2332,7 @@ bool splitOffLeadingLiterals(const NGHolder &g, set<ue2_literal> *lit_out,
     assert(!terms.empty());
     set<NFAVertex> adj_term1;
     insert(&adj_term1, adjacent_vertices(*terms.begin(), g));
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : terms) {
         DEBUG_PRINTF("term %zu\n", g[v].index);
         set<NFAVertex> temp;
@@ -2442,13 +2444,9 @@ void makeReportsSomPass(ReportManager &rm, NGHolder &g) {
 }
 
 static
-bool doLitHaigSom(NG &ng, NGHolder &g, som_type som) {
+bool doLitHaigSom(NG &ng, const NGHolder &g, som_type som) {
     ue2_literal lit;
     shared_ptr<NGHolder> rhs = make_shared<NGHolder>();
-    if (!rhs) {
-        assert(0);
-        throw std::bad_alloc();
-    }
     if (!ng.cc.grey.allowLitHaig) {
         return false;
     }
@@ -2513,10 +2511,6 @@ bool doHaigLitHaigSom(NG &ng, NGHolder &g,
     ue2_literal lit;
     shared_ptr<NGHolder> rhs = make_shared<NGHolder>();
     shared_ptr<NGHolder> lhs = make_shared<NGHolder>();
-    if (!rhs || !lhs) {
-        assert(0);
-        throw std::bad_alloc();
-    }
 
     if (!splitOffBestLiteral(g, regions, &lit, &*lhs, &*rhs, ng.cc)) {
         return false;
@@ -2659,7 +2653,7 @@ bool doHaigLitHaigSom(NG &ng, NGHolder &g,
 }
 
 static
-bool doMultiLitHaigSom(NG &ng, NGHolder &g, som_type som) {
+bool doMultiLitHaigSom(NG &ng, const NGHolder &g, som_type som) {
     set<ue2_literal> lits;
     shared_ptr<NGHolder> rhs = make_shared<NGHolder>();
     if (!ng.cc.grey.allowLitHaig) {
@@ -3133,7 +3127,7 @@ sombe_rv doSomWithHaig(NG &ng, NGHolder &g, const ExpressionInfo &expr,
 
     // try a redundancy pass.
     if (addSomRedundancy(g, depths)) {
-        depths = getDistancesFromSOM(g);
+        depths = getDistancesFromSOM(g); // cppcheck-suppress unreadVariable
     }
 
     auto regions = assignRegions(g);

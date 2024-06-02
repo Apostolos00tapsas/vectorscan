@@ -131,6 +131,7 @@ bool findPaths(const NGHolder &g, vector<Path> &paths) {
 
 static
 bool hasLargeDegreeVertex(const NGHolder &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &v : vertices_range(g)) {
         if (is_special(v, g)) { // specials can have large degree
             continue;

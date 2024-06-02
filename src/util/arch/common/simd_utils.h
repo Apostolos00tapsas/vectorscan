@@ -238,6 +238,7 @@ static really_inline u32 diffrich64_256(m256 a, m256 b) {
 // aligned load
 static really_inline m256 load256(const void *ptr) {
     assert(ISALIGNED_N(ptr, alignof(m256)));
+    // cppcheck-suppress cstyleCast
     m256 rv = { load128(ptr), load128((const char *)ptr + 16) };
     return rv;
 }
@@ -255,11 +256,13 @@ static really_inline m256 loadu2x128(const void *ptr) {
 static really_inline void store256(void *ptr, m256 a) {
     assert(ISALIGNED_N(ptr, alignof(m256)));
     ptr = vectorscan_assume_aligned(ptr, 16);
+    // cppcheck-suppress cstyleCast
     *(m256 *)ptr = a;
 }
 
 // unaligned load
 static really_inline m256 loadu256(const void *ptr) {
+    // cppcheck-suppress cstyleCast
     m256 rv = { loadu128(ptr), loadu128((const char *)ptr + 16) };
     return rv;
 }
@@ -267,6 +270,7 @@ static really_inline m256 loadu256(const void *ptr) {
 // unaligned store
 static really_inline void storeu256(void *ptr, m256 a) {
     storeu128(ptr, a.lo);
+    // cppcheck-suppress cstyleCast
     storeu128((char *)ptr + 16, a.hi);
 }
 
@@ -476,8 +480,8 @@ static really_inline u32 diffrich64_384(m384 a, m384 b) {
 // aligned load
 static really_inline m384 load384(const void *ptr) {
     assert(ISALIGNED_16(ptr));
-    m384 rv = { load128(ptr), load128((const char *)ptr + 16),
-                load128((const char *)ptr + 32) };
+    // cppcheck-suppress cstyleCast
+    m384 rv = { load128(ptr), load128((const char *)ptr + 16),load128((const char *)ptr + 32) };
     return rv;
 }
 
@@ -485,13 +489,14 @@ static really_inline m384 load384(const void *ptr) {
 static really_inline void store384(void *ptr, m384 a) {
     assert(ISALIGNED_16(ptr));
     ptr = vectorscan_assume_aligned(ptr, 16);
+    // cppcheck-suppress cstyleCast
     *(m384 *)ptr = a;
 }
 
 // unaligned load
 static really_inline m384 loadu384(const void *ptr) {
-    m384 rv = { loadu128(ptr), loadu128((const char *)ptr + 16),
-                loadu128((const char *)ptr + 32)};
+    // cppcheck-suppress cstyleCast
+    m384 rv = { loadu128(ptr), loadu128((const char *)ptr + 16),loadu128((const char *)ptr + 32)};
     return rv;
 }
 
@@ -703,6 +708,7 @@ u32 diffrich64_512(m512 a, m512 b) {
 static really_inline
 m512 load512(const void *ptr) {
     assert(ISALIGNED_N(ptr, alignof(m256)));
+    // cppcheck-suppress cstyleCast
     m512 rv = { load256(ptr), load256((const char *)ptr + 32) };
     return rv;
 }
@@ -711,6 +717,7 @@ m512 load512(const void *ptr) {
 static really_inline
 void store512(void *ptr, m512 a) {
     assert(ISALIGNED_N(ptr, alignof(m512)));
+    // cppcheck-suppress cstyleCast
     m512 *x = (m512 *)ptr;
     store256(&x->lo, a.lo);
     store256(&x->hi, a.hi);
@@ -719,6 +726,7 @@ void store512(void *ptr, m512 a) {
 // unaligned load
 static really_inline
 m512 loadu512(const void *ptr) {
+    // cppcheck-suppress cstyleCast
     m512 rv = { loadu256(ptr), loadu256((const char *)ptr + 32) };
     return rv;
 }

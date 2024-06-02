@@ -45,7 +45,7 @@ struct RdfaEdgeProps {
 };
 
 struct RdfaGraph : public ue2_graph<RdfaGraph, RdfaVertexProps, RdfaEdgeProps> {
-    RdfaGraph(const raw_dfa &rdfa);
+    explicit RdfaGraph(const raw_dfa &rdfa);
 };
 
 

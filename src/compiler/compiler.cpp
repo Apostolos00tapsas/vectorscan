@@ -443,7 +443,7 @@ bytecode_ptr<RoseEngine> generateRoseEngine(NG &ng) {
     if (!rose) {
         DEBUG_PRINTF("error building rose\n");
         assert(0);
-        return nullptr;
+        return bytecode_ptr<RoseEngine>(nullptr);
     }
 
     dumpReportManager(ng.rm, ng.cc.grey);
@@ -478,7 +478,7 @@ hs_database_t *dbCreate(const char *in_bytecode, size_t len, u64a platform) {
     DEBUG_PRINTF("db size %zu\n", db_len);
     DEBUG_PRINTF("db platform %llx\n", platform);
 
-    struct hs_database *db = (struct hs_database *)hs_database_alloc(db_len);
+    struct hs_database *db = static_cast<struct hs_database *>(hs_database_alloc(db_len));
     if (hs_check_alloc(db) != HS_SUCCESS) {
         hs_database_free(db);
         return nullptr;
@@ -492,7 +492,7 @@ hs_database_t *dbCreate(const char *in_bytecode, size_t len, u64a platform) {
     DEBUG_PRINTF("shift is %zu\n", shift);
 
     db->bytecode = offsetof(struct hs_database, bytes) - shift;
-    char *bytecode = (char *)db + db->bytecode;
+    char *bytecode = reinterpret_cast<char *>(db) + db->bytecode;
     assert(ISALIGNED_CL(bytecode));
 
     db->magic = HS_DB_MAGIC;
@@ -525,7 +525,7 @@ struct hs_database *build(NG &ng, unsigned int *length, u8 pureFlag) {
         throw CompileError("Internal error.");
     }
 
-    const char *bytecode = (const char *)(rose.get());
+    const char *bytecode = reinterpret_cast<const char *>(rose.get());
     const platform_t p = target_to_platform(ng.cc.target_info);
     struct hs_database *db = dbCreate(bytecode, *length, p);
     if (!db) {

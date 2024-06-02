@@ -56,6 +56,7 @@ namespace ue2 {
 
 static
 bool checkFromVertex(const NGHolder &g, NFAVertex start) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : adjacent_vertices_range(start, g)) {
         if (v == g.startDs) {
             continue;

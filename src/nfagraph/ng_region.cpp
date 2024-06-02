@@ -153,6 +153,7 @@ bool exitValid(UNUSED const AcyclicGraph &g, const vector<exit_info> &exits,
     }
 
     for (auto it = begin(exits) + 1; it != end(exits); ++it) {
+        // cppcheck-suppress useStlAlgorithm
         if (it->open != enters) {
             return false;
         }

@@ -56,7 +56,7 @@ extern "C"
     char gf_name##_Q(const struct NFA *n, struct mq *q, s64a end);             \
     char gf_name##_Q2(const struct NFA *n, struct mq *q, s64a end);            \
     char gf_name##_QR(const struct NFA *n, struct mq *q, ReportID report);     \
-    char gf_name##_reportCurrent(const struct NFA *n, struct mq *q);           \
+    char gf_name##_reportCurrent(const struct NFA *n, const struct mq *q);     \
     char gf_name##_inAccept(const struct NFA *n, ReportID report,              \
                             struct mq *q);                                     \
     char gf_name##_inAnyAccept(const struct NFA *n, struct mq *q);             \

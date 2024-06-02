@@ -77,13 +77,14 @@ static
 bool eligibleForAlwaysOnGroup(const RoseBuildImpl &build, u32 id) {
     auto eligble = [&](RoseVertex v) {
         return build.isRootSuccessor(v)
-        && (!build.g[v].left || !isAnchored(build.g[v].left));
+        && (!build.g[v].left || !isAnchored(left_id(build.g[v].left)));
     };
 
     if (any_of_in(build.literal_info[id].vertices, eligble)) {
         return true;
     }
 
+    // cppcheck-suppress useStlAlgorithm
     for (u32 delayed_id : build.literal_info[id].delayed_ids) {
         if (any_of_in(build.literal_info[delayed_id].vertices, eligble)) {
             return true;
@@ -130,6 +131,7 @@ rose_group calcLocalGroup(const RoseVertex v, const RoseGraph &g,
         for (auto w : adjacent_vertices_range(u, g)) {
             if (!small_literal_count || g[v].left == g[w].left) {
                 for (u32 lit_id : g[w].literals) {
+                    // cppcheck-suppress useStlAlgorithm
                     local_group |= literal_info[lit_id].group_mask;
                 }
             } else {
@@ -208,7 +210,7 @@ void allocateGroupForEvent(RoseBuildImpl &build, u32 group_always_on,
 
     bool new_group = !groupCount[group_always_on];
     for (RoseVertex v : info.vertices) {
-        if (build.g[v].left && !isAnchored(build.g[v].left)) {
+        if (build.g[v].left && !isAnchored(left_id(build.g[v].left))) {
             new_group = false;
         }
     }
@@ -275,7 +277,7 @@ void assignGroupsToLiterals(RoseBuildImpl &build) {
     // Second pass: the other literals.
     for (u32 id = 0; id < literals.size(); id++) {
         const rose_literal_id &lit = literals.at(id);
-        rose_literal_info &info = literal_info[id];
+        const rose_literal_info &info = literal_info[id];
 
         if (!requires_group_assignment(lit, info)) {
             continue;
@@ -409,6 +411,7 @@ rose_group RoseBuildImpl::getSuccGroups(RoseVertex start) const {
     rose_group initialGroups = 0;
 
     for (auto v : adjacent_vertices_range(start, g)) {
+        // cppcheck-suppress useStlAlgorithm
         initialGroups |= getGroups(v);
     }
 
@@ -536,6 +539,7 @@ bool coversGroup(const RoseBuildImpl &build,
     rose_group groups = lit_info.group_mask;
     while (groups) {
         u32 group_id = findAndClearLSB_64(&groups);
+        // cppcheck-suppress useStlAlgorithm
         for (u32 id : build.group_to_literal.at(group_id)) {
             DEBUG_PRINTF(" checking against friend %u\n", id);
             if (!is_subset_of(build.literal_info[id].vertices,
@@ -611,6 +615,7 @@ bool isGroupSquasher(const RoseBuildImpl &build, const u32 id /* literal id */,
         }
 
         // Out-edges must have inf max bound, + no other shenanigans */
+        // cppcheck-suppress useStlAlgorithm
         for (const auto &e : out_edges_range(v, g)) {
             if (g[e].maxBound != ROSE_BOUND_INF) {
                 return false;
@@ -629,6 +634,7 @@ bool isGroupSquasher(const RoseBuildImpl &build, const u32 id /* literal id */,
     }
 
     // Multiple-vertex case
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : lit_info.vertices) {
         assert(!build.isAnyStart(v));
 
@@ -650,6 +656,7 @@ bool isGroupSquasher(const RoseBuildImpl &build, const u32 id /* literal id */,
 
         // Out-edges must have inf max bound and not directly lead to another
         // vertex with this group, e.g. 'foobar.*foobar'.
+        // cppcheck-suppress useStlAlgorithm
         for (const auto &e : out_edges_range(v, g)) {
             if (g[e].maxBound != ROSE_BOUND_INF) {
                 return false;
@@ -660,6 +667,7 @@ bool isGroupSquasher(const RoseBuildImpl &build, const u32 id /* literal id */,
                 return false; /* is an infix rose trigger */
             }
 
+            // cppcheck-suppress useStlAlgorithm
             for (u32 lit_id : g[t].literals) {
                 if (build.literal_info[lit_id].group_mask &
                     lit_info.group_mask) {
@@ -671,6 +679,7 @@ bool isGroupSquasher(const RoseBuildImpl &build, const u32 id /* literal id */,
         // In-edges must all be dot-stars with no overlap at all, as overlap
         // also causes history to be used.
         /* Different tables are already forbidden by previous checks */
+        // cppcheck-suppress useStlAlgorithm
         for (const auto &e : in_edges_range(v, g)) {
             if (!(g[e].minBound == 0 && g[e].maxBound == ROSE_BOUND_INF)) {
                 return false;

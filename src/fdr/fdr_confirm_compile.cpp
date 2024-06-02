@@ -58,7 +58,7 @@ u64a make_u64a_mask(const vector<u8> &v) {
     u64a mask = 0;
     size_t vlen = v.size();
     size_t len = std::min(vlen, sizeof(mask));
-    unsigned char *m = (unsigned char *)&mask;
+    u8 *m = reinterpret_cast<u8 *>(&mask);
     memcpy(m + sizeof(mask) - len, &v[vlen - len], len);
     return mask;
 }
@@ -159,7 +159,7 @@ bytecode_ptr<FDRConfirm> getFDRConfirm(const vector<hwlmLiteral> &lits,
     map<u32, vector<LiteralIndex> > res2lits;
     hwlm_group_t gm = 0;
     for (LiteralIndex i = 0; i < lits.size(); i++) {
-        LitInfo & li = tmpLitInfo[i];
+        const LitInfo & li = tmpLitInfo[i];
         u32 hash = CONF_HASH_CALL(li.v, andmsk, mult, nBits);
         DEBUG_PRINTF("%016llx --> %u\n", li.v, hash);
         res2lits[hash].emplace_back(i);
@@ -245,10 +245,10 @@ bytecode_ptr<FDRConfirm> getFDRConfirm(const vector<hwlmLiteral> &lits,
     fdrc->groups = gm;
 
     // After the FDRConfirm, we have the lit index array.
-    u8 *fdrc_base = (u8 *)fdrc.get();
+    u8 *fdrc_base = reinterpret_cast<u8 *>(fdrc.get());
     u8 *ptr = fdrc_base + sizeof(*fdrc);
     ptr = ROUNDUP_PTR(ptr, alignof(u32));
-    u32 *bitsToLitIndex = (u32 *)ptr;
+    u32 *bitsToLitIndex = reinterpret_cast<u32 *>(ptr);
     ptr += bitsToLitIndexSize;
 
     // After the lit index array, we have the LitInfo structures themselves,
@@ -265,7 +265,7 @@ bytecode_ptr<FDRConfirm> getFDRConfirm(const vector<hwlmLiteral> &lits,
             LiteralIndex litIdx = *i;
 
             // Write LitInfo header.
-            LitInfo &finalLI = *(LitInfo *)ptr;
+            LitInfo &finalLI = *(reinterpret_cast<LitInfo *>(ptr));
             finalLI = tmpLitInfo[litIdx];
 
             ptr += sizeof(LitInfo); // String starts directly after LitInfo.
@@ -294,15 +294,13 @@ setupFullConfs(const vector<hwlmLiteral> &lits,
                const EngineDescription &eng,
                const map<BucketIndex, vector<LiteralIndex>> &bucketToLits,
                bool make_small) {
-    unique_ptr<TeddyEngineDescription> teddyDescr =
-        getTeddyDescription(eng.getID());
-
     BC2CONF bc2Conf;
     u32 totalConfirmSize = 0;
     for (BucketIndex b = 0; b < eng.getNumBuckets(); b++) {
         if (contains(bucketToLits, b)) {
             vector<hwlmLiteral> vl;
             for (const LiteralIndex &lit_idx : bucketToLits.at(b)) {
+                // cppcheck-suppress useStlAlgorithm
                 vl.emplace_back(lits[lit_idx]);
             }
 
@@ -320,7 +318,7 @@ setupFullConfs(const vector<hwlmLiteral> &lits,
     auto buf = make_zeroed_bytecode_ptr<u8>(totalSize, 64);
     assert(buf); // otherwise would have thrown std::bad_alloc
 
-    u32 *confBase = (u32 *)buf.get();
+    u32 *confBase = reinterpret_cast<u32 *>(buf.get());
     u8 *ptr = buf.get() + totalConfSwitchSize;
     assert(ISALIGNED_CL(ptr));
 

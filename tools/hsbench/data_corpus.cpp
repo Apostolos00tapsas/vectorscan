@@ -49,7 +49,7 @@ void readRow(sqlite3_stmt *statement, vector<DataBlock> &blocks,
              map<unsigned int, unsigned int> &stream_indices) {
     unsigned int id = sqlite3_column_int(statement, 0);
     unsigned int stream_id = sqlite3_column_int(statement, 1);
-    const char *blob = (const char *)sqlite3_column_blob(statement, 2);
+    const char *blob = reinterpret_cast<const char *>(sqlite3_column_blob(statement, 2));
     unsigned int bytes = sqlite3_column_bytes(statement, 2);
 
     if (!contains(stream_indices, stream_id)) {

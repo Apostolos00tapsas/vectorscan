@@ -80,7 +80,7 @@ class SmallWriteBuild;
 class SomSlotManager;
 
 struct suffix_id {
-    suffix_id(const RoseSuffixInfo &in)
+    explicit suffix_id(const RoseSuffixInfo &in)
         : g(in.graph.get()), c(in.castle.get()), d(in.rdfa.get()),
           h(in.haig.get()), t(in.tamarama.get()),
           dfa_min_width(in.dfa_min_width),
@@ -181,7 +181,7 @@ depth findMaxWidth(const suffix_id &s, u32 top);
 
 /** \brief represents an engine to the left of a rose role */
 struct left_id {
-    left_id(const LeftEngInfo &in)
+    explicit left_id(const LeftEngInfo &in)
         : g(in.graph.get()), c(in.castle.get()), d(in.dfa.get()),
           h(in.haig.get()), dfa_min_width(in.dfa_min_width),
           dfa_max_width(in.dfa_max_width) {

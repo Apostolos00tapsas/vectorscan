@@ -53,13 +53,13 @@ static
 const sstate_aux *get_aux(const NFA *n, dstate_id_t i) {
     assert(n && isSheng16Type(n->type));
 
-    const sheng *s = (const sheng *)getImplNfa(n);
+    const sheng *s = reinterpret_cast<const sheng *>(getImplNfa(n));
     const sstate_aux *aux_base =
-        (const sstate_aux *)((const char *)n + s->aux_offset);
+        reinterpret_cast<const sstate_aux *>(reinterpret_cast<const char *>(n) + s->aux_offset);
 
     const sstate_aux *aux = aux_base + i;
 
-    assert((const char *)aux < (const char *)s + s->length);
+    assert(reinterpret_cast<const char *>(aux) < reinterpret_cast<const char *>(s) + s->length);
 
     return aux;
 }
@@ -68,13 +68,13 @@ static
 const sstate_aux *get_aux32(const NFA *n, dstate_id_t i) {
     assert(n && isSheng32Type(n->type));
 
-    const sheng32 *s = (const sheng32 *)getImplNfa(n);
+    const sheng32 *s = reinterpret_cast<const sheng32 *>(getImplNfa(n));
     const sstate_aux *aux_base =
-        (const sstate_aux *)((const char *)n + s->aux_offset);
+        reinterpret_cast<const sstate_aux *>(reinterpret_cast<const char *>(n) + s->aux_offset);
 
     const sstate_aux *aux = aux_base + i;
 
-    assert((const char *)aux < (const char *)s + s->length);
+    assert(reinterpret_cast<const char *>(aux) < reinterpret_cast<const char *>(s) + s->length);
 
     return aux;
 }
@@ -83,13 +83,13 @@ static
 const sstate_aux *get_aux64(const NFA *n, dstate_id_t i) {
     assert(n && isSheng64Type(n->type));
 
-    const sheng64 *s = (const sheng64 *)getImplNfa(n);
+    const sheng64 *s = reinterpret_cast<const sheng64 *>(getImplNfa(n));
     const sstate_aux *aux_base =
-        (const sstate_aux *)((const char *)n + s->aux_offset);
+        reinterpret_cast<const sstate_aux *>(reinterpret_cast<const char *>(n) + s->aux_offset);
 
     const sstate_aux *aux = aux_base + i;
 
-    assert((const char *)aux < (const char *)s + s->length);
+    assert(reinterpret_cast<const char *>(aux) < reinterpret_cast<const char *>(s) + s->length);
 
     return aux;
 }
@@ -101,7 +101,7 @@ void dumpHeader(FILE *f, const sheng *s) {
     fprintf(f, "aux base offset: %u, reports base offset: %u, "
                "accel offset: %u\n",
             s->aux_offset, s->report_offset, s->accel_offset);
-    fprintf(f, "anchored start state: %u, floating start state: %u\n",
+    fprintf(f, "anchored start state: %d, floating start state: %d\n",
             s->anchored & SHENG_STATE_MASK, s->floating & SHENG_STATE_MASK);
     fprintf(f, "has accel: %u can die: %u single report: %u\n",
             !!(s->flags & SHENG_FLAG_HAS_ACCEL),
@@ -116,7 +116,7 @@ void dumpHeader32(FILE *f, const sheng32 *s) {
     fprintf(f, "aux base offset: %u, reports base offset: %u, "
                "accel offset: %u\n",
             s->aux_offset, s->report_offset, s->accel_offset);
-    fprintf(f, "anchored start state: %u, floating start state: %u\n",
+    fprintf(f, "anchored start state: %d, floating start state: %d\n",
             s->anchored & SHENG32_STATE_MASK, s->floating & SHENG32_STATE_MASK);
     fprintf(f, "has accel: %u can die: %u single report: %u\n",
             !!(s->flags & SHENG_FLAG_HAS_ACCEL),
@@ -131,7 +131,7 @@ void dumpHeader64(FILE *f, const sheng64 *s) {
     fprintf(f, "aux base offset: %u, reports base offset: %u, "
                "accel offset: %u\n",
             s->aux_offset, s->report_offset, s->accel_offset);
-    fprintf(f, "anchored start state: %u, floating start state: %u\n",
+    fprintf(f, "anchored start state: %d, floating start state: %d\n",
             s->anchored & SHENG64_STATE_MASK, s->floating & SHENG64_STATE_MASK);
     fprintf(f, "has accel: %u can die: %u single report: %u\n",
             !!(s->flags & SHENG_FLAG_HAS_ACCEL),
@@ -182,9 +182,9 @@ void dumpMasks(FILE *f, const sheng *s) {
         for (u32 pos = 0; pos < 16; pos++) {
             u8 c = buf[pos];
             if (c & SHENG_STATE_FLAG_MASK) {
-                fprintf(f, "%2u* ", c & SHENG_STATE_MASK);
+                fprintf(f, "%2d* ", c & SHENG_STATE_MASK);
             } else {
-                fprintf(f, "%2u  ", c & SHENG_STATE_MASK);
+                fprintf(f, "%2d  ", c & SHENG_STATE_MASK);
             }
         }
         fprintf(f, "\n");
@@ -202,9 +202,9 @@ void dumpMasks32(FILE *f, const sheng32 *s) {
         for (u32 pos = 0; pos < 64; pos++) {
             u8 c = buf[pos];
             if (c & SHENG32_STATE_FLAG_MASK) {
-                fprintf(f, "%2u* ", c & SHENG32_STATE_MASK);
+                fprintf(f, "%2d* ", c & SHENG32_STATE_MASK);
             } else {
-                fprintf(f, "%2u  ", c & SHENG32_STATE_MASK);
+                fprintf(f, "%2d  ", c & SHENG32_STATE_MASK);
             }
         }
         fprintf(f, "\n");
@@ -222,9 +222,9 @@ void dumpMasks64(FILE *f, const sheng64 *s) {
         for (u32 pos = 0; pos < 64; pos++) {
             u8 c = buf[pos];
             if (c & SHENG64_STATE_FLAG_MASK) {
-                fprintf(f, "%2u* ", c & SHENG64_STATE_MASK);
+                fprintf(f, "%2d* ", c & SHENG64_STATE_MASK);
             } else {
-                fprintf(f, "%2u  ", c & SHENG64_STATE_MASK);
+                fprintf(f, "%2d  ", c & SHENG64_STATE_MASK);
             }
         }
         fprintf(f, "\n");
@@ -234,7 +234,7 @@ void dumpMasks64(FILE *f, const sheng64 *s) {
 static
 void nfaExecSheng_dumpText(const NFA *nfa, FILE *f) {
     assert(nfa->type == SHENG_NFA);
-    const sheng *s = (const sheng *)getImplNfa(nfa);
+    const sheng *s = reinterpret_cast<const sheng *>(getImplNfa(nfa));
 
     fprintf(f, "sheng DFA\n");
     dumpHeader(f, s);
@@ -245,19 +245,19 @@ void nfaExecSheng_dumpText(const NFA *nfa, FILE *f) {
         if (aux->accept) {
             fprintf(f, "report list:\n");
             const report_list *rl =
-                (const report_list *)((const char *)nfa + aux->accept);
+                reinterpret_cast<const report_list *>(reinterpret_cast<const char *>(nfa) + aux->accept);
             dumpReports(f, rl);
         }
         if (aux->accept_eod) {
             fprintf(f, "EOD report list:\n");
             const report_list *rl =
-                (const report_list *)((const char *)nfa + aux->accept_eod);
+                reinterpret_cast<const report_list *>(reinterpret_cast<const char *>(nfa) + aux->accept_eod);
             dumpReports(f, rl);
         }
         if (aux->accel) {
             fprintf(f, "accel:\n");
             const AccelAux *accel =
-                (const AccelAux *)((const char *)nfa + aux->accel);
+                reinterpret_cast<const AccelAux *>(reinterpret_cast<const char *>(nfa) + aux->accel);
             dumpAccelInfo(f, *accel);
         }
     }
@@ -272,7 +272,7 @@ void nfaExecSheng_dumpText(const NFA *nfa, FILE *f) {
 static
 void nfaExecSheng32_dumpText(const NFA *nfa, FILE *f) {
     assert(nfa->type == SHENG_NFA_32);
-    const sheng32 *s = (const sheng32 *)getImplNfa(nfa);
+    const sheng32 *s = reinterpret_cast<const sheng32 *>(getImplNfa(nfa));
 
     fprintf(f, "sheng32 DFA\n");
     dumpHeader32(f, s);
@@ -283,19 +283,19 @@ void nfaExecSheng32_dumpText(const NFA *nfa, FILE *f) {
         if (aux->accept) {
             fprintf(f, "report list:\n");
             const report_list *rl =
-                (const report_list *)((const char *)nfa + aux->accept);
+                reinterpret_cast<const report_list *>(reinterpret_cast<const char *>(nfa) + aux->accept);
             dumpReports(f, rl);
         }
         if (aux->accept_eod) {
             fprintf(f, "EOD report list:\n");
             const report_list *rl =
-                (const report_list *)((const char *)nfa + aux->accept_eod);
+                reinterpret_cast<const report_list *>(reinterpret_cast<const char *>(nfa)  + aux->accept_eod);
             dumpReports(f, rl);
         }
         if (aux->accel) {
             fprintf(f, "accel:\n");
             const AccelAux *accel =
-                (const AccelAux *)((const char *)nfa + aux->accel);
+                reinterpret_cast<const AccelAux *>(reinterpret_cast<const char *>(nfa)  + aux->accel);
             dumpAccelInfo(f, *accel);
         }
     }
@@ -310,7 +310,7 @@ void nfaExecSheng32_dumpText(const NFA *nfa, FILE *f) {
 static
 void nfaExecSheng64_dumpText(const NFA *nfa, FILE *f) {
     assert(nfa->type == SHENG_NFA_64);
-    const sheng64 *s = (const sheng64 *)getImplNfa(nfa);
+    const sheng64 *s = reinterpret_cast<const sheng64 *>(getImplNfa(nfa));
 
     fprintf(f, "sheng64 DFA\n");
     dumpHeader64(f, s);
@@ -321,19 +321,19 @@ void nfaExecSheng64_dumpText(const NFA *nfa, FILE *f) {
         if (aux->accept) {
             fprintf(f, "report list:\n");
             const report_list *rl =
-                (const report_list *)((const char *)nfa + aux->accept);
+                reinterpret_cast<const report_list *>(reinterpret_cast<const char *>(nfa) + aux->accept);
             dumpReports(f, rl);
         }
         if (aux->accept_eod) {
             fprintf(f, "EOD report list:\n");
             const report_list *rl =
-                (const report_list *)((const char *)nfa + aux->accept_eod);
+                reinterpret_cast<const report_list *>(reinterpret_cast<const char *>(nfa) + aux->accept_eod);
             dumpReports(f, rl);
         }
         if (aux->accel) {
             fprintf(f, "accel:\n");
             const AccelAux *accel =
-                (const AccelAux *)((const char *)nfa + aux->accel);
+                reinterpret_cast<const AccelAux *>(reinterpret_cast<const char *>(nfa) + aux->accel);
             dumpAccelInfo(f, *accel);
         }
     }
@@ -358,7 +358,7 @@ void dumpDotPreambleDfa(FILE *f) {
 template <typename T>
 static
 void describeNode(UNUSED const NFA *n, UNUSED const T *s, UNUSED u16 i,
-                  UNUSED FILE *f) {
+                  UNUSED FILE *f) { // cppcheck-suppress constParameterPointer
 }
 
 template <>
@@ -487,7 +487,7 @@ void describeEdge(FILE *f, const u16 *t, u16 i) {
 static
 void shengGetTransitions(const NFA *n, u16 state, u16 *t) {
     assert(isSheng16Type(n->type));
-    const sheng *s = (const sheng *)getImplNfa(n);
+    const sheng *s = reinterpret_cast<const sheng *>(getImplNfa(n));
     const sstate_aux *aux = get_aux(n, state);
 
     for (unsigned i = 0; i < N_CHARS; i++) {
@@ -505,7 +505,7 @@ void shengGetTransitions(const NFA *n, u16 state, u16 *t) {
 static
 void sheng32GetTransitions(const NFA *n, u16 state, u16 *t) {
     assert(isSheng32Type(n->type));
-    const sheng32 *s = (const sheng32 *)getImplNfa(n);
+    const sheng32 *s = reinterpret_cast<const sheng32 *>(getImplNfa(n));
     const sstate_aux *aux = get_aux32(n, state);
 
     for (unsigned i = 0; i < N_CHARS; i++) {
@@ -523,7 +523,7 @@ void sheng32GetTransitions(const NFA *n, u16 state, u16 *t) {
 static
 void sheng64GetTransitions(const NFA *n, u16 state, u16 *t) {
     assert(isSheng64Type(n->type));
-    const sheng64 *s = (const sheng64 *)getImplNfa(n);
+    const sheng64 *s = reinterpret_cast<const sheng64 *>(getImplNfa(n));
     const sstate_aux *aux = get_aux64(n, state);
 
     for (unsigned i = 0; i < N_CHARS; i++) {
@@ -541,7 +541,7 @@ void sheng64GetTransitions(const NFA *n, u16 state, u16 *t) {
 static
 void nfaExecSheng_dumpDot(const NFA *nfa, FILE *f) {
     assert(nfa->type == SHENG_NFA);
-    const sheng *s = (const sheng *)getImplNfa(nfa);
+    const sheng *s = reinterpret_cast<const sheng *>(getImplNfa(nfa));
 
     dumpDotPreambleDfa(f);
 
@@ -561,7 +561,7 @@ void nfaExecSheng_dumpDot(const NFA *nfa, FILE *f) {
 static
 void nfaExecSheng32_dumpDot(const NFA *nfa, FILE *f) {
     assert(nfa->type == SHENG_NFA_32);
-    const sheng32 *s = (const sheng32 *)getImplNfa(nfa);
+    const sheng32 *s = reinterpret_cast<const sheng32 *>(getImplNfa(nfa));
 
     dumpDotPreambleDfa(f);
 
@@ -581,7 +581,7 @@ void nfaExecSheng32_dumpDot(const NFA *nfa, FILE *f) {
 static
 void nfaExecSheng64_dumpDot(const NFA *nfa, FILE *f) {
     assert(nfa->type == SHENG_NFA_64);
-    const sheng64 *s = (const sheng64 *)getImplNfa(nfa);
+    const sheng64 *s = reinterpret_cast<const sheng64 *>(getImplNfa(nfa));
 
     dumpDotPreambleDfa(f);
 

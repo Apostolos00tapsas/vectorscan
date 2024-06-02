@@ -232,6 +232,7 @@ public:
 
         // Must all be external reports.
         assert(rm);
+        // cppcheck-suppress useStlAlgorithm
         for (const auto &report_id : test_reports) {
             if (!isExternalReport(rm->getReport(report_id))) {
                 return false;
@@ -247,6 +248,7 @@ public:
         flat_set<ReportID> seen_reports;
         for (const auto &rdfa : nfas) {
             for (const auto &report_id : all_reports(*rdfa)) {
+                // cppcheck-suppress useStlAlgorithm
                 if (!seen_reports.insert(report_id).second) {
                     DEBUG_PRINTF("report %u in several dfas\n", report_id);
                     return true;

@@ -260,6 +260,7 @@ bool vertexIsBad(const NGHolder &g, NFAVertex v,
     // We must drop any vertex that is the target of a back-edge within
     // our subgraph. The tail set contains all vertices that are after v in a
     // topo ordering.
+    // cppcheck-suppress useStlAlgorithm
     for (auto u : inv_adjacent_vertices_range(v, g)) {
         if (contains(tail, u)) {
             DEBUG_PRINTF("back-edge (%zu,%zu) in subgraph found\n",
@@ -343,6 +344,7 @@ static
 void findFirstReports(const NGHolder &g, const ReachSubgraph &rsi,
                       flat_set<ReportID> &reports) {
     for (auto v : rsi.vertices) {
+        // cppcheck-suppress useStlAlgorithm
         if (is_match_vertex(v, g)) {
             reports = g[v].reports;
             return;
@@ -391,9 +393,9 @@ void checkReachSubgraphs(const NGHolder &g, vector<ReachSubgraph> &rs,
         unordered_set<NFAVertex> involved(rsi.vertices.begin(),
                                           rsi.vertices.end());
         unordered_set<NFAVertex> tail(involved); // to look for back-edges.
-        unordered_set<NFAVertex> pred, succ;
-        proper_pred(g, rsi.vertices.front(), pred);
-        proper_succ(g, rsi.vertices.back(), succ);
+        unordered_set<NFAVertex> v_pred, v_succ;
+        proper_pred(g, rsi.vertices.front(), v_pred);
+        proper_succ(g, rsi.vertices.back(), v_succ);
 
         flat_set<ReportID> reports;
         findFirstReports(g, rsi, reports);
@@ -404,7 +406,7 @@ void checkReachSubgraphs(const NGHolder &g, vector<ReachSubgraph> &rs,
         for (auto v : rsi.vertices) {
             tail.erase(v); // now contains all vertices _after_ this one.
 
-            if (vertexIsBad(g, v, involved, tail, pred, succ, reports)) {
+            if (vertexIsBad(g, v, involved, tail, v_pred, v_succ, reports)) {
                 recalc = true;
                 continue;
             }
@@ -620,6 +622,7 @@ bool processSubgraph(const NGHolder &g, ReachSubgraph &rsi,
 static
 bool allPredsInSubgraph(NFAVertex v, const NGHolder &g,
                         const unordered_set<NFAVertex> &involved) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto u : inv_adjacent_vertices_range(v, g)) {
         if (!contains(involved, u)) {
             return false;
@@ -688,6 +691,7 @@ u32 isCloseToAccept(const NGHolder &g, NFAVertex v) {
     }
 
     for (auto w : adjacent_vertices_range(v, g)) {
+        // cppcheck-suppress useStlAlgorithm
         if (is_any_accept(w, g)) {
             return 1;
         }
@@ -702,6 +706,7 @@ u32 unpeelAmount(const NGHolder &g, const ReachSubgraph &rsi) {
     u32 rv = 0;
 
     for (auto v : adjacent_vertices_range(last, g)) {
+        // cppcheck-suppress useStlAlgorithm
         rv = max(rv, isCloseToAccept(g, v));
     }
 
@@ -788,10 +793,10 @@ void replaceSubgraphWithSpecial(NGHolder &g, ReachSubgraph &rsi,
 
     const unordered_set<NFAVertex> involved(rsi.vertices.begin(),
                                                  rsi.vertices.end());
-    vector<NFAVertex> succs;
-    getSuccessors(g, rsi, &succs);
+    vector<NFAVertex> g_succs;
+    getSuccessors(g, rsi, &g_succs);
 
-    unpeelNearEnd(g, rsi, depths, &succs);
+    unpeelNearEnd(g, rsi, depths, &g_succs);
 
     // Create our replacement cyclic state with the same reachability and
     // report info as the last vertex in our topo-ordered list.
@@ -819,7 +824,7 @@ void replaceSubgraphWithSpecial(NGHolder &g, ReachSubgraph &rsi,
 
     // Wire cyclic state to tug trigger states built from successors.
     vector<NFAVertex> tugs;
-    for (auto v : succs) {
+    for (auto v : g_succs) {
         buildTugTrigger(g, cyclic, v, involved, depths, tugs);
     }
     created.insert(tugs.begin(), tugs.end());
@@ -854,11 +859,9 @@ void replaceSubgraphWithLazySpecial(NGHolder &g, ReachSubgraph &rsi,
     assert(rsi.repeatMax >= rsi.repeatMin);
 
     DEBUG_PRINTF("entry\n");
-
-    const unordered_set<NFAVertex> involved(rsi.vertices.begin(),
-                                            rsi.vertices.end());
-    vector<NFAVertex> succs;
-    getSuccessors(g, rsi, &succs);
+ 
+    vector<NFAVertex> g_succs;
+    getSuccessors(g, rsi, &g_succs);
 
     // Create our replacement cyclic state with the same reachability and
     // report info as the last vertex in our topo-ordered list.
@@ -887,15 +890,15 @@ void replaceSubgraphWithLazySpecial(NGHolder &g, ReachSubgraph &rsi,
     // In the rose case, our tug is our cyclic, and it's wired to our
     // successors (which should be just the accept).
     vector<NFAVertex> tugs;
-    assert(succs.size() == 1);
-    for (auto v : succs) {
+    assert(g_succs.size() == 1);
+    for (auto v : g_succs) {
         add_edge(cyclic, v, g);
     }
 
     // Wire pos trigger to accept if min repeat is one -- this deals with cases
     // where we can get a pos and tug trigger on the same byte.
     if (rsi.repeatMin == depth(1)) {
-        for (auto v : succs) {
+        for (auto v : g_succs) {
             add_edge(pos_trigger, v, g);
             g[pos_trigger].reports = g[cyclic].reports;
         }
@@ -995,6 +998,7 @@ bool peelSubgraph(const NGHolder &g, const Grey &grey, ReachSubgraph &rsi,
 
     // If vertices in the middle are involved in other repeats, it's a definite
     // no-no.
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : rsi.vertices) {
         if (contains(created, v)) {
             DEBUG_PRINTF("vertex %zu is in another repeat\n", g[v].index);
@@ -1075,7 +1079,9 @@ bool hasSkipEdges(const NGHolder &g, const ReachSubgraph &rsi) {
     const NFAVertex last = rsi.vertices.back();
 
     // All of the preds of first must have edges to all the successors of last.
+    // cppcheck-suppress useStlAlgorithm
     for (auto u : inv_adjacent_vertices_range(first, g)) {
+        // cppcheck-suppress useStlAlgorithm
         for (auto v : adjacent_vertices_range(last, g)) {
             if (!edge(u, v, g).second) {
                 return false;
@@ -1114,6 +1120,7 @@ bool entered_at_fixed_offset(NFAVertex v, const NGHolder &g,
     }
     DEBUG_PRINTF("first is at least %s from start\n", first.str().c_str());
 
+    // cppcheck-suppress useStlAlgorithm
     for (auto u : inv_adjacent_vertices_range(v, g)) {
         const depth &u_max_depth = depths.at(u).fromStart.max;
         DEBUG_PRINTF("pred %zu max depth %s from start\n", g[u].index,
@@ -1135,7 +1142,7 @@ NFAVertex buildTriggerStates(NGHolder &g, const vector<CharReach> &trigger,
         g[v].char_reach = cr;
         add_edge(u, v, g);
         if (u == g.start) {
-            g[edge(u, v, g)].tops.insert(top);
+            g[edge(u, v, g).first].tops.insert(top);
         }
         u = v;
     }
@@ -1204,6 +1211,7 @@ static
 CharReach predReach(const NGHolder &g, NFAVertex v) {
     CharReach cr;
     for (auto u : inv_adjacent_vertices_range(v, g)) {
+        // cppcheck-suppress useStlAlgorithm
         cr |= g[u].char_reach;
     }
     return cr;
@@ -1431,6 +1439,7 @@ struct StrawWalker {
      * inf max bound). */
     bool isBoundedRepeatCyclic(NFAVertex v) const {
         for (const auto &r : repeats) {
+            // cppcheck-suppress useStlAlgorithm
             if (r.repeatMax.is_finite() && r.cyclic == v) {
                 return true;
             }
@@ -1456,9 +1465,9 @@ struct StrawWalker {
         }
         if (ai != ae) {
             DEBUG_PRINTF("more than one succ\n");
-            set<NFAVertex> succs;
-            insert(&succs, adjacent_vertices(v, g));
-            succs.erase(v);
+            set<NFAVertex> a_succs;
+            insert(&a_succs, adjacent_vertices(v, g));
+            a_succs.erase(v);
             for (tie(ai, ae) = adjacent_vertices(v, g); ai != ae; ++ai) {
                 next = *ai;
                 DEBUG_PRINTF("checking %zu\n", g[next].index);
@@ -1468,7 +1477,7 @@ struct StrawWalker {
                 set<NFAVertex> lsuccs;
                 insert(&lsuccs, adjacent_vertices(next, g));
 
-                if (lsuccs != succs) {
+                if (lsuccs != a_succs) {
                     continue;
                 }
 
@@ -1580,6 +1589,7 @@ bool hasCyclicSupersetExitPath(const NGHolder &g, const ReachSubgraph &rsi,
 static
 bool leadsOnlyToAccept(const NGHolder &g, const ReachSubgraph &rsi) {
     const NFAVertex u = rsi.vertices.back();
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : adjacent_vertices_range(u, g)) {
         if (v != g.accept) {
             return false;
@@ -1593,6 +1603,7 @@ static
 bool allSimpleHighlander(const ReportManager &rm,
                          const flat_set<ReportID> &reports) {
     assert(!reports.empty());
+    // cppcheck-suppress useStlAlgorithm
     for (auto report : reports) {
         if (!isSimpleExhaustible(rm.getReport(report))) {
             return false;
@@ -1874,7 +1885,7 @@ void buildFeeder(NGHolder &g, const BoundedRepeatData &rd,
  * offset.
  */
 static
-bool improveLeadingRepeat(NGHolder &g, BoundedRepeatData &rd,
+bool improveLeadingRepeat(NGHolder &g, const BoundedRepeatData &rd,
                           unordered_set<NFAVertex> &created,
                           const vector<BoundedRepeatData> &all_repeats) {
     assert(edge(g.startDs, g.startDs, g).second);
@@ -1895,9 +1906,9 @@ bool improveLeadingRepeat(NGHolder &g, BoundedRepeatData &rd,
     }
 
     vector<NFAVertex> straw;
-    NFAVertex pred =
+    NFAVertex w_pred =
         walkStrawToCyclicRev(g, rd.pos_trigger, all_repeats, straw);
-    if (pred != g.startDs) {
+    if (w_pred != g.startDs) {
         DEBUG_PRINTF("straw walk doesn't lead to startDs\n");
         return false;
     }
@@ -1909,6 +1920,7 @@ bool improveLeadingRepeat(NGHolder &g, BoundedRepeatData &rd,
         DEBUG_PRINTF("startDs has other successors\n");
         return false;
     }
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &v : straw) {
         if (proper_out_degree(v, g) != 1) {
             DEBUG_PRINTF("branch between startDs and repeat, from vertex %zu\n",
@@ -1944,7 +1956,7 @@ bool improveLeadingRepeat(NGHolder &g, BoundedRepeatData &rd,
 }
 
 static
-vector<NFAVertex> makeOwnStraw(NGHolder &g, BoundedRepeatData &rd,
+vector<NFAVertex> makeOwnStraw(NGHolder &g, const BoundedRepeatData &rd,
                                const vector<NFAVertex> &straw) {
     // Straw runs from startDs to our pos trigger.
     assert(!straw.empty());
@@ -1978,7 +1990,7 @@ vector<NFAVertex> makeOwnStraw(NGHolder &g, BoundedRepeatData &rd,
  * rewire the straw to start instead of removing the startDs self-loop.
  */
 static
-bool improveLeadingRepeatOutfix(NGHolder &g, BoundedRepeatData &rd,
+bool improveLeadingRepeatOutfix(NGHolder &g, const BoundedRepeatData &rd,
                                 unordered_set<NFAVertex> &created,
                                 const vector<BoundedRepeatData> &all_repeats) {
     assert(g.kind == NFA_OUTFIX);
@@ -1999,9 +2011,9 @@ bool improveLeadingRepeatOutfix(NGHolder &g, BoundedRepeatData &rd,
     }
 
     vector<NFAVertex> straw;
-    NFAVertex pred =
+    NFAVertex w_pred =
         walkStrawToCyclicRev(g, rd.pos_trigger, all_repeats, straw);
-    if (pred != g.startDs) {
+    if (w_pred != g.startDs) {
         DEBUG_PRINTF("straw walk doesn't lead to startDs\n");
         return false;
     }
@@ -2169,6 +2181,7 @@ bool hasOverlappingRepeats(UNUSED const NGHolder &g,
             DEBUG_PRINTF("already seen pos %zu\n", g[br.pos_trigger].index);
             return true;
         }
+        // cppcheck-suppress useStlAlgorithm
         for (auto v : br.tug_triggers) {
             if (contains(involved, v)) {
                 DEBUG_PRINTF("already seen tug %zu\n", g[v].index);

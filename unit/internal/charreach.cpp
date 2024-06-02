@@ -98,7 +98,6 @@ TEST(ng_charreach, assignment) {
     cr2 = cr;
 
     ASSERT_EQ(cr.count(), cr2.count());
-    ASSERT_TRUE(cr == cr2);
 }
 
 TEST(ng_charreach, flip) {

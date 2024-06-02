@@ -73,7 +73,7 @@ Component *ComponentAlternation::accept(ComponentVisitor &v) {
     }
 
     for (auto i = children.begin(), e = children.end(); i != e; ++i) {
-        Component *child = i->get();
+        const Component *child = i->get();
         c = (*i)->accept(v);
         if (c != child) {
             // Child has been replaced (new Component pointer) or we've been
@@ -109,20 +109,20 @@ void ComponentAlternation::append(unique_ptr<Component> component) {
 vector<PositionInfo> ComponentAlternation::first() const {
     // firsts come from all our subcomponents in position order. This will
     // maintain left-to-right priority order.
-    vector<PositionInfo> firsts, subfirsts;
+    vector<PositionInfo> firsts;
 
     for (const auto &c : children) {
-        subfirsts = c->first();
+         vector<PositionInfo> subfirsts = c->first();
         firsts.insert(firsts.end(), subfirsts.begin(), subfirsts.end());
     }
     return firsts;
 }
 
 vector<PositionInfo> ComponentAlternation::last() const {
-    vector<PositionInfo> lasts, sublasts;
+    vector<PositionInfo> lasts;
 
     for (const auto &c : children) {
-        sublasts = c->last();
+        vector<PositionInfo> sublasts = c->last();
         lasts.insert(lasts.end(), sublasts.begin(), sublasts.end());
     }
     return lasts;
@@ -130,6 +130,7 @@ vector<PositionInfo> ComponentAlternation::last() const {
 
 bool ComponentAlternation::empty(void) const {
     // an alternation can be empty if any of its components are empty
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &c : children) {
         if (c->empty()) {
             return true;
@@ -173,6 +174,7 @@ bool ComponentAlternation::checkEmbeddedEndAnchor(bool at_end) const {
 }
 
 bool ComponentAlternation::vacuous_everywhere(void) const {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &c : children) {
         if (c->vacuous_everywhere()) {
             return true;

@@ -861,7 +861,7 @@ bool isUtf8CodePoint(const char c) {
 }
 
 static
-bool canReach(const NGHolder &g, const NFAEdge &e, struct fmstate &state) {
+bool canReach(const NGHolder &g, const NFAEdge &e, const struct fmstate &state) {
     auto flags = g[e].assert_flags;
     if (!flags) {
         return true;
@@ -896,7 +896,7 @@ bool canReach(const NGHolder &g, const NFAEdge &e, struct fmstate &state) {
 
 static
 void getAcceptMatches(const NGHolder &g, MatchSet &matches,
-                      struct fmstate &state, NFAVertex accept_vertex,
+                      const struct fmstate &state, NFAVertex accept_vertex,
                       vector<StateSet::State> &active_states) {
     assert(accept_vertex == g.accept || accept_vertex == g.acceptEod);
 

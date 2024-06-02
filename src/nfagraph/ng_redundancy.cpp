@@ -307,13 +307,15 @@ void markForRemoval(const NFAVertex v, VertexInfoMap &infoMap,
 
 static
 bool hasInEdgeTops(const NGHolder &g, NFAVertex v) {
-    NFAEdge e = edge(g.start, v, g);
+    
+    NFAEdge e;
+    std::tie(e, std::ignore) = edge(g.start, v, g);
     return e && !g[e].tops.empty();
 }
 
 /** Transform (1), removal of redundant vertices. */
 static
-bool doUselessMergePass(NGHolder &g, som_type som, VertexInfoMap &infoMap,
+bool doUselessMergePass(const NGHolder &g, const som_type som, VertexInfoMap &infoMap,
                         set<NFAVertex> &removable) {
     /* useless merges can be done in any order, no need to take any care with
      * ordering */
@@ -323,7 +325,7 @@ bool doUselessMergePass(NGHolder &g, som_type som, VertexInfoMap &infoMap,
 
     bool changed = false;
     for (auto v : vertices_range(g)) {
-        VertexInfo &info = infoMap[v];
+        const VertexInfo &info = infoMap[v];
 
         if (info.isRemoved) {
             continue;
@@ -439,7 +441,7 @@ bool doUselessMergePass(NGHolder &g, som_type som, VertexInfoMap &infoMap,
                 continue; // Conservatively skip anything with nonzero tops.
             }
 
-            CharReach &otherReach = g[t].char_reach;
+            const CharReach &otherReach = g[t].char_reach;
             if (currReach.isSubsetOf(otherReach)) {
                 DEBUG_PRINTF("removing redundant vertex %zu (keeping %zu)\n",
                              g[v].index, g[t].index);
@@ -636,12 +638,12 @@ bool reversePathReachSubset(const NFAEdge &e, const NFAVertex &dom,
 
     NFAVertex start = source(e, g);
     using RevGraph = boost::reverse_graph<NGHolder, const NGHolder &>;
-    map<RevGraph::vertex_descriptor, boost::default_color_type> vertexColor;
 
     // Walk the graph backwards from v, examining each node. We fail (return
     // false) if we encounter a node with reach NOT a subset of domReach, and
     // we stop searching at dom.
     try {
+        map<RevGraph::vertex_descriptor, boost::default_color_type> vertexColor;
         depth_first_visit(RevGraph(g), start,
                           ReachSubsetVisitor(domReach),
                           make_assoc_property_map(vertexColor),
@@ -664,12 +666,12 @@ bool forwardPathReachSubset(const NFAEdge &e, const NFAVertex &dom,
     }
 
     NFAVertex start = target(e, g);
-    map<NFAVertex, boost::default_color_type> vertexColor;
 
     // Walk the graph forward from v, examining each node. We fail (return
     // false) if we encounter a node with reach NOT a subset of domReach, and
     // we stop searching at dom.
     try {
+        map<NFAVertex, boost::default_color_type> vertexColor;
         depth_first_visit(g, start, ReachSubsetVisitor(domReach),
                           make_assoc_property_map(vertexColor),
                           VertexIs<NGHolder, NFAVertex>(dom));
@@ -682,6 +684,7 @@ bool forwardPathReachSubset(const NFAEdge &e, const NFAVertex &dom,
 
 static
 bool allOutsSpecial(NFAVertex v, const NGHolder &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto w : adjacent_vertices_range(v, g)) {
         if (!is_special(w, g)) {
             return false;
@@ -692,6 +695,7 @@ bool allOutsSpecial(NFAVertex v, const NGHolder &g) {
 
 static
 bool allInsSpecial(NFAVertex v, const NGHolder &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto u : inv_adjacent_vertices_range(v, g)) {
         if (!is_special(u, g)) {
             return false;
@@ -704,6 +708,7 @@ bool allInsSpecial(NFAVertex v, const NGHolder &g) {
  * just a chain of vertices with no other edges. */
 static
 bool isIrreducible(const NGHolder &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : vertices_range(g)) {
         // skip specials
         if (is_special(v, g)) {
@@ -745,7 +750,7 @@ u32 findCyclic(const NGHolder &g, vector<bool> &cyclic) {
 }
 
 static
-void findCyclicDom(NGHolder &g, vector<bool> &cyclic,
+void findCyclicDom(const NGHolder &g, vector<bool> &cyclic,
                    set<NFAEdge> &dead, som_type som) {
     auto dominators = findDominators(g);
 
@@ -789,7 +794,7 @@ void findCyclicDom(NGHolder &g, vector<bool> &cyclic,
 }
 
 static
-void findCyclicPostDom(NGHolder &g, vector<bool> &cyclic,
+void findCyclicPostDom(const NGHolder &g, vector<bool> &cyclic,
                        set<NFAEdge> &dead) {
     auto postdominators = findPostDominators(g);
 

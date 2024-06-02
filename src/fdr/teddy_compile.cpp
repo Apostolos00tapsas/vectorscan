@@ -328,7 +328,7 @@ bool pack(const vector<hwlmLiteral> &lits,
 
 static
 void initReinforcedTable(u8 *rmsk) {
-    u64a *mask = (u64a *)rmsk;
+    u64a *mask = reinterpret_cast<u64a *>(rmsk);
     fill_n(mask, N_CHARS, 0x00ffffffffffffffULL);
 }
 
@@ -576,8 +576,8 @@ bytecode_ptr<FDR> TeddyCompiler::build() {
 
     auto fdr = make_zeroed_bytecode_ptr<FDR>(size, 64);
     assert(fdr); // otherwise would have thrown std::bad_alloc
-    Teddy *teddy = (Teddy *)fdr.get(); // ugly
-    u8 *teddy_base = (u8 *)teddy;
+    Teddy *teddy = reinterpret_cast<Teddy *>(fdr.get()); // ugly
+    u8 *teddy_base = reinterpret_cast<u8 *>(teddy);
 
     // Write header.
     teddy->size = size;
@@ -622,7 +622,7 @@ bytecode_ptr<FDR> TeddyCompiler::build() {
 static
 bool assignStringsToBuckets(
                 const vector<hwlmLiteral> &lits,
-                TeddyEngineDescription &eng,
+                const TeddyEngineDescription &eng,
                 map<BucketIndex, vector<LiteralIndex>> &bucketToLits) {
     assert(eng.numMasks <= MAX_NUM_MASKS);
     if (lits.size() > eng.getNumBuckets() * TEDDY_BUCKET_LOAD) {

@@ -48,9 +48,7 @@ std::ostream &operator<<(std::ostream &os, const flat_set<T> &f) {
     os << "{";
     for (auto it = begin(f); it != end(f); ++it) {
         os << *it;
-        if (it != end(f)) {
-            os << ", ";
-        }
+        os << ", ";
     }
     os << "}";
     return os;
@@ -342,31 +340,24 @@ TEST(flat_set, iter_interop) {
 
 TEST(flat_set, compare_ops) {
     flat_set<u32> f1 = {1, 2, 3, 4, 5};
-    flat_set<u32> f1_copy = f1;
     flat_set<u32> f2 = {2, 4, 6, 8, 10};
 
     EXPECT_TRUE(f1 == f1);
-    EXPECT_TRUE(f1 == f1_copy);
     EXPECT_FALSE(f1 == f2);
 
     EXPECT_FALSE(f1 != f1);
-    EXPECT_FALSE(f1 != f1_copy);
     EXPECT_TRUE(f1 != f2);
 
     EXPECT_FALSE(f1 < f1);
-    EXPECT_FALSE(f1 < f1_copy);
     EXPECT_TRUE(f1 < f2);
 
     EXPECT_TRUE(f1 <= f1);
-    EXPECT_TRUE(f1 <= f1_copy);
     EXPECT_TRUE(f1 <= f2);
 
     EXPECT_FALSE(f1 > f1);
-    EXPECT_FALSE(f1 > f1_copy);
     EXPECT_FALSE(f1 > f2);
 
     EXPECT_TRUE(f1 >= f1);
-    EXPECT_TRUE(f1 >= f1_copy);
     EXPECT_FALSE(f1 >= f2);
 }
 

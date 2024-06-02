@@ -70,7 +70,7 @@ void noodleMatch(const u8 *data, size_t data_len, const char *lit_str,
     u32 id = 1000;
     hwlmLiteral lit(std::string(lit_str, lit_len), nocase, id);
     auto n = noodBuildTable(lit);
-    ASSERT_TRUE(n != nullptr);
+    ASSERT_TRUE(static_cast<bool>(n));
 
     hwlm_error_t rv;
     struct hs_scratch scratch;

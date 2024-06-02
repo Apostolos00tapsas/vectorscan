@@ -62,7 +62,7 @@ u32 our_clzll(u64a x) {
 TEST(BitUtils, findAndClearLSB32_1) {
     // test that it can find every single-bit case
     for (unsigned int i = 0; i < 32; i++) {
-        u32 input = 1 << i;
+        u32 input = 1U << i;
         u32 idx = findAndClearLSB_32(&input);
         EXPECT_EQ(i, idx);
         EXPECT_EQ(0U, input);
@@ -112,7 +112,7 @@ TEST(BitUtils, findAndClearLSB64_2) {
 TEST(BitUtils, findAndClearMSB32_1) {
     // test that it can find every single-bit case
     for (unsigned int i = 0; i < 32; i++) {
-        u32 input = 1 << i;
+        u32 input = 1U << i;
         u32 idx = findAndClearMSB_32(&input);
         EXPECT_EQ(i, idx);
         EXPECT_EQ(0U, input);

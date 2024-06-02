@@ -978,14 +978,14 @@ char nfaExecGough16_initCompressedState(const struct NFA *nfa, u64a offset,
 char nfaExecGough8_reportCurrent(const struct NFA *n, struct mq *q) {
     const struct mcclellan *m = (const struct mcclellan *)getImplNfa(n);
     NfaCallback cb = q->cb;
-    void *ctxt = q->context;
     u8 s = *(u8 *)q->state;
     u64a offset = q_cur_offset(q);
-    struct gough_som_info *som = getSomInfo(q->state);
+    const struct gough_som_info *som = getSomInfo(q->state);
     assert(q_cur_type(q) == MQE_START);
     assert(s);
 
     if (s >= m->accept_limit_8) {
+        void *ctxt = q->context;
         u32 cached_accept_id = 0;
         u16 cached_accept_state = 0;
         u32 cached_accept_som = 0;
@@ -1000,16 +1000,16 @@ char nfaExecGough8_reportCurrent(const struct NFA *n, struct mq *q) {
 char nfaExecGough16_reportCurrent(const struct NFA *n, struct mq *q) {
     const struct mcclellan *m = (const struct mcclellan *)getImplNfa(n);
     NfaCallback cb = q->cb;
-    void *ctxt = q->context;
     u16 s = *(u16 *)q->state;
     const struct mstate_aux *aux = get_aux(m, s);
     u64a offset = q_cur_offset(q);
-    struct gough_som_info *som = getSomInfo(q->state);
+    const struct gough_som_info *som = getSomInfo(q->state);
     assert(q_cur_type(q) == MQE_START);
     DEBUG_PRINTF("state %hu\n", s);
     assert(s);
 
     if (aux->accept) {
+        void *ctxt = q->context;
         u32 cached_accept_id = 0;
         u16 cached_accept_state = 0;
         u32 cached_accept_som = 0;

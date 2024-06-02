@@ -57,6 +57,7 @@ template<typename Graph, typename Range>
 vector<size_t> to_indices(const Range &range, const Graph &g) {
     vector<size_t> indices;
     for (const auto &elem : range) {
+        // cppcheck-suppress useStlAlgorithm
         indices.push_back(g[elem].index);
     }
     sort(indices.begin(), indices.end());
@@ -68,6 +69,7 @@ vector<size_t> to_indices(const std::initializer_list<T> &range,
                           const Graph &g) {
     vector<size_t> indices;
     for (const auto &elem : range) {
+        // cppcheck-suppress useStlAlgorithm
         indices.push_back(g[elem].index);
     }
     sort(indices.begin(), indices.end());

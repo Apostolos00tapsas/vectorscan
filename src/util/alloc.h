@@ -68,7 +68,7 @@ public:
     AlignedAllocator() noexcept {}
 
     template <class U, std::size_t N2>
-    AlignedAllocator(const AlignedAllocator<U, N2> &) noexcept {}
+    explicit AlignedAllocator(const AlignedAllocator<U, N2> &) noexcept {}
 
     template <class U> struct rebind {
         using other = AlignedAllocator<U, N>;

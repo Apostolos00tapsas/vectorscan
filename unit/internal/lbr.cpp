@@ -73,7 +73,7 @@ struct LbrTestParams {
 
 static
 int onMatch(u64a, u64a, ReportID, void *ctx) {
-    unsigned *matches = (unsigned *)ctx;
+    unsigned *matches = reinterpret_cast<unsigned *>(ctx);
     (*matches)++;
     return MO_CONTINUE_MATCHING;
 }
@@ -98,7 +98,7 @@ protected:
         ParsedExpression parsed(0, pattern.c_str(), flags, 0);
         auto built_expr = buildGraph(rm, cc, parsed);
         const auto &g = built_expr.g;
-        ASSERT_TRUE(g != nullptr);
+        ASSERT_TRUE(static_cast<bool>(g));
         clearReports(*g);
 
         rm.setProgramOffset(0, MATCH_REPORT);
@@ -106,7 +106,7 @@ protected:
         /* LBR triggered by dot */
         vector<vector<CharReach>> triggers = {{CharReach::dot()}};
         nfa = constructLBR(*g, triggers, cc, rm);
-        ASSERT_TRUE(nfa != nullptr);
+        ASSERT_TRUE(static_cast<bool>(nfa));
 
         full_state = make_bytecode_ptr<char>(nfa->scratchStateSize, 64);
         stream_state = make_bytecode_ptr<char>(nfa->streamStateSize);
@@ -191,7 +191,7 @@ TEST_P(LbrTest, MatchMin) {
     const string corpus = matchingCorpus(params.min);
 
     initQueue();
-    q.buffer = (const u8 *)corpus.c_str();
+    q.buffer = reinterpret_cast<const u8 *>(corpus.c_str());
     q.length = corpus.length();
     u64a end = corpus.length();
 
@@ -212,7 +212,7 @@ TEST_P(LbrTest, MatchMax) {
     const string corpus = matchingCorpus(params.max);
 
     initQueue();
-    q.buffer = (const u8 *)corpus.c_str();
+    q.buffer = reinterpret_cast<const u8 *>(corpus.c_str());
     q.length = corpus.length();
     u64a end = corpus.length();
 
@@ -238,7 +238,7 @@ TEST_P(LbrTest, QueueExecToMatch) {
     const string corpus = matchingCorpus(params.min);
 
     initQueue();
-    q.buffer = (const u8 *)corpus.c_str();
+    q.buffer = reinterpret_cast<const u8 *>(corpus.c_str());
     q.length = corpus.length();
     u64a end = corpus.length();
 

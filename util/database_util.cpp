@@ -94,7 +94,7 @@ hs_database_t * loadDatabase(const char *filename, bool verbose) {
     }
     size_t len = st.st_size;
 
-    bytes = (char *)mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, 0);
+    bytes = reinterpret_cast<char *>(mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, 0));
     if (bytes == MAP_FAILED) {
         cout << "mmap failed" << endl;
         close(fd);

@@ -108,14 +108,14 @@ void dumpRepeats(const limex_type *limex, u32 model_size, FILE *f) {
     fprintf(f, "\n");
     fprintf(f, "%u bounded repeats.\n", limex->repeatCount);
 
-    const char *base = (const char *)limex;
-    const u32 *repeatOffset = (const u32 *)(base + limex->repeatOffset);
+    const char *base = reinterpret_cast<const char *>(limex);
+    const u32 *repeatOffset = reinterpret_cast<const u32 *>(base + limex->repeatOffset);
 
     for (u32 i = 0; i < limex->repeatCount; i++) {
         const NFARepeatInfo *info =
-            (const NFARepeatInfo *)(base + repeatOffset[i]);
+            reinterpret_cast<const NFARepeatInfo *>(base + repeatOffset[i]);
         const RepeatInfo *repeat =
-            (const RepeatInfo *)((const char *)info + sizeof(*info));
+            reinterpret_cast<const RepeatInfo *>(reinterpret_cast<const char *>(info) + sizeof(*info));
         fprintf(f, "  repeat %u: %s {%u,%u} packedCtrlSize=%u, "
                    "stateSize=%u\n",
                 i, repeatTypeName(repeat->type), repeat->repeatMin,
@@ -123,7 +123,7 @@ void dumpRepeats(const limex_type *limex, u32 model_size, FILE *f) {
         fprintf(f, "    nfa state: stream offset %u\n", info->stateOffset);
         fprintf(f, "    ");
 
-        const u8 *tug_mask = (const u8 *)info + info->tugMaskOffset;
+        const u8 *tug_mask = reinterpret_cast<const u8 *>(info) + info->tugMaskOffset;
         dumpMask(f, "tugs", tug_mask, model_size);
     }
 
@@ -157,7 +157,7 @@ void dumpLimexReachMap(const u8 *reachMap, FILE *f) {
 template<typename limex_type>
 static
 const NFA *limex_to_nfa(const limex_type *limex) {
-    return (const NFA *)((const char *)limex - sizeof(NFA));
+    return reinterpret_cast<const NFA *>(reinterpret_cast<const char *>(limex) - sizeof(NFA));
 }
 
 template<typename limex_type>
@@ -172,8 +172,8 @@ void dumpAccel(const limex_type *limex, FILE *f) {
 
     u32 tableOffset = limex->accelTableOffset;
     u32 auxOffset = limex->accelAuxOffset;
-    const u8 *accelTable = (const u8 *)((const char *)limex + tableOffset);
-    const AccelAux *aux = (const AccelAux *)((const char *)limex + auxOffset);
+    const u8 *accelTable = reinterpret_cast<const u8 *>(reinterpret_cast<const char *>(limex) + tableOffset);
+    const AccelAux *aux = reinterpret_cast<const AccelAux *>(reinterpret_cast<const char *>(limex) + auxOffset);
 
     for (u32 i = 0; i < limex->accelCount; i++) {
         fprintf(f, "  accel %u (aux entry %u): ", i, accelTable[i]);
@@ -191,7 +191,7 @@ void dumpAcceptList(const char *limex_base, const struct NFAAccept *accepts,
             continue;
         }
         fprintf(f, "  idx %u fires report list %u:", i, a.reports);
-        const ReportID *report = (const ReportID *)(limex_base + a.reports);
+        const ReportID *report = reinterpret_cast<const ReportID *>(limex_base + a.reports);
         for (; *report != MO_INVALID_IDX; report++) {
             fprintf(f, " %u", *report);
         }
@@ -202,18 +202,18 @@ void dumpAcceptList(const char *limex_base, const struct NFAAccept *accepts,
 template<typename limex_type>
 static
 void dumpAccepts(const limex_type *limex, FILE *f) {
-    const char *limex_base = (const char *)limex;
+    const char *limex_base = reinterpret_cast<const char *>(limex);
 
     const u32 acceptCount = limex->acceptCount;
     const u32 acceptEodCount = limex->acceptEodCount;
 
     fprintf(f, "\n%u accepts.\n", acceptCount);
     const auto *accepts =
-        (const struct NFAAccept *)(limex_base + limex->acceptOffset);
+        reinterpret_cast<const struct NFAAccept *>(limex_base + limex->acceptOffset);
     dumpAcceptList(limex_base, accepts, acceptCount, f);
     fprintf(f, "\n%u accepts at EOD.\n", acceptEodCount);
     const auto *accepts_eod =
-        (const struct NFAAccept *)(limex_base + limex->acceptEodOffset);
+        reinterpret_cast<const struct NFAAccept *>(limex_base + limex->acceptEodOffset);
     dumpAcceptList(limex_base, accepts_eod, acceptEodCount, f);
     fprintf(f, "\n");
 }
@@ -224,7 +224,7 @@ void dumpSquash(const limex_type *limex, FILE *f) {
     u32 size = limex_traits<limex_type>::size;
 
     // Dump squash masks, if there are any.
-    const u8 *squashMask = (const u8 *)limex + limex->squashOffset;
+    const u8 *squashMask = reinterpret_cast<const u8 *>(limex) + limex->squashOffset;
     for (u32 i = 0; i < limex->squashCount; i++) {
         std::ostringstream name;
         name << "squash_" << i;
@@ -238,7 +238,7 @@ static
 const typename limex_traits<limex_type>::exception_type *
 getExceptionTable(const limex_type *limex) {
     return (const typename limex_traits<limex_type>::exception_type *)
-        ((const char *)limex + limex->exceptionOffset);
+        (reinterpret_cast<const char *>(limex) + limex->exceptionOffset);
 }
 
 template<typename limex_type>
@@ -248,7 +248,7 @@ void dumpLimexExceptions(const limex_type *limex, FILE *f) {
                 getExceptionTable(limex);
     const u32 size = limex_traits<limex_type>::size;
 
-    const char *limex_base = (const char *)limex;
+    const char *limex_base = reinterpret_cast<const char *>(limex);
 
     fprintf(f, "\n");
     for (u32 i = 0; i < limex->exceptionCount; i++) {
@@ -259,13 +259,13 @@ void dumpLimexExceptions(const limex_type *limex, FILE *f) {
         case LIMEX_TRIGGER_POS: fprintf(f, "  trigger: POS\n"); break;
         default: break;
         }
-        dumpMask(f, "succ", (const u8 *)&e[i].successors, size);
-        dumpMask(f, "squash", (const u8 *)&e[i].squash, size);
+        dumpMask(f, "succ", reinterpret_cast<const u8 *>(&e[i].successors), size);
+        dumpMask(f, "squash", reinterpret_cast<const u8 *>(&e[i].squash), size);
         fprintf(f, "reports: ");
         if (e[i].reports == MO_INVALID_IDX) {
             fprintf(f, " <none>\n");
         } else {
-            const ReportID *r = (const ReportID *)(limex_base + e[i].reports);
+            const ReportID *r = reinterpret_cast<const ReportID *>(limex_base + e[i].reports);
             while (*r != MO_INVALID_IDX) {
                 fprintf(f, " %u", *r++);
             }
@@ -282,7 +282,7 @@ void dumpLimexShifts(const limex_type *limex, FILE *f) {
     fprintf(f, "Shift Masks:\n");
     for(u32 i = 0; i < limex->shiftCount; i++) {
         fprintf(f, "\t Shift %u(%hhu)\t\tMask: %s\n", i, limex->shiftAmount[i],
-                dumpMask((const u8 *)&limex->shift[i], size).c_str());
+                dumpMask(reinterpret_cast<const u8 *>(&limex->shift[i]), size).c_str());
     }
 }
 template<typename limex_type>
@@ -304,20 +304,20 @@ void dumpLimexText(const limex_type *limex, FILE *f) {
     }
     fprintf(f, "\n\n");
 
-    dumpMask(f, "init", (const u8 *)&limex->init, size);
-    dumpMask(f, "init_dot_star", (const u8 *)&limex->initDS, size);
-    dumpMask(f, "accept", (const u8 *)&limex->accept, size);
-    dumpMask(f, "accept_at_eod", (const u8 *)&limex->acceptAtEOD, size);
-    dumpMask(f, "accel", (const u8 *)&limex->accel, size);
-    dumpMask(f, "accel_and_friends", (const u8 *)&limex->accel_and_friends,
+    dumpMask(f, "init", reinterpret_cast<const u8 *>(&limex->init), size);
+    dumpMask(f, "init_dot_star", reinterpret_cast<const u8 *>(&limex->initDS), size);
+    dumpMask(f, "accept", reinterpret_cast<const u8 *>(&limex->accept), size);
+    dumpMask(f, "accept_at_eod", reinterpret_cast<const u8 *>(&limex->acceptAtEOD), size);
+    dumpMask(f, "accel", reinterpret_cast<const u8 *>(&limex->accel), size);
+    dumpMask(f, "accel_and_friends", reinterpret_cast<const u8 *>(&limex->accel_and_friends),
              size);
-    dumpMask(f, "compress_mask", (const u8 *)&limex->compressMask, size);
-    dumpMask(f, "emask", (const u8 *)&limex->exceptionMask, size);
-    dumpMask(f, "zombie", (const u8 *)&limex->zombieMask, size);
+    dumpMask(f, "compress_mask", reinterpret_cast<const u8 *>(&limex->compressMask), size);
+    dumpMask(f, "emask", reinterpret_cast<const u8 *>(&limex->exceptionMask), size);
+    dumpMask(f, "zombie", reinterpret_cast<const u8 *>(&limex->zombieMask), size);
 
     // Dump top masks, if there are any.
     u32 topCount = limex->topCount;
-    const u8 *topMask = (const u8 *)limex + limex->topOffset;
+    const u8 *topMask = reinterpret_cast<const u8 *>(limex) + limex->topOffset;
     for (u32 i = 0; i < topCount; i++) {
         std::ostringstream name;
         name << "top_" << i;
@@ -331,7 +331,7 @@ void dumpLimexText(const limex_type *limex, FILE *f) {
     dumpSquash(limex, f);
 
     dumpLimexReachMap(limex->reachMap, f);
-    dumpLimexReachMasks(size, (const u8 *)limex + sizeof(*limex) /* reach*/,
+    dumpLimexReachMasks(size, reinterpret_cast<const u8 *>(limex) + sizeof(*limex) /* reach*/,
                         limex->reachSize, f);
 
     dumpAccepts(limex, f);
@@ -378,7 +378,7 @@ struct limex_labeller : public nfa_labeller {
     void label_state(FILE *f, u32 state) const override {
         const typename limex_traits<limex_type>::exception_type *exceptions
             = getExceptionTable(limex);
-        if (!testbit((const u8 *)&limex->exceptionMask,
+        if (!testbit(reinterpret_cast<const u8 *>(&limex->exceptionMask),
                      limex_traits<limex_type>::size, state)) {
             return;
         }
@@ -404,11 +404,11 @@ static
 void dumpVertexDotInfo(const limex_type *limex, u32 state_count, FILE *f,
                        const nfa_labeller &labeller) {
     u32 size = sizeof(limex->init) * 8;
-    const u8 *reach = (const u8 *)limex + sizeof(*limex);
+    const u8 *reach = reinterpret_cast<const u8 *>(limex) + sizeof(*limex);
     vector<CharReach> perStateReach;
     setupReach(limex->reachMap, reach, size, state_count, &perStateReach);
 
-    const u8 *topMask = (const u8 *)limex + limex->topOffset;
+    const u8 *topMask = reinterpret_cast<const u8 *>(limex) + limex->topOffset;
 
     for (u32 state = 0; state < state_count; state++) {
         fprintf(f, "%u [ width = 1, fixedsize = true, fontsize = 12, "
@@ -419,15 +419,15 @@ void dumpVertexDotInfo(const limex_type *limex, u32 state_count, FILE *f,
         // bung in another couple lines to push char class (the widest thing) up a bit
         fprintf(f, "\\n\\n\" ];\n");
 
-        if (testbit((const u8 *)&limex->acceptAtEOD, size, state)) {
+        if (testbit(reinterpret_cast<const u8 *>(&limex->acceptAtEOD), size, state)) {
             fprintf(f, "%u [ shape = box ];\n", state);
-        } else if (testbit((const u8 *)&limex->accept, size, state)) {
+        } else if (testbit(reinterpret_cast<const u8 *>(&limex->accept), size, state)) {
             fprintf(f, "%u [ shape = doublecircle ];\n", state);
         }
-        if (testbit((const u8 *)&limex->accel, size, state)) {
+        if (testbit(reinterpret_cast<const u8 *>(&limex->accel), size, state)) {
             fprintf(f, "%u [ color = red style = diagonals];\n", state);
         }
-        if (testbit((const u8 *)&limex->init, size, state)) {
+        if (testbit(reinterpret_cast<const u8 *>(&limex->init), size, state)) {
             fprintf(f, "START -> %u [ color = grey ];\n", state);
         }
 
@@ -447,7 +447,7 @@ template<typename limex_type>
 static
 void dumpExDotInfo(const limex_type *limex, u32 state, FILE *f) {
     u32 size = limex_traits<limex_type>::size;
-    if (!testbit((const u8 *)&limex->exceptionMask, size, state)) {
+    if (!testbit(reinterpret_cast<const u8 *>(&limex->exceptionMask), size, state)) {
         return; /* not exceptional */
     }
 
@@ -461,10 +461,10 @@ void dumpExDotInfo(const limex_type *limex, u32 state, FILE *f) {
     u32 state_count = limex_to_nfa(limex)->nPositions;
 
     for (u32 j = 0; j < state_count; j++) {
-        if (testbit((const u8 *)&e->successors, size, j)) {
+        if (testbit(reinterpret_cast<const u8 *>(&e->successors), size, j)) {
             fprintf(f, "%u -> %u [color = blue];\n", state, j);
         }
-        if (!testbit((const u8 *)&e->squash, size, j)) {
+        if (!testbit(reinterpret_cast<const u8 *>(&e->squash), size, j)) {
             fprintf(f, "%u -> %u [color = grey style = dashed];\n", state, j);
         }
     }
@@ -480,7 +480,7 @@ static
 void dumpLimDotInfo(const limex_type *limex, u32 state, FILE *f) {
     for (u32 j = 0; j < limex->shiftCount; j++) {
         const u32 shift_amount = limex->shiftAmount[j];
-        if (testbit((const u8 *)&limex->shift[j],
+        if (testbit(reinterpret_cast<const u8 *>(&limex->shift[j]),
                     limex_traits<limex_type>::size, state)) {
             fprintf(f, "%u -> %u;\n", state, state + shift_amount);
         }
@@ -502,7 +502,7 @@ void dumpLimexDot(const NFA *nfa, const limex_type *limex, FILE *f) {
 
 #define LIMEX_DUMP_FN(size)                                                    \
     void nfaExecLimEx##size##_dump(const NFA *nfa, const string &base) {       \
-        auto limex = (const LimExNFA##size *)getImplNfa(nfa);                  \
+        auto limex = reinterpret_cast<const LimExNFA##size *>(getImplNfa(nfa));                  \
         dumpLimexText(limex, StdioFile(base + ".txt", "w"));                   \
         dumpLimexDot(nfa, limex, StdioFile(base + ".dot", "w"));               \
     }

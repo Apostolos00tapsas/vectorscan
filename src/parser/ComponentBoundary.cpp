@@ -161,26 +161,26 @@ void ComponentBoundary::buildFollowSet(GlushkovBuildState &,
 
 bool ComponentBoundary::checkEmbeddedStartAnchor(bool at_start) const {
     if (at_start) {
-        return at_start;
+        return true;
     }
 
     if (m_bound == BEGIN_STRING || m_bound == BEGIN_LINE) {
         throw ParseError("Embedded start anchors not supported.");
     }
 
-    return at_start;
+    return false;
 }
 
 bool ComponentBoundary::checkEmbeddedEndAnchor(bool at_end) const {
     if (at_end) {
-        return at_end;
+        return true;
     }
 
     if (m_bound != BEGIN_STRING && m_bound != BEGIN_LINE) {
         throw ParseError("Embedded end anchors not supported.");
     }
 
-    return at_end;
+    return false;
 }
 
 } // namespace

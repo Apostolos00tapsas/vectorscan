@@ -98,9 +98,9 @@ class ClassInfo {
 public:
     struct ClassDepth {
         ClassDepth() {}
-        ClassDepth(const NFAVertexDepth &d)
+        explicit ClassDepth(const NFAVertexDepth &d)
             : d1(d.fromStart), d2(d.fromStartDotStar) {}
-        ClassDepth(const NFAVertexRevDepth &rd)
+        explicit ClassDepth(const NFAVertexRevDepth &rd)
             : d1(rd.toAccept), d2(rd.toAcceptEod) {}
         DepthMinMax d1;
         DepthMinMax d2;
@@ -159,7 +159,7 @@ public:
         return id;
     }
 
-    void append(WorkQueue &other) {
+    void append(const WorkQueue &other) {
         for (const auto &e : other) {
             push(e);
         }
@@ -193,10 +193,11 @@ private:
 }
 
 static
-bool outIsIrreducible(NFAVertex &v, const NGHolder &g) {
+bool outIsIrreducible(const NFAVertex &v, const NGHolder &g) {
     unsigned nonSpecialVertices = 0;
     for (auto w : adjacent_vertices_range(v, g)) {
         if (!is_special(w, g) && w != v) {
+            // cppcheck-suppress useStlAlgorithm
             nonSpecialVertices++;
         }
     }
@@ -204,10 +205,11 @@ bool outIsIrreducible(NFAVertex &v, const NGHolder &g) {
 }
 
 static
-bool inIsIrreducible(NFAVertex &v, const NGHolder &g) {
+bool inIsIrreducible(const NFAVertex &v, const NGHolder &g) {
     unsigned nonSpecialVertices = 0;
     for (auto u : inv_adjacent_vertices_range(v, g)) {
         if (!is_special(u, g) && u != v) {
+            // cppcheck-suppress useStlAlgorithm
             nonSpecialVertices++;
         }
     }
@@ -218,6 +220,7 @@ bool inIsIrreducible(NFAVertex &v, const NGHolder &g) {
  * just a chain of vertices with no other edges. */
 static
 bool isIrreducible(const NGHolder &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : vertices_range(g)) {
         // skip specials
         if (is_special(v, g)) {
@@ -242,11 +245,13 @@ bool isIrreducible(const NGHolder &g) {
 #ifndef NDEBUG
 static
 bool hasEdgeAsserts(NFAVertex v, const NGHolder &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &e : in_edges_range(v, g)) {
         if (g[e].assert_flags != 0) {
             return true;
         }
     }
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &e : out_edges_range(v, g)) {
         if (g[e].assert_flags != 0) {
             return true;
@@ -337,9 +342,9 @@ vector<VertexInfoSet> partitionGraph(vector<unique_ptr<VertexInfo>> &infos,
         ClassInfo::ClassDepth depth;
 
         if (eq == LEFT_EQUIVALENCE) {
-            depth = depths[vi->vert_index];
+            depth = ClassInfo::ClassDepth(depths[vi->vert_index]);
         } else {
-            depth = rdepths[vi->vert_index];
+            depth = ClassInfo::ClassDepth(rdepths[vi->vert_index]);
         }
         ClassInfo ci(g, *vi, depth, eq);
 
@@ -547,8 +552,8 @@ void mergeClass(vector<unique_ptr<VertexInfo>> &infos, NGHolder &g,
             pred_info->succ.erase(old_vertex_info);
 
             // if edge doesn't exist, create it
-            NFAEdge e = add_edge_if_not_present(pred_info->v, new_v, g);
-
+            NFAEdge e;
+            std::tie(e, std::ignore) = add_edge_if_not_present(pred_info->v, new_v, g);
             // put edge tops, if applicable
             if (!edgetops.empty()) {
                 assert(g[e].tops.empty() || g[e].tops == edgetops);
@@ -558,7 +563,8 @@ void mergeClass(vector<unique_ptr<VertexInfo>> &infos, NGHolder &g,
             pred_info->succ.insert(new_vertex_info);
 
             if (new_v_eod) {
-                NFAEdge ee = add_edge_if_not_present(pred_info->v, new_v_eod,
+                NFAEdge ee;
+                std::tie(ee, std::ignore) = add_edge_if_not_present(pred_info->v, new_v_eod,
                                                      g);
 
                 // put edge tops, if applicable

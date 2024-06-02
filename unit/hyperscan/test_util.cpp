@@ -41,7 +41,7 @@ using namespace std;
 
 int record_cb(unsigned id, unsigned long long, unsigned long long to,
               unsigned, void *ctxt) {
-    CallBackContext *c = (CallBackContext *)ctxt;
+    CallBackContext *c = reinterpret_cast<CallBackContext *>(ctxt);
 
     c->matches.emplace_back(to, id);
 
@@ -58,7 +58,7 @@ std::ostream &operator<<(std::ostream &o, const pattern &p) {
 }
 
 hs_database_t *buildDB(const vector<pattern> &patterns, unsigned int mode,
-                       hs_platform_info *plat) {
+                       const hs_platform_info *plat) {
     vector<const char *> expressions;
     vector<unsigned int> flags;
     vector<unsigned int> ids;
@@ -92,7 +92,7 @@ hs_database_t *buildDB(const pattern &expr, unsigned int mode) {
 
 hs_database_t *buildDB(const char *expression, unsigned int flags,
                        unsigned int id, unsigned int mode,
-                       hs_platform_info_t *plat) {
+                       const hs_platform_info_t *plat) {
     return buildDB({pattern(expression, flags, id)}, mode, plat);
 }
 
@@ -189,9 +189,10 @@ void *count_malloc(size_t n) {
     }
 
     allocated_count += n;
-    *(size_t *)pp = n;
-    void *p = (char *)pp + 16;
+    *(reinterpret_cast<size_t *>(pp)) = n;
+    void *p = static_cast<char *>(pp) + 16;
 
+    // cppcheck-suppress memleak
     return p;
 }
 
@@ -200,8 +201,8 @@ void count_free(void *p) {
         return;
     }
 
-    void *pp = (char *)p - 16;
-    size_t n = *(size_t *)pp;
+    void *pp = static_cast<char *>(p) - 16;
+    size_t n = *(reinterpret_cast<size_t *>(pp));
 
     allocated_count -= n;
 
@@ -215,9 +216,10 @@ void *count_malloc_b(size_t n) {
     }
 
     allocated_count_b += n;
-    *(size_t *)pp = n;
-    void *p = (char *)pp + 32;
+    *(reinterpret_cast<size_t *>(pp)) = n;
+    void *p = static_cast<char *>(pp) + 32;
 
+    // cppcheck-suppress memleak
     return p;
 }
 
@@ -226,8 +228,8 @@ void count_free_b(void *p) {
         return;
     }
 
-    void *pp = (char *)p - 32;
-    size_t n = *(size_t *)pp;
+    void *pp = static_cast<char *>(p) - 32;
+    size_t n = *(reinterpret_cast<size_t *>(pp));
 
     allocated_count_b -= n;
 

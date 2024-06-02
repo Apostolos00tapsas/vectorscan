@@ -508,7 +508,7 @@ TEST(SuperVectorUtilsTest,Movemask256c){
     u8 vec2[32] = {0};
     u32 r = rand() % 100 + 1;
     for(int i=0; i<32; i++) {
-        if (r & (1 << i)) {
+        if (r & (1U << i)) {
             vec[i] = 0xff;
         }
     }

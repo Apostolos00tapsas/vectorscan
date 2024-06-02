@@ -215,12 +215,12 @@ struct ALIGN_CL_DIRECTIVE hs_scratch {
 
 /* array of fatbit ptr; TODO: why not an array of fatbits? */
 static really_inline
-struct fatbit **getAnchoredLiteralLog(struct hs_scratch *scratch) {
+struct fatbit **getAnchoredLiteralLog(const struct hs_scratch *scratch) {
     return scratch->al_log;
 }
 
 static really_inline
-struct fatbit **getDelaySlots(struct hs_scratch *scratch) {
+struct fatbit **getDelaySlots(const struct hs_scratch *scratch) {
     return scratch->delay_slots;
 }
 

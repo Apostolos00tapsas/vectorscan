@@ -87,12 +87,11 @@ static int initLegalValidMasks(u64a validMasks[]) {
  */
 static int initLegalNegMasks(u64a negMasks[]) {
     u64a data = 0;
-    u64a offset;
     int num = 0;
     while (data != ONES64) {
         negMasks[num] = data;
         num++;
-        offset = (data | (data +1)) ^ data;
+        u64a offset = (data | (data +1)) ^ data;
         data += 0xfeULL * offset + 1;
     }
     negMasks[num] = data;

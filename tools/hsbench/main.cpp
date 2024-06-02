@@ -227,7 +227,7 @@ struct BenchmarkSigs {
 /** Process command-line arguments. Prints usage and exits on error. */
 static
 void processArgs(int argc, char *argv[], vector<BenchmarkSigs> &sigSets,
-                 UNUSED unique_ptr<Grey> &grey) {
+                 UNUSED const unique_ptr<Grey> &grey) {
     const char options[] = "-b:c:Cd:e:E:G:hHi:n:No:p:PsS:Vw:z:"
 #if defined(HAVE_DECL_PTHREAD_SETAFFINITY_NP)
         "T:" // add the thread flag
@@ -465,7 +465,7 @@ void processArgs(int argc, char *argv[], vector<BenchmarkSigs> &sigSets,
 
 /** Start the global timer. */
 static
-void startTotalTimer(ThreadContext *ctx) {
+void startTotalTimer(const ThreadContext *ctx) {
     if (ctx->num != 0) {
         return; // only runs in the first thread
     }
@@ -474,7 +474,7 @@ void startTotalTimer(ThreadContext *ctx) {
 
 /** Stop the global timer and calculate totals. */
 static
-void stopTotalTimer(ThreadContext *ctx) {
+void stopTotalTimer(const ThreadContext *ctx) {
     if (ctx->num != 0) {
         return; // only runs in the first thread
     }
@@ -485,7 +485,7 @@ void stopTotalTimer(ThreadContext *ctx) {
 /** Run a benchmark over a given engine and corpus in block mode. */
 static
 void benchBlock(void *context) {
-    ThreadContext *ctx = (ThreadContext *)context;
+    ThreadContext *ctx = reinterpret_cast<ThreadContext *>(context);
 
     // Synchronization point
     ctx->barrier();
@@ -603,7 +603,7 @@ void benchStreamingInternal(ThreadContext *ctx, vector<StreamInfo> &streams,
 /** Run a benchmark over a given engine and corpus in streaming mode. */
 static
 void benchStreaming(void *context) {
-    ThreadContext *ctx = (ThreadContext *)context;
+    ThreadContext *ctx = reinterpret_cast<ThreadContext *>(context);
     vector<StreamInfo> streams = prepStreamingData(ctx);
 
     // Synchronization point
@@ -622,7 +622,7 @@ void benchStreaming(void *context) {
 
 static
 void benchStreamingCompress(void *context) {
-    ThreadContext *ctx = (ThreadContext *)context;
+    ThreadContext *ctx = reinterpret_cast<ThreadContext *>(context);
     vector<StreamInfo> streams = prepStreamingData(ctx);
 
     // Synchronization point
@@ -671,8 +671,8 @@ vector<VectoredInfo> prepVectorData(const ThreadContext *ctx) {
 /** Run a benchmark over a given engine and corpus in vectored mode. */
 static
 void benchVectored(void *context) {
-    ThreadContext *ctx = (ThreadContext *)context;
-
+    ThreadContext *ctx = reinterpret_cast<ThreadContext *>(context);
+    
     vector<VectoredInfo> v_plans = prepVectorData(ctx);
 
     // Synchronization point
@@ -727,6 +727,7 @@ double fastestResult(const vector<unique_ptr<ThreadContext>> &threads) {
     double best = threads[0]->results[0].seconds;
     for (const auto &t : threads) {
         for (const auto &r : t->results) {
+            // cppcheck-suppress useStlAlgorithm
             best = min(best, r.seconds);
         }
     }
@@ -737,6 +738,7 @@ static
 u64a byte_size(const vector<DataBlock> &corpus_blocks) {
     u64a total = 0;
     for (const DataBlock &block : corpus_blocks) {
+        // cppcheck-suppress useStlAlgorithm
         total += block.payload.size();
     }
 
@@ -757,10 +759,9 @@ void displayResults(const vector<unique_ptr<ThreadContext>> &threads,
 
     // Sanity check: all of our results should have the same match count.
     for (const auto &t : threads) {
-        if (!all_of(begin(t->results), end(t->results),
-                    [&matchesPerRun](const ResultEntry &e) {
+        if (!all_of(begin(t->results), end(t->results), [&matchesPerRun](const ResultEntry &e) {
                         return e.matches == matchesPerRun;
-                    })) {
+                    })) { // cppcheck-suppress useStlAlgorithm
             printf("\nWARNING: PER-SCAN MATCH COUNTS ARE INCONSISTENT!\n\n");
             break;
         }
@@ -813,10 +814,9 @@ void displayCsvResults(const vector<unique_ptr<ThreadContext>> &threads,
 
     // Sanity check: all of our results should have the same match count.
     for (const auto &t : threads) {
-        if (!all_of(begin(t->results), end(t->results),
-                    [&matchesPerRun](const ResultEntry &e) {
+        if (!all_of(begin(t->results), end(t->results), [&matchesPerRun](const ResultEntry &e) {
                         return e.matches == matchesPerRun;
-                    })) {
+                    })) { // cppcheck-suppress useStlAlgorithm
             printf("\nWARNING: PER-SCAN MATCH COUNTS ARE INCONSISTENT!\n\n");
             break;
         }
@@ -867,10 +867,9 @@ void sqlResults(const vector<unique_ptr<ThreadContext>> &threads,
 
     // Sanity check: all of our results should have the same match count.
     for (const auto &t : threads) {
-        if (!all_of(begin(t->results), end(t->results),
-                    [&matchesPerRun](const ResultEntry &e) {
+        if (!all_of(begin(t->results), end(t->results), [&matchesPerRun](const ResultEntry &e) {
                         return e.matches == matchesPerRun;
-                    })) {
+                    })) { // cppcheck-suppress useStlAlgorithm
             printf("\nWARNING: PER-SCAN MATCH COUNTS ARE INCONSISTENT!\n\n");
             break;
         }
@@ -958,6 +957,7 @@ void runBenchmark(const Engine &db,
 
     for (unsigned i = 0; i < numThreads; i++) {
         auto t = makeThreadContext(db, corpus_blocks, i, sync_barrier);
+	// cppcheck-suppress knownConditionTrueFalse
         int core = useAffinity ? (int)threadCores[i] : -1;
         if (!t->start(core)) {
             printf("Unable to start processing thread %u\n", i);
@@ -1008,9 +1008,9 @@ int HS_CDECL main(int argc, char *argv[]) {
     if (sigSets.empty()) {
         SignatureSet sigs;
         sigs.reserve(exprMapTemplate.size());
-        for (auto i : exprMapTemplate | map_keys) {
-            sigs.push_back(i);
-        }
+        const auto &i = exprMapTemplate | map_keys;
+        std::copy(begin(i), end(i),  std::back_inserter(sigs));
+
         sigSets.emplace_back(exprPath, std::move(sigs));
     }
 

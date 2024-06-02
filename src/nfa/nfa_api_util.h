@@ -68,7 +68,7 @@ void pushQueueAt(struct mq * restrict q, u32 pos, u32 e, s64a loc) {
     // We assert that the event is different from its predecessor. If it's a
     // dupe, you should have used the ordinary pushQueue call.
     if (q->end) {
-        UNUSED struct mq_item *prev = &q->items[q->end - 1];
+        UNUSED const struct mq_item *prev = &q->items[q->end - 1];
         assert(prev->type != e || prev->location != loc);
     }
 #endif

@@ -164,7 +164,7 @@ ComponentSequence *enterSequence(ComponentSequence *parent,
 
     ComponentSequence *seq = child.get();
     parent->addComponent(std::move(child));
-    return seq;
+    return seq; // cppcheck-suppress returnDanglingLifetime
 }
 
 static
@@ -224,7 +224,7 @@ u8 decodeCtrl(char raw) {
 
 static
 unichar readUtf8CodePoint2c(const char *s) {
-    auto *ts = (const u8 *)s;
+    auto *ts = reinterpret_cast<const u8 *>(s);
     assert(ts[0] >= 0xc0 && ts[0] < 0xe0);
     assert(ts[1] >= 0x80 && ts[1] < 0xc0);
     unichar val = ts[0] & 0x1f;
@@ -237,7 +237,7 @@ unichar readUtf8CodePoint2c(const char *s) {
 
 static
 unichar readUtf8CodePoint3c(const char *s) {
-    auto *ts = (const u8 *)s;
+    auto *ts = reinterpret_cast<const u8 *>(s);
     assert(ts[0] >= 0xe0 && ts[0] < 0xf0);
     assert(ts[1] >= 0x80 && ts[1] < 0xc0);
     assert(ts[2] >= 0x80 && ts[2] < 0xc0);
@@ -253,7 +253,7 @@ unichar readUtf8CodePoint3c(const char *s) {
 
 static
 unichar readUtf8CodePoint4c(const char *s) {
-    auto *ts = (const u8 *)s;
+    auto *ts = reinterpret_cast<const u8 *>(s);
     assert(ts[0] >= 0xf0 && ts[0] < 0xf8);
     assert(ts[1] >= 0x80 && ts[1] < 0xc0);
     assert(ts[2] >= 0x80 && ts[2] < 0xc0);

@@ -302,8 +302,8 @@ int PE_FN(STATE_ARG, ESTATE_ARG, UNUSED u32 diffmask, STATE_T *succ,
     }
 #else
     // A copy of the estate as an array of GPR-sized chunks.
-    CHUNK_T chunks[sizeof(STATE_T) / sizeof(CHUNK_T)];
-    CHUNK_T emask_chunks[sizeof(STATE_T) / sizeof(CHUNK_T)];
+    CHUNK_T chunks[sizeof(STATE_T) / sizeof(CHUNK_T)];       // cppcheck-suppress duplicateExpression
+    CHUNK_T emask_chunks[sizeof(STATE_T) / sizeof(CHUNK_T)]; // cppcheck-suppress duplicateExpression
 #ifdef ESTATE_ON_STACK
     memcpy(chunks, &estate, sizeof(STATE_T));
 #else
@@ -311,7 +311,7 @@ int PE_FN(STATE_ARG, ESTATE_ARG, UNUSED u32 diffmask, STATE_T *succ,
 #endif
     memcpy(emask_chunks, &limex->exceptionMask, sizeof(STATE_T));
 
-    u32 base_index[sizeof(STATE_T) / sizeof(CHUNK_T)];
+    u32 base_index[sizeof(STATE_T) / sizeof(CHUNK_T)];       // cppcheck-suppress duplicateExpression
     base_index[0] = 0;
     for (s32 i = 0; i < (s32)ARRAY_LENGTH(base_index) - 1; i++) {
         base_index[i + 1] = base_index[i] + POPCOUNT_FN(emask_chunks[i]);
@@ -322,6 +322,7 @@ int PE_FN(STATE_ARG, ESTATE_ARG, UNUSED u32 diffmask, STATE_T *succ,
 #ifdef ARCH_64_BIT
         t >>= 1; // Due to diffmask64, which leaves holes in the bitmask.
 #endif
+	// cppcheck-suppress unsignedLessThanZero
         assert(t < ARRAY_LENGTH(chunks));
         CHUNK_T word = chunks[t];
         assert(word != 0);

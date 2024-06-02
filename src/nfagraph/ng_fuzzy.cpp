@@ -71,13 +71,13 @@ vector<flat_set<NFAVertex>> gatherSuccessorsByDepth(const NGHolder &g,
                 continue;
             }
 
-            for (auto succ : adjacent_vertices_range(v, g)) {
+            for (auto succr : adjacent_vertices_range(v, g)) {
                 // ignore self-loops
-                if (v == succ) {
+                if (v == succr) {
                     continue;
                 }
                 DEBUG_PRINTF("Node %zu depth %u\n", g[succ].index, d + 1);
-                next.insert(succ);
+                next.insert(succr);
             }
         }
         result[d] = next;
@@ -113,13 +113,13 @@ vector<flat_set<NFAVertex>> gatherPredecessorsByDepth(const NGHolder &g,
     for (unsigned d = 1; d < depth; d++) {
         // collect all successors for all current level vertices
         for (auto v : cur) {
-            for (auto pred : inv_adjacent_vertices_range(v, g)) {
+            for (auto predc : inv_adjacent_vertices_range(v, g)) {
                 // ignore self-loops
-                if (v == pred) {
+                if (v == predc) {
                     continue;
                 }
                 DEBUG_PRINTF("Node %zu depth %u\n", g[pred].index, d + 1);
-                next.insert(pred);
+                next.insert(predc);
             }
         }
         result[d] = next;
@@ -582,11 +582,11 @@ private:
 
         // set up all reports
         bool clone = false;
-        for (auto &pair : reports_to_vertices) {
+        for (const auto &pair : reports_to_vertices) {
             const auto &reports = pair.first;
-            const auto &vertices = pair.second;
+            const auto &svertices = pair.second;
 
-            for (auto src : vertices) {
+            for (auto src : svertices) {
                 // get all predecessors up to edit distance
                 auto src_vertices_by_depth =
                         gatherPredecessorsByDepth(g, src, edit_distance);
@@ -594,7 +594,8 @@ private:
                 // find which accepts source vertex connects to
                 flat_set<NFAVertex> targets;
                 for (const auto &accept : accepts) {
-                    NFAEdge e = edge(src, accept, g);
+                    NFAEdge e;
+                    std::tie(e, std::ignore) = edge(src, accept, g);
                     if (e) {
                         targets.insert(accept);
                     }
@@ -602,8 +603,8 @@ private:
                 assert(targets.size());
 
                 for (unsigned d = 0; d < src_vertices_by_depth.size(); d++) {
-                    const auto &preds = src_vertices_by_depth[d];
-                    for (auto v : preds) {
+                    const auto &predcs = src_vertices_by_depth[d];
+                    for (auto v : predcs) {
                         // only clone a node if it already contains reports
                         if (clone && !g[v].reports.empty()) {
                             create_clone(v, reports, edit_distance - d,
@@ -673,6 +674,7 @@ void validate_fuzzy_compile(const NGHolder &g, u32 edit_distance, bool hamming,
     }
     // graph isn't fuzzable if there are edge assertions anywhere in the graph
     for (auto e : edges_range(g)) {
+        // cppcheck-suppress useStlAlgorithm
         if (g[e].assert_flags) {
             throw CompileError("Zero-width assertions are disallowed for "
                                "approximate matching.");

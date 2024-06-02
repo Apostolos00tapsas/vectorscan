@@ -187,7 +187,7 @@ u32 SomSlotManager::getInitialResetSomSlot(const NGHolder &prefix,
             find_if(reset.entries.begin(), reset.entries.end(),
                     has_prefix_func) != reset.entries.end();
 
-        for (auto &e : reset.entries) {
+        for (const auto &e : reset.entries) {
             u32 temp = 0;
             /* we don't need to test against sentinels which are identical to
              * our current one as races don't matter and we know it clears

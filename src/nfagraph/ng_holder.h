@@ -114,6 +114,7 @@ public:
 
     nfa_kind kind; /* Role that this plays in Rose */
 
+    // cppcheck-suppress duplInheritedMember
     static const size_t N_SPECIAL_VERTICES = N_SPECIALS;
 public:
     const vertex_descriptor start;     //!< Anchored start vertex.

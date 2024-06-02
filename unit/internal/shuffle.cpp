@@ -210,14 +210,14 @@ TEST(Shuffle, PackedExtract_templatized_128_1) {
         SuperVector<16> permute = SuperVector<16>::Zeroes();
         SuperVector<16> compare = SuperVector<16>::Zeroes();
         build_pshufb_masks_onebit(i, &permute.u.v128[0], &compare.u.v128[0]);
-        EXPECT_EQ(1U, packedExtract<16>(setbit<m128>(i), permute, compare));
+        EXPECT_EQ(1U, packedExtract<16>(SuperVector<16>(setbit<m128>(i)), permute, compare));
         EXPECT_EQ(1U, packedExtract<16>(SuperVector<16>::Ones(), permute, compare));
         // we should get zero out of these cases
         EXPECT_EQ(0U, packedExtract<16>(SuperVector<16>::Zeroes(), permute, compare));
-        EXPECT_EQ(0U, packedExtract<16>(not128(setbit<m128>(i)), permute, compare));
+        EXPECT_EQ(0U, packedExtract<16>(SuperVector<16>(not128(setbit<m128>(i))), permute, compare));
         // we should get zero out of all the other bit positions
         for (unsigned int j = 0; (j != i && j < 128); j++) {
-            EXPECT_EQ(0U, packedExtract<16>(setbit<m128>(j), permute, compare));
+            EXPECT_EQ(0U, packedExtract<16>(SuperVector<16>(setbit<m128>(j)), permute, compare));
         }
     }
 }
@@ -251,14 +251,14 @@ TEST(Shuffle, PackedExtract_templatized_256_1) {
         SuperVector<32> permute = SuperVector<32>::Zeroes();
         SuperVector<32> compare = SuperVector<32>::Zeroes();
         build_pshufb_masks_onebit(i, &permute.u.v256[0], &compare.u.v256[0]);
-        EXPECT_EQ(1U, packedExtract<32>(setbit<m256>(i), permute, compare));
+        EXPECT_EQ(1U, packedExtract<32>(SuperVector<32>(setbit<m256>(i)), permute, compare));
         EXPECT_EQ(1U, packedExtract<32>(SuperVector<32>::Ones(), permute, compare));
         // we should get zero out of these cases
         EXPECT_EQ(0U, packedExtract<32>(SuperVector<32>::Zeroes(), permute, compare));
-        EXPECT_EQ(0U, packedExtract<32>(not256(setbit<m256>(i)), permute, compare));
+        EXPECT_EQ(0U, packedExtract<32>(SuperVector<32>(not256(setbit<m256>(i))), permute, compare));
         // we should get zero out of all the other bit positions
         for (unsigned int j = 0; (j != i && j < 256); j++) {
-            EXPECT_EQ(0U, packedExtract<32>(setbit<m256>(j), permute, compare));
+            EXPECT_EQ(0U, packedExtract<32>(SuperVector<32>(setbit<m256>(j)), permute, compare));
         }
     }
 }
@@ -291,14 +291,14 @@ TEST(Shuffle, PackedExtract_templatized_512_1) {
         SuperVector<64> permute = SuperVector<64>::Zeroes();
         SuperVector<64> compare = SuperVector<64>::Zeroes();
         build_pshufb_masks_onebit(i, &permute.u.v512[0], &compare.u.v512[0]);
-        EXPECT_EQ(1U, packedExtract<64>(setbit<m512>(i), permute, compare));
+        EXPECT_EQ(1U, packedExtract<64>(SuperVector<64>(setbit<m512>(i)), permute, compare));
         EXPECT_EQ(1U, packedExtract<64>(SuperVector<64>::Ones(), permute, compare));
         // we should get zero out of these cases
         EXPECT_EQ(0U, packedExtract<64>(SuperVector<64>::Zeroes(), permute, compare));
-        EXPECT_EQ(0U, packedExtract<64>(not512(setbit<m512>(i)), permute, compare));
+        EXPECT_EQ(0U, packedExtract<64>(SuperVector<64>(not512(setbit<m512>(i))), permute, compare));
         // we should get zero out of all the other bit positions
         for (unsigned int j = 0; (j != i && j < 512); j++) {
-            EXPECT_EQ(0U, packedExtract<64>(setbit<m512>(j), permute, compare));
+            EXPECT_EQ(0U, packedExtract<64>(SuperVector<64>(setbit<m512>(j)), permute, compare));
         }
     }
 }

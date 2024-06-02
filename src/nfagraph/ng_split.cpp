@@ -151,7 +151,8 @@ void splitRHS(const NGHolder &base, const vector<NFAVertex> &pivots,
 
     for (auto pivot : pivots) {
         assert(contains(*rhs_map, pivot));
-        NFAEdge e = add_edge(rhs->start, (*rhs_map)[pivot], *rhs);
+        auto edge_result = add_edge(rhs->start, (*rhs_map)[pivot], *rhs);
+        NFAEdge e = edge_result.first;
         (*rhs)[e].tops.insert(DEFAULT_TOP);
     }
 

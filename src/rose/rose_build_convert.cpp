@@ -99,7 +99,7 @@ unique_ptr<NGHolder> makeFloodProneSuffix(const ue2_literal &s, size_t len,
     NFAVertex u = h->start;
     for (auto it = s.begin() + s.length() - len; it != s.end(); ++it) {
         NFAVertex v = addHolderVertex(*it, *h);
-        NFAEdge e = add_edge(u, v, *h);
+        NFAEdge e = add_edge(u, v, *h).first;
         if (u == h->start) {
             (*h)[e].tops.insert(DEFAULT_TOP);
         }
@@ -410,7 +410,7 @@ bool handleStartPrefixCliche(const NGHolder &h, RoseGraph &g, RoseVertex v,
         assert(g[e_old].maxBound >= bound_max);
         setEdgeBounds(g, e_old, bound_min, bound_max);
     } else {
-        RoseEdge e_new = add_edge(ar, v, g);
+        RoseEdge e_new = add_edge(ar, v, g).first;
         setEdgeBounds(g, e_new, bound_min, bound_max);
         to_delete->emplace_back(e_old);
     }
@@ -561,10 +561,7 @@ bool handleMixedPrefixCliche(const NGHolder &h, RoseGraph &g, RoseVertex v,
     DEBUG_PRINTF("woot?\n");
 
     shared_ptr<NGHolder> h_new = make_shared<NGHolder>();
-    if (!h_new) {
-        assert(0);
-        throw std::bad_alloc();
-    }
+
     unordered_map<NFAVertex, NFAVertex> rhs_map;
     vector<NFAVertex> exits_vec;
     insert(&exits_vec, exits_vec.end(), exits);
@@ -606,7 +603,7 @@ bool handleMixedPrefixCliche(const NGHolder &h, RoseGraph &g, RoseVertex v,
         if (source(e_old, g) == ar) {
             setEdgeBounds(g, e_old, ri.repeatMin + width, ri.repeatMax + width);
         } else {
-            RoseEdge e_new = add_edge(ar, v, g);
+            RoseEdge e_new = add_edge(ar, v, g).first;
             setEdgeBounds(g, e_new, ri.repeatMin + width, ri.repeatMax + width);
             to_delete->emplace_back(e_old);
         }

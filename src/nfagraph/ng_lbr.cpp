@@ -72,7 +72,7 @@ u32 depth_to_u32(const depth &d) {
 
 template<class LbrStruct> static
 u64a* getTable(NFA *nfa) {
-    char *ptr = (char *)nfa + sizeof(struct NFA) + sizeof(LbrStruct) +
+    char *ptr = reinterpret_cast<char *>(nfa) + sizeof(struct NFA) + sizeof(LbrStruct) +
                 sizeof(RepeatInfo);
     ptr = ROUNDUP_PTR(ptr, alignof(u64a));
     return (u64a *)ptr;
@@ -95,7 +95,7 @@ void fillNfa(NFA *nfa, lbr_common *c, ReportID report, const depth &repeatMin,
     c->repeatInfoOffset = info_offset;
     c->report = report;
 
-    RepeatInfo *info = (RepeatInfo *)((char *)c + info_offset);
+    RepeatInfo *info = reinterpret_cast<RepeatInfo *>(reinterpret_cast<char *>(c) + info_offset);
     info->type = verify_u8(rtype);
     info->repeatMin = depth_to_u32(repeatMin);
     info->repeatMax = depth_to_u32(repeatMax);
@@ -154,14 +154,14 @@ bytecode_ptr<NFA> buildLbrDot(const CharReach &cr, const depth &repeatMin,
                               const depth &repeatMax, u32 minPeriod,
                               bool is_reset, ReportID report) {
     if (!cr.all()) {
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     enum RepeatType rtype = chooseRepeatType(repeatMin, repeatMax, minPeriod,
                                              is_reset);
     auto nfa = makeLbrNfa<lbr_dot>(LBR_NFA_DOT, rtype, repeatMax);
-    struct lbr_dot *ld = (struct lbr_dot *)getMutableImplNfa(nfa.get());
-
+    struct lbr_dot *ld = reinterpret_cast<struct lbr_dot *>getMutableImplNfa(nfa.get());
+    
     fillNfa<lbr_dot>(nfa.get(), &ld->common, report, repeatMin, repeatMax,
                      minPeriod, rtype);
 
@@ -176,13 +176,13 @@ bytecode_ptr<NFA> buildLbrVerm(const CharReach &cr, const depth &repeatMin,
     const CharReach escapes(~cr);
 
     if (escapes.count() != 1) {
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     enum RepeatType rtype = chooseRepeatType(repeatMin, repeatMax, minPeriod,
                                              is_reset);
     auto nfa = makeLbrNfa<lbr_verm>(LBR_NFA_VERM, rtype, repeatMax);
-    struct lbr_verm *lv = (struct lbr_verm *)getMutableImplNfa(nfa.get());
+    struct lbr_verm *lv = reinterpret_cast<struct lbr_verm *>(getMutableImplNfa(nfa.get()));
     lv->c = escapes.find_first();
 
     fillNfa<lbr_verm>(nfa.get(), &lv->common, report, repeatMin, repeatMax,
@@ -199,13 +199,14 @@ bytecode_ptr<NFA> buildLbrNVerm(const CharReach &cr, const depth &repeatMin,
     const CharReach escapes(cr);
 
     if (escapes.count() != 1) {
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     enum RepeatType rtype = chooseRepeatType(repeatMin, repeatMax, minPeriod,
                                              is_reset);
     auto nfa = makeLbrNfa<lbr_verm>(LBR_NFA_NVERM, rtype, repeatMax);
-    struct lbr_verm *lv = (struct lbr_verm *)getMutableImplNfa(nfa.get());
+    struct lbr_verm *lv = reinterpret_cast<struct lbr_verm *>getMutableImplNfa(nfa.get());
+    
     lv->c = escapes.find_first();
 
     fillNfa<lbr_verm>(nfa.get(), &lv->common, report, repeatMin, repeatMax,
@@ -222,13 +223,13 @@ bytecode_ptr<NFA> buildLbrShuf(const CharReach &cr, const depth &repeatMin,
     enum RepeatType rtype = chooseRepeatType(repeatMin, repeatMax, minPeriod,
                                              is_reset);
     auto nfa = makeLbrNfa<lbr_shuf>(LBR_NFA_SHUF, rtype, repeatMax);
-    struct lbr_shuf *ls = (struct lbr_shuf *)getMutableImplNfa(nfa.get());
+    struct lbr_shuf *ls = reinterpret_cast<struct lbr_shuf *>getMutableImplNfa(nfa.get());
 
     fillNfa<lbr_shuf>(nfa.get(), &ls->common, report, repeatMin, repeatMax,
                       minPeriod, rtype);
 
-    if (shuftiBuildMasks(~cr, (u8 *)&ls->mask_lo, (u8 *)&ls->mask_hi) == -1) {
-        return nullptr;
+    if (shuftiBuildMasks(~cr, reinterpret_cast<u8 *>(&ls->mask_lo), reinterpret_cast<u8 *>(&ls->mask_hi)) == -1) {
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     DEBUG_PRINTF("built shuf lbr\n");
@@ -242,12 +243,12 @@ bytecode_ptr<NFA> buildLbrTruf(const CharReach &cr, const depth &repeatMin,
     enum RepeatType rtype = chooseRepeatType(repeatMin, repeatMax, minPeriod,
                                              is_reset);
     auto nfa = makeLbrNfa<lbr_truf>(LBR_NFA_TRUF, rtype, repeatMax);
-    struct lbr_truf *lc = (struct lbr_truf *)getMutableImplNfa(nfa.get());
-
+    struct lbr_truf *lc = reinterpret_cast<struct lbr_truf *>getMutableImplNfa(nfa.get());
+    
     fillNfa<lbr_truf>(nfa.get(), &lc->common, report, repeatMin, repeatMax,
                       minPeriod, rtype);
 
-    truffleBuildMasks(~cr, (u8 *)&lc->mask1, (u8 *)&lc->mask2);
+    truffleBuildMasks(~cr, reinterpret_cast<u8 *>(&lc->mask1), reinterpret_cast<u8 *>(&lc->mask2));
 
     DEBUG_PRINTF("built truffle lbr\n");
     return nfa;
@@ -296,7 +297,7 @@ bytecode_ptr<NFA> constructLBR(const CharReach &cr, const depth &repeatMin,
 
     if (!nfa) {
         assert(0);
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     return nfa;
@@ -307,11 +308,11 @@ bytecode_ptr<NFA> constructLBR(const CastleProto &proto,
                                const CompileContext &cc,
                                const ReportManager &rm) {
     if (!cc.grey.allowLbr) {
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     if (proto.repeats.size() != 1) {
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     const PureRepeat &repeat = proto.repeats.begin()->second;
@@ -319,7 +320,7 @@ bytecode_ptr<NFA> constructLBR(const CastleProto &proto,
 
     if (repeat.reports.size() != 1) {
         DEBUG_PRINTF("too many reports\n");
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     bool is_reset;
@@ -346,16 +347,16 @@ bytecode_ptr<NFA> constructLBR(const NGHolder &g,
                                const CompileContext &cc,
                                const ReportManager &rm) {
     if (!cc.grey.allowLbr) {
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     PureRepeat repeat;
     if (!isPureRepeat(g, repeat)) {
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
     if (repeat.reports.size() != 1) {
         DEBUG_PRINTF("too many reports\n");
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     CastleProto proto(g.kind, repeat);

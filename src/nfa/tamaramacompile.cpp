@@ -32,6 +32,8 @@
  */
 
 #include "config.h"
+#include <numeric>
+
 
 #include "tamaramacompile.h"
 
@@ -41,6 +43,8 @@
 #include "repeatcompile.h"
 #include "util/container.h"
 #include "util/verify_types.h"
+
+#include <numeric>
 
 using namespace std;
 
@@ -127,9 +131,10 @@ buildTamarama(const TamaInfo &tamaInfo, const u32 queue,
         sizeof(u32) * subSize + 64; // offsets to subengines in bytecode and
                                     // padding for subengines
 
-    for (const auto &sub : tamaInfo.subengines) {
-        total_size += ROUNDUP_CL(sub->length);
-    }
+    auto subl = [](size_t z, const NFA *sub) {
+        return z + (size_t)(ROUNDUP_CL(sub->length));
+    };
+    total_size += std::accumulate(tamaInfo.subengines.begin(), tamaInfo.subengines.end(), 0, subl);
 
     // use subSize as a sentinel value for no active subengines,
     // so add one to subSize here
@@ -139,9 +144,9 @@ buildTamarama(const TamaInfo &tamaInfo, const u32 queue,
     nfa->length = verify_u32(total_size);
     nfa->queueIndex = queue;
 
-    char *ptr = (char *)nfa.get() + sizeof(NFA);
+    char *ptr = reinterpret_cast<char *>(nfa.get()) + sizeof(NFA);
     char *base_offset = ptr;
-    Tamarama *t = (Tamarama *)ptr;
+    Tamarama *t = reinterpret_cast<Tamarama *>(ptr);
     t->numSubEngines = verify_u32(subSize);
     t->activeIdxSize = verify_u8(activeIdxSize);
 
@@ -149,11 +154,11 @@ buildTamarama(const TamaInfo &tamaInfo, const u32 queue,
     copy_bytes(ptr, top_base);
     ptr += byte_length(top_base);
 
-    u32 *offsets = (u32 *)ptr;
+    u32 *offsets = reinterpret_cast<u32 *>(ptr);
     char *sub_nfa_offset = ptr + sizeof(u32) * subSize;
     copyInSubnfas(base_offset, *nfa, tamaInfo, offsets, sub_nfa_offset,
                   activeIdxSize);
-    assert((size_t)(sub_nfa_offset - (char *)nfa.get()) <= total_size);
+    assert(static_cast<size_t>(sub_nfa_offset - reinterpret_cast<char *>(nfa.get())) <= total_size);
     return nfa;
 }
 

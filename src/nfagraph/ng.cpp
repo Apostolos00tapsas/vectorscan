@@ -193,9 +193,6 @@ void reduceGraph(NGHolder &g, som_type som, bool utf8,
 
     if (!som) {
         mergeCyclicDotStars(g);
-    }
-
-    if (!som) {
         removeSiblingsOfStartDotStar(g);
     }
 }
@@ -292,7 +289,7 @@ bool addComponent(NG &ng, NGHolder &g, const ExpressionInfo &expr,
 
 // Returns true if all components have been added.
 static
-bool processComponents(NG &ng, ExpressionInfo &expr,
+bool processComponents(NG &ng, const ExpressionInfo &expr,
                        deque<unique_ptr<NGHolder>> &g_comp,
                        const som_type som) {
     const u32 num_components = g_comp.size();

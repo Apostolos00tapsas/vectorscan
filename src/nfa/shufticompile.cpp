@@ -182,6 +182,7 @@ bool shuftiBuildDoubleMasks(const CharReach &onechar,
         }
         nibble_masks.clear();
         for (const auto &e : new_masks) {
+            // cppcheck-suppress useStlAlgorithm
             nibble_masks.emplace_back(e.second);
         }
     }

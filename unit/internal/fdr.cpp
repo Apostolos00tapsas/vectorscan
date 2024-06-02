@@ -61,10 +61,10 @@ using namespace ue2;
 #define CHECK_WITH_TEDDY_OK_TO_FAIL(fdr, hint)                                 \
     {                                                                          \
         auto descr = getTeddyDescription(hint);                                \
-        if (descr && fdr == nullptr) {                                         \
+        if (descr && fdr.get() == nullptr) {                                         \
             return; /* cannot build Teddy for this set of literals */          \
         } else {                                                               \
-            ASSERT_TRUE(fdr != nullptr);                                       \
+            ASSERT_TRUE(fdr.get() != nullptr);                                       \
         }                                                                      \
     }
 #endif
@@ -138,25 +138,25 @@ vector<u32> getValidFdrEngines() {
 
 
 static
-bytecode_ptr<FDR> buildFDREngineHinted(std::vector<hwlmLiteral> &lits,
+bytecode_ptr<FDR> buildFDREngineHinted(const std::vector<hwlmLiteral> &lits,
                                        bool make_small, u32 hint,
                                        const target_t &target,
                                        const Grey &grey) {
     auto proto = fdrBuildProtoHinted(HWLM_ENGINE_FDR, lits, make_small, hint,
                                      target, grey);
     if (!proto) {
-        return nullptr;
+        return ue2::bytecode_ptr<FDR>(nullptr);
     }
     return fdrBuildTable(*proto, grey);
 }
 
 static
-bytecode_ptr<FDR> buildFDREngine(std::vector<hwlmLiteral> &lits,
+bytecode_ptr<FDR> buildFDREngine(const std::vector<hwlmLiteral> &lits,
                                  bool make_small, const target_t &target,
                                  const Grey &grey) {
     auto proto = fdrBuildProto(HWLM_ENGINE_FDR, lits, make_small, target, grey);
     if (!proto) {
-        return nullptr;
+        return bytecode_ptr<FDR>(nullptr);
     }
     return fdrBuildTable(*proto, grey);
 }
@@ -179,7 +179,7 @@ TEST_P(FDRp, Simple) {
 
     struct hs_scratch scratch;
     scratch.fdr_conf = NULL;
-    fdrExec(fdr.get(), (const u8 *)data, sizeof(data), 0, decentCallback,
+    fdrExec(fdr.get(), reinterpret_cast<const u8 *>(data), sizeof(data), 0, decentCallback,
             &scratch, HWLM_ALL_GROUPS);
 
     ASSERT_EQ(3U, matches.size());
@@ -204,7 +204,7 @@ TEST_P(FDRp, SimpleSingle) {
 
     struct hs_scratch scratch;
     scratch.fdr_conf = NULL;
-    fdrExec(fdr.get(), (const u8 *)data, sizeof(data) - 1 /* skip nul */, 0,
+    fdrExec(fdr.get(), reinterpret_cast<const u8 *>(data), sizeof(data) - 1 /* skip nul */, 0,
             decentCallback, &scratch, HWLM_ALL_GROUPS);
 
     ASSERT_EQ(4U, matches.size());
@@ -258,7 +258,7 @@ TEST_P(FDRp, NoRepeat1) {
 
     struct hs_scratch scratch;
     scratch.fdr_conf = NULL;
-    fdrExec(fdr.get(), (const u8 *)data, sizeof(data) - 1 /* skip nul */, 0,
+    fdrExec(fdr.get(), reinterpret_cast<const u8 *>(data), sizeof(data) - 1 /* skip nul */, 0,
             decentCallback, &scratch, HWLM_ALL_GROUPS);
 
     ASSERT_EQ(1U, matches.size());
@@ -282,7 +282,7 @@ TEST_P(FDRp, NoRepeat2) {
 
     struct hs_scratch scratch;
     scratch.fdr_conf = NULL;
-    fdrExec(fdr.get(), (const u8 *)data, sizeof(data) - 1 /* skip nul */, 0,
+    fdrExec(fdr.get(), reinterpret_cast<const u8 *>(data), sizeof(data) - 1 /* skip nul */, 0,
             decentCallback, &scratch, HWLM_ALL_GROUPS);
 
     ASSERT_EQ(3U, matches.size());
@@ -307,7 +307,7 @@ TEST_P(FDRp, NoRepeat3) {
 
     struct hs_scratch scratch;
     scratch.fdr_conf = NULL;
-    fdrExec(fdr.get(), (const u8 *)data, sizeof(data) - 1 /* skip nul */, 0,
+    fdrExec(fdr.get(), reinterpret_cast<const u8 *>(data), sizeof(data) - 1 /* skip nul */, 0,
             decentCallback, &scratch, HWLM_ALL_GROUPS);
 
     ASSERT_EQ(1U, matches.size());
@@ -352,7 +352,7 @@ TEST_P(FDRp, SmallStreaming) {
     expected.push_back(match(1, 1));
     expected.push_back(match(2, 1));
 
-    safeExecStreaming(fdr.get(), (const u8 *)"", 0, (const u8 *)"aaar", 4, 0,
+    safeExecStreaming(fdr.get(), reinterpret_cast<const u8 *>(""), 0, reinterpret_cast<const u8 *>("aaar"), 4, 0,
                       decentCallback, HWLM_ALL_GROUPS);
     for (u32 i = 0; i < MIN(expected.size(), matches.size()); i++) {
         EXPECT_EQ(expected[i], matches[i]);
@@ -364,7 +364,7 @@ TEST_P(FDRp, SmallStreaming) {
     expected.push_back(match(6, 1));
     expected.push_back(match(8, 10));
 
-    safeExecStreaming(fdr.get(), (const u8 *)"aaar", 4, (const u8 *)"dvark", 5,
+    safeExecStreaming(fdr.get(), reinterpret_cast<const u8 *>("aaar"), 4, reinterpret_cast<const u8 *>("dvark"), 5,
                       0, decentCallback, HWLM_ALL_GROUPS);
 
     for (u32 i = 0; i < MIN(expected.size(), matches.size()); i++) {
@@ -394,8 +394,8 @@ TEST_P(FDRp, SmallStreaming2) {
     expected.push_back(match(14,2));
     expected.push_back(match(15,2));
 
-    safeExecStreaming(fdr.get(), (const u8 *)"foobar", 6,
-                      (const u8 *)"aardvarkkk", 10, 0, decentCallback,
+    safeExecStreaming(fdr.get(), reinterpret_cast<const u8 *>("foobar"), 6,
+                      reinterpret_cast<const u8 *>("aardvarkkk"), 10, 0, decentCallback,
                       HWLM_ALL_GROUPS);
 
     for (u32 i = 0; i < MIN(expected.size(), matches.size()); i++) {
@@ -421,20 +421,20 @@ TEST_P(FDRp, moveByteStream) {
     size_t size = fdrSize(fdrTable0.get());
 
     auto fdrTable = make_bytecode_ptr<FDR>(size, 64);
-    EXPECT_NE(nullptr, fdrTable);
+    EXPECT_NE(nullptr, fdrTable.get());
 
     memcpy(fdrTable.get(), fdrTable0.get(), size);
 
     //  bugger up original
     for (size_t i = 0 ; i < size; i++) {
-        ((char *)fdrTable0.get())[i] = (i % 2) ? 0xCA : 0xFE;
+        (reinterpret_cast<char *>(fdrTable0.get()))[i] = (i % 2) ? 0xCA : 0xFE;
     }
 
     // check matches
     struct hs_scratch scratch;
     scratch.fdr_conf = NULL;
 
-    hwlm_error_t fdrStatus = fdrExec(fdrTable.get(), (const u8 *)data,
+    hwlm_error_t fdrStatus = fdrExec(fdrTable.get(), reinterpret_cast<const u8 *>(data),
                                      data_len, 0, decentCallback, &scratch,
                                      HWLM_ALL_GROUPS);
     ASSERT_EQ(0, fdrStatus);
@@ -463,8 +463,8 @@ TEST_P(FDRp, Stream1) {
 
     // check matches
 
-    fdrStatus = safeExecStreaming(fdr.get(), (const u8 *)data1, data_len1,
-                                  (const u8 *)data2, data_len2, 0,
+    fdrStatus = safeExecStreaming(fdr.get(), reinterpret_cast<const u8 *>(data1), data_len1,
+                                  reinterpret_cast<const u8 *>(data2), data_len2, 0,
                                   decentCallback, HWLM_ALL_GROUPS);
     ASSERT_EQ(0, fdrStatus);
 
@@ -509,7 +509,7 @@ TEST_P(FDRpp, AlignAndTooEarly) {
 
     // allocate aligned buffer
     auto dataBufAligned = shared_ptr<char>(
-        (char *)aligned_malloc_internal(data_len, buf_alignment),
+        reinterpret_cast<char *>(aligned_malloc_internal(data_len, buf_alignment)),
         aligned_free_internal);
 
     vector<hwlmLiteral> lits;
@@ -535,7 +535,7 @@ TEST_P(FDRpp, AlignAndTooEarly) {
 
             for (size_t j = 0; j <= litLen; j++) {
                 hwlm_error_t fdrStatus = fdrExec(fdr.get(),
-                        (const u8 *)dataBufAligned.get() + i + j,
+                        reinterpret_cast<const u8 *>(dataBufAligned.get()) + i + j,
                         4 * buf_alignment - j * 2, 0, decentCallback,
                         &scratch, HWLM_ALL_GROUPS);
                 ASSERT_EQ(0, fdrStatus);
@@ -656,7 +656,7 @@ TEST_P(FDRpa, ShortWritings) {
             const string &buf = bufs[bufIdx];
             size_t bufLen = buf.size();
 
-            hwlm_error_t fdrStatus = fdrExec(fdr.get(), (const u8 *)buf.data(),
+            hwlm_error_t fdrStatus = fdrExec(fdr.get(), reinterpret_cast<const u8 *>(buf.data()),
                         bufLen, 0, decentCallback, &scratch, HWLM_ALL_GROUPS);
             ASSERT_EQ(0, fdrStatus);
 
@@ -706,12 +706,12 @@ TEST(FDR, FDRTermS) {
     lits.push_back(hwlmLiteral("ff", 0, 1));
 
     auto fdr = buildFDREngine(lits, false, get_current_target(), Grey());
-    ASSERT_TRUE(fdr != nullptr);
+    ASSERT_TRUE(fdr.get() != nullptr);
 
     // check matches
 
-    fdrStatus = safeExecStreaming(fdr.get(), (const u8 *)data1, data_len1,
-                                  (const u8 *)data2, data_len2, 0,
+    fdrStatus = safeExecStreaming(fdr.get(), reinterpret_cast<const u8 *>(data1), data_len1,
+                                  reinterpret_cast<const u8 *>(data2), data_len2, 0,
                                   decentCallbackT, HWLM_ALL_GROUPS);
     ASSERT_EQ(HWLM_TERMINATED, fdrStatus);
 
@@ -729,13 +729,13 @@ TEST(FDR, FDRTermB) {
     lits.push_back(hwlmLiteral("ff", 0, 1));
 
     auto fdr = buildFDREngine(lits, false, get_current_target(), Grey());
-    ASSERT_TRUE(fdr != nullptr);
+    ASSERT_TRUE(fdr.get() != nullptr);
 
     // check matches
     struct hs_scratch scratch;
     scratch.fdr_conf = NULL;
 
-    fdrStatus = fdrExec(fdr.get(), (const u8 *)data1, data_len1,
+    fdrStatus = fdrExec(fdr.get(), reinterpret_cast<const u8 *>(data1), data_len1,
                         0, decentCallbackT, &scratch, HWLM_ALL_GROUPS);
     ASSERT_EQ(HWLM_TERMINATED, fdrStatus);
 

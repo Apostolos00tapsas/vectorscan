@@ -75,7 +75,7 @@ string dumpMask(const vector<u8> &v) {
 
 static
 bool maskFromLeftGraph(const LeftEngInfo &left, vector<u8> &msk,
-                       vector<u8> &cmp) {
+                       vector<u8> &lcmp) {
     const u32 lag = left.lag;
     const ReportID report = left.leftfix_report;
 
@@ -111,9 +111,9 @@ bool maskFromLeftGraph(const LeftEngInfo &left, vector<u8> &msk,
             cr |= v_cr;
             insert(&next, inv_adjacent_vertices(v, h));
         }
-        make_and_cmp_mask(cr, &msk.at(i), &cmp.at(i));
-        DEBUG_PRINTF("%zu: reach=%s, msk=%u, cmp=%u\n", i,
-                     describeClass(cr).c_str(), msk[i], cmp[i]);
+        make_and_cmp_mask(cr, &msk.at(i), &lcmp.at(i));
+        DEBUG_PRINTF("%zu: reach=%s, msk=%u, lcmp=%u\n", i,
+                     describeClass(cr).c_str(), msk[i], lcmp[i]);
         curr.swap(next);
     } while (i-- > 0);
 
@@ -122,7 +122,7 @@ bool maskFromLeftGraph(const LeftEngInfo &left, vector<u8> &msk,
 
 static
 bool maskFromLeftCastle(const LeftEngInfo &left, vector<u8> &msk,
-                        vector<u8> &cmp) {
+                        vector<u8> &lcmp) {
     const u32 lag = left.lag;
     const ReportID report = left.leftfix_report;
 
@@ -149,23 +149,23 @@ bool maskFromLeftCastle(const LeftEngInfo &left, vector<u8> &msk,
     u32 len = min_width;
     u32 end = HWLM_MASKLEN - lag;
     for (u32 i = end; i > end - min(end, len); i--) {
-        make_and_cmp_mask(c.reach(), &msk.at(i - 1), &cmp.at(i - 1));
+        make_and_cmp_mask(c.reach(), &msk.at(i - 1), &lcmp.at(i - 1));
     }
 
     return true;
 }
 
 static
-bool maskFromLeft(const LeftEngInfo &left, vector<u8> &msk, vector<u8> &cmp) {
+bool maskFromLeft(const LeftEngInfo &left, vector<u8> &msk, vector<u8> &lcmp) {
     if (left.lag >= HWLM_MASKLEN) {
         DEBUG_PRINTF("too much lag\n");
         return false;
     }
 
     if (left.graph) {
-        return maskFromLeftGraph(left, msk, cmp);
+        return maskFromLeftGraph(left, msk, lcmp);
     } else if (left.castle) {
-        return maskFromLeftCastle(left, msk, cmp);
+        return maskFromLeftCastle(left, msk, lcmp);
     }
 
     return false;
@@ -173,7 +173,7 @@ bool maskFromLeft(const LeftEngInfo &left, vector<u8> &msk, vector<u8> &cmp) {
 
 static
 bool maskFromPreds(const RoseBuildImpl &build, const rose_literal_id &id,
-                   const RoseVertex v, vector<u8> &msk, vector<u8> &cmp) {
+                   const RoseVertex v, vector<u8> &msk, vector<u8> &lcmp) {
     const RoseGraph &g = build.g;
 
     // For right now, wuss out and only handle cases with one pred.
@@ -222,7 +222,7 @@ bool maskFromPreds(const RoseBuildImpl &build, const rose_literal_id &id,
     ue2_literal::const_iterator it, ite;
     for (it = u_id.s.begin() + (u_len - u_sublen), ite = u_id.s.end();
             it != ite; ++it) {
-        make_and_cmp_mask(*it, &msk.at(i), &cmp.at(i));
+        make_and_cmp_mask(*it, &msk.at(i), &lcmp.at(i));
         ++i;
     }
 
@@ -231,21 +231,21 @@ bool maskFromPreds(const RoseBuildImpl &build, const rose_literal_id &id,
 
 static
 bool addSurroundingMask(const RoseBuildImpl &build, const rose_literal_id &id,
-                        const RoseVertex v, vector<u8> &msk, vector<u8> &cmp) {
+                        const RoseVertex v, vector<u8> &msk, vector<u8> &lcmp) {
     // Start with zero masks.
     msk.assign(HWLM_MASKLEN, 0);
-    cmp.assign(HWLM_MASKLEN, 0);
+    lcmp.assign(HWLM_MASKLEN, 0);
 
     const LeftEngInfo &left = build.g[v].left;
     if (left && left.lag < HWLM_MASKLEN) {
-        if (maskFromLeft(left, msk, cmp)) {
+        if (maskFromLeft(left, msk, lcmp)) {
             DEBUG_PRINTF("mask from a leftfix!\n");
             return true;
         }
     }
 
     if (id.s.length() < HWLM_MASKLEN) {
-        if (maskFromPreds(build, id, v, msk, cmp)) {
+        if (maskFromPreds(build, id, v, msk, lcmp)) {
             DEBUG_PRINTF("mask from preds!\n");
             return true;
         }
@@ -255,18 +255,18 @@ bool addSurroundingMask(const RoseBuildImpl &build, const rose_literal_id &id,
 }
 
 static
-bool hamsterMaskCombine(vector<u8> &msk, vector<u8> &cmp,
+bool hamsterMaskCombine(vector<u8> &msk, vector<u8> &lcmp,
                         const vector<u8> &v_msk, const vector<u8> &v_cmp) {
-    assert(msk.size() == HWLM_MASKLEN && cmp.size() == HWLM_MASKLEN);
+    assert(msk.size() == HWLM_MASKLEN && lcmp.size() == HWLM_MASKLEN);
     assert(v_msk.size() == HWLM_MASKLEN && v_cmp.size() == HWLM_MASKLEN);
 
     u8 all_masks = 0;
 
     for (size_t i = 0; i < HWLM_MASKLEN; i++) {
-        u8 filter = ~(cmp[i] ^ v_cmp[i]);
+        u8 filter = ~(lcmp[i] ^ v_cmp[i]);
         msk[i] &= v_msk[i];
         msk[i] &= filter;
-        cmp[i] &= filter;
+        lcmp[i] &= filter;
 
         all_masks |= msk[i];
     }
@@ -278,7 +278,7 @@ bool hamsterMaskCombine(vector<u8> &msk, vector<u8> &cmp,
 static
 bool addSurroundingMask(const RoseBuildImpl &build, const rose_literal_id &id,
                         const rose_literal_info &info, vector<u8> &msk,
-                        vector<u8> &cmp) {
+                        vector<u8> &lcmp) {
     if (!build.cc.grey.roseHamsterMasks) {
         return false;
     }
@@ -289,7 +289,7 @@ bool addSurroundingMask(const RoseBuildImpl &build, const rose_literal_id &id,
     }
 
     msk.assign(HWLM_MASKLEN, 0);
-    cmp.assign(HWLM_MASKLEN, 0);
+    lcmp.assign(HWLM_MASKLEN, 0);
 
     size_t num = 0;
     vector<u8> v_msk, v_cmp;
@@ -301,28 +301,28 @@ bool addSurroundingMask(const RoseBuildImpl &build, const rose_literal_id &id,
         }
 
         if (!num++) {
-            // First (or only) vertex, this becomes the mask/cmp pair.
+            // First (or only) vertex, this becomes the mask/lcmp pair.
             msk = v_msk;
-            cmp = v_cmp;
+            lcmp = v_cmp;
         } else {
             // Multiple vertices with potentially different masks. We combine
             // them into an 'advisory' mask.
-            if (!hamsterMaskCombine(msk, cmp, v_msk, v_cmp)) {
+            if (!hamsterMaskCombine(msk, lcmp, v_msk, v_cmp)) {
                 DEBUG_PRINTF("mask went to zero\n");
                 return false;
             }
         }
     }
 
-    normaliseLiteralMask(id.s, msk, cmp);
+    normaliseLiteralMask(id.s, msk, lcmp);
 
     if (msk.empty()) {
         DEBUG_PRINTF("no mask\n");
         return false;
     }
 
-    DEBUG_PRINTF("msk=%s, cmp=%s\n", dumpMask(msk).c_str(),
-                 dumpMask(cmp).c_str());
+    DEBUG_PRINTF("msk=%s, lcmp=%s\n", dumpMask(msk).c_str(),
+                 dumpMask(lcmp).c_str());
     return true;
 }
 
@@ -357,13 +357,13 @@ void findMoreLiteralMasks(RoseBuildImpl &build) {
         const auto &lit = build.literals.at(id);
         auto &lit_info = build.literal_info.at(id);
 
-        vector<u8> msk, cmp;
-        if (!addSurroundingMask(build, lit, lit_info, msk, cmp)) {
+        vector<u8> msk, lcmp;
+        if (!addSurroundingMask(build, lit, lit_info, msk, lcmp)) {
             continue;
         }
         DEBUG_PRINTF("found surrounding mask for lit_id=%u (%s)\n", id,
                      dumpString(lit.s).c_str());
-        u32 new_id = build.getLiteralId(lit.s, msk, cmp, lit.delay, lit.table);
+        u32 new_id = build.getLiteralId(lit.s, msk, lcmp, lit.delay, lit.table);
         if (new_id == id) {
             continue;
         }
@@ -392,7 +392,7 @@ void findMoreLiteralMasks(RoseBuildImpl &build) {
 // mixed-case is mandatory.
 static
 void addLiteralMask(const rose_literal_id &id, vector<u8> &msk,
-                    vector<u8> &cmp) {
+                    vector<u8> &lcmp) {
     const size_t suffix_len = min(id.s.length(), size_t{HWLM_MASKLEN});
     bool mixed_suffix = mixed_sensitivity_in(id.s.end() - suffix_len,
                                              id.s.end());
@@ -403,7 +403,7 @@ void addLiteralMask(const rose_literal_id &id, vector<u8> &msk,
 
     while (msk.size() < HWLM_MASKLEN) {
         msk.insert(msk.begin(), 0);
-        cmp.insert(cmp.begin(), 0);
+        lcmp.insert(lcmp.begin(), 0);
     }
 
     if (!id.msk.empty()) {
@@ -413,7 +413,7 @@ void addLiteralMask(const rose_literal_id &id, vector<u8> &msk,
             size_t mand_offset = msk.size() - i - 1;
             size_t lit_offset = id.msk.size() - i - 1;
             msk[mand_offset] = id.msk[lit_offset];
-            cmp[mand_offset] = id.cmp[lit_offset];
+            lcmp[mand_offset] = id.cmp[lit_offset];
         }
     }
 
@@ -425,12 +425,12 @@ void addLiteralMask(const rose_literal_id &id, vector<u8> &msk,
                 size_t offset = HWLM_MASKLEN - i - 1;
                 DEBUG_PRINTF("offset %zu must match 0x%02x exactly\n", offset,
                              c.c);
-                make_and_cmp_mask(c, &msk[offset], &cmp[offset]);
+                make_and_cmp_mask(c, &msk[offset], &lcmp[offset]);
             }
         }
     }
 
-    normaliseLiteralMask(id.s, msk, cmp);
+    normaliseLiteralMask(id.s, msk, lcmp);
 }
 
 static
@@ -477,10 +477,10 @@ bool isNoRunsVertex(const RoseBuildImpl &build, RoseVertex u) {
         DEBUG_PRINTF("u=%zu is not a root role\n", g[u].index);
         return false;
     }
+    auto edge_result = edge(build.root, u, g);
+    RoseEdge e = edge_result.first;
 
-    RoseEdge e = edge(build.root, u, g);
-
-    if (!e) {
+    if (!edge_result.second) {
         DEBUG_PRINTF("u=%zu is not a root role\n", g[u].index);
         return false;
     }
@@ -490,6 +490,7 @@ bool isNoRunsVertex(const RoseBuildImpl &build, RoseVertex u) {
         return false;
     }
 
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &oe : out_edges_range(u, g)) {
         RoseVertex v = target(oe, g);
         if (g[oe].maxBound != ROSE_BOUND_INF) {
@@ -532,6 +533,7 @@ bool isNoRunsLiteral(const RoseBuildImpl &build, const u32 id,
     }
 
     // Undelayed vertices.
+    // cppcheck-suppress useStlAlgorithm
     for (RoseVertex v : info.vertices) {
         if (!isNoRunsVertex(build, v)) {
             return false;
@@ -543,6 +545,7 @@ bool isNoRunsLiteral(const RoseBuildImpl &build, const u32 id,
         assert(d < build.literal_info.size());
         const rose_literal_info &delayed_info = build.literal_info.at(d);
         assert(delayed_info.undelayed_id == id);
+        // cppcheck-suppress useStlAlgorithm
         for (RoseVertex v : delayed_info.vertices) {
             if (!isNoRunsVertex(build, v)) {
                 return false;
@@ -635,7 +638,7 @@ u64a literalMinReportOffset(const RoseBuildImpl &build,
         }
 
         if (g[v].suffix) {
-            depth suffix_width = findMinWidth(g[v].suffix, g[v].suffix.top);
+            depth suffix_width = findMinWidth(suffix_id(g[v].suffix), g[v].suffix.top);
             assert(suffix_width.is_reachable());
             DEBUG_PRINTF("suffix with width %s\n", suffix_width.str().c_str());
             min_offset = min(min_offset, vert_offset + suffix_width);
@@ -704,7 +707,7 @@ void addFragmentLiteral(const RoseBuildImpl &build, MatcherProto &mp,
                  lit.s.length());
 
     vector<u8> msk = lit.msk; // copy
-    vector<u8> cmp = lit.cmp; // copy
+    vector<u8> lcmp = lit.cmp; // copy
 
     bool noruns = isNoRunsFragment(build, f, max_len);
     DEBUG_PRINTF("fragment is %s\n", noruns ? "noruns" : "not noruns");
@@ -720,24 +723,24 @@ void addFragmentLiteral(const RoseBuildImpl &build, MatcherProto &mp,
         assert(!noruns);
     }
 
-    addLiteralMask(lit, msk, cmp);
+    addLiteralMask(lit, msk, lcmp);
 
     const auto &s_final = lit_final.get_string();
     bool nocase = lit_final.any_nocase();
 
-    DEBUG_PRINTF("id=%u, s='%s', nocase=%d, noruns=%d, msk=%s, cmp=%s\n",
+    DEBUG_PRINTF("id=%u, s='%s', nocase=%d, noruns=%d, msk=%s, lcmp=%s\n",
                  f.fragment_id, escapeString(s_final).c_str(), (int)nocase,
-                 noruns, dumpMask(msk).c_str(), dumpMask(cmp).c_str());
+                 noruns, dumpMask(msk).c_str(), dumpMask(lcmp).c_str());
 
-    if (!maskIsConsistent(s_final, nocase, msk, cmp)) {
-        DEBUG_PRINTF("msk/cmp for literal can't match, skipping\n");
+    if (!maskIsConsistent(s_final, nocase, msk, lcmp)) {
+        DEBUG_PRINTF("msk/lcmp for literal can't match, skipping\n");
         return;
     }
 
     const auto &groups = f.groups;
 
     mp.lits.emplace_back(std::move(s_final), nocase, noruns, f.fragment_id,
-                         groups, msk, cmp);
+                         groups, msk, lcmp);
 }
 
 static
@@ -748,11 +751,11 @@ void addAccelLiteral(MatcherProto &mp, const rose_literal_id &lit,
     DEBUG_PRINTF("lit='%s' (len %zu)\n", dumpString(s).c_str(), s.length());
 
     vector<u8> msk = lit.msk; // copy
-    vector<u8> cmp = lit.cmp; // copy
-    addLiteralMask(lit, msk, cmp);
+    vector<u8> lcmp = lit.cmp; // copy
+    addLiteralMask(lit, msk, lcmp);
 
-    if (!maskIsConsistent(s.get_string(), s.any_nocase(), msk, cmp)) {
-        DEBUG_PRINTF("msk/cmp for literal can't match, skipping\n");
+    if (!maskIsConsistent(s.get_string(), s.any_nocase(), msk, lcmp)) {
+        DEBUG_PRINTF("msk/lcmp for literal can't match, skipping\n");
         return;
     }
 
@@ -761,9 +764,9 @@ void addAccelLiteral(MatcherProto &mp, const rose_literal_id &lit,
     string s_final = lit.s.get_string();
     trim_to_suffix(s_final, max_len);
     trim_to_suffix(msk, max_len);
-    trim_to_suffix(cmp, max_len);
+    trim_to_suffix(lcmp, max_len);
 
-    mp.accel_lits.emplace_back(s_final, lit.s.any_nocase(), msk, cmp,
+    mp.accel_lits.emplace_back(s_final, lit.s.any_nocase(), msk, lcmp,
                                info.group_mask);
 }
 
@@ -884,9 +887,9 @@ void buildAccel(const RoseBuildImpl &build,
 }
 
 bytecode_ptr<HWLM>
-buildHWLMMatcher(const RoseBuildImpl &build, LitProto *litProto) {
+buildHWLMMatcher(const RoseBuildImpl &build, const LitProto *litProto) {
     if (!litProto) {
-        return nullptr;
+        return bytecode_ptr<HWLM>(nullptr);
     }
     auto hwlm = hwlmBuild(*litProto->hwlmProto, build.cc,
                           build.getInitialGroups());

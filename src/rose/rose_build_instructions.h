@@ -2319,7 +2319,7 @@ class RoseInstrSetCombination
 public:
     u32 ckey;
 
-    RoseInstrSetCombination(u32 ckey_in) : ckey(ckey_in) {}
+    explicit RoseInstrSetCombination(u32 ckey_in) : ckey(ckey_in) {}
 
     bool operator==(const RoseInstrSetCombination &ri) const {
         return ckey == ri.ckey;
@@ -2361,7 +2361,7 @@ class RoseInstrSetExhaust
 public:
     u32 ekey;
 
-    RoseInstrSetExhaust(u32 ekey_in) : ekey(ekey_in) {}
+    explicit RoseInstrSetExhaust(u32 ekey_in) : ekey(ekey_in) {}
 
     bool operator==(const RoseInstrSetExhaust &ri) const {
         return ekey == ri.ekey;

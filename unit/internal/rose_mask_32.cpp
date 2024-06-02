@@ -40,9 +40,9 @@ union RoseLookaroundMask32 {
 
 struct ValidateMask32TestInfo {
     RoseLookaroundMask32 data;
-    u32 valid_mask;
     RoseLookaroundMask32 and_mask;
     RoseLookaroundMask32 cmp_mask;
+    u32 valid_mask;
     u32 neg_mask;
 };
 
@@ -194,10 +194,9 @@ TEST(ValidateMask32, testMask32_3) {
             u32 valid_mask = ONES32 << (left + right) >> left;
             for (int i = 0; i < test_len; i++) {
                 const auto &t = testBasic[i];
-                int bool_result;
                 for (int j = 0; j < 5000; j++) {
                     u32 neg_mask = neg_mask_rand.Generate(1u << 31);
-                    bool_result = (neg_mask & valid_mask) ==
+                    int bool_result = (neg_mask & valid_mask) ==
                                   (t.neg_mask & valid_mask);
                     EXPECT_EQ(bool_result, validateMask32(t.data.a256,
                                                           valid_mask,

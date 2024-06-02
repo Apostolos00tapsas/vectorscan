@@ -60,7 +60,7 @@ std::vector<raw_dfa> buildAnchoredDfas(RoseBuildImpl &build,
  * given in litPrograms.
  */
 bytecode_ptr<anchored_matcher_info>
-buildAnchoredMatcher(RoseBuildImpl &build,
+buildAnchoredMatcher(const RoseBuildImpl &build,
                      const std::vector<LitFragment> &fragments,
                      std::vector<raw_dfa> &dfas);
 

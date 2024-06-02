@@ -52,7 +52,7 @@ u8 hasInterestingStates(const u8 a, const u8 b, const u8 c, const u8 d) {
     return (a | b | c | d) & (SHENG_STATE_FLAG_MASK);
 }
 
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 static really_inline
 u8 isDeadState32(const u8 a) {
     return a & SHENG32_STATE_DEAD;
@@ -108,7 +108,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define SHENG_IMPL sheng_cod
 #define DEAD_FUNC isDeadState
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_cod
 #define DEAD_FUNC32 isDeadState32
 #define ACCEPT_FUNC32 isAcceptState32
@@ -121,7 +121,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef SHENG_IMPL
 #undef DEAD_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef DEAD_FUNC32
 #undef ACCEPT_FUNC32
@@ -135,7 +135,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define SHENG_IMPL sheng_co
 #define DEAD_FUNC dummyFunc
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_co
 #define DEAD_FUNC32 dummyFunc
 #define ACCEPT_FUNC32 isAcceptState32
@@ -148,7 +148,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef SHENG_IMPL
 #undef DEAD_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef DEAD_FUNC32
 #undef ACCEPT_FUNC32
@@ -162,7 +162,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define SHENG_IMPL sheng_samd
 #define DEAD_FUNC isDeadState
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_samd
 #define DEAD_FUNC32 isDeadState32
 #define ACCEPT_FUNC32 isAcceptState32
@@ -175,7 +175,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef SHENG_IMPL
 #undef DEAD_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef DEAD_FUNC32
 #undef ACCEPT_FUNC32
@@ -189,7 +189,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define SHENG_IMPL sheng_sam
 #define DEAD_FUNC dummyFunc
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_sam
 #define DEAD_FUNC32 dummyFunc
 #define ACCEPT_FUNC32 isAcceptState32
@@ -202,7 +202,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef SHENG_IMPL
 #undef DEAD_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef DEAD_FUNC32
 #undef ACCEPT_FUNC32
@@ -216,7 +216,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define SHENG_IMPL sheng_nmd
 #define DEAD_FUNC isDeadState
 #define ACCEPT_FUNC dummyFunc
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_nmd
 #define DEAD_FUNC32 isDeadState32
 #define ACCEPT_FUNC32 dummyFunc
@@ -229,7 +229,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef SHENG_IMPL
 #undef DEAD_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef DEAD_FUNC32
 #undef ACCEPT_FUNC32
@@ -243,7 +243,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define SHENG_IMPL sheng_nm
 #define DEAD_FUNC dummyFunc
 #define ACCEPT_FUNC dummyFunc
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_nm
 #define DEAD_FUNC32 dummyFunc
 #define ACCEPT_FUNC32 dummyFunc
@@ -256,7 +256,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef SHENG_IMPL
 #undef DEAD_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef DEAD_FUNC32
 #undef ACCEPT_FUNC32
@@ -277,7 +277,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define INNER_ACCEL_FUNC isAccelState
 #define OUTER_ACCEL_FUNC dummyFunc
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_4_coda
 #define INTERESTING_FUNC32 hasInterestingStates32
 #define INNER_DEAD_FUNC32 isDeadState32
@@ -296,7 +296,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef INNER_ACCEL_FUNC
 #undef OUTER_ACCEL_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef INTERESTING_FUNC32
 #undef INNER_DEAD_FUNC32
@@ -316,7 +316,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define INNER_ACCEL_FUNC dummyFunc
 #define OUTER_ACCEL_FUNC dummyFunc
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_4_cod
 #define INTERESTING_FUNC32 hasInterestingStates32
 #define INNER_DEAD_FUNC32 isDeadState32
@@ -339,7 +339,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef INNER_ACCEL_FUNC
 #undef OUTER_ACCEL_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef INTERESTING_FUNC32
 #undef INNER_DEAD_FUNC32
@@ -363,7 +363,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define INNER_ACCEL_FUNC isAccelState
 #define OUTER_ACCEL_FUNC dummyFunc
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_4_coa
 #define INTERESTING_FUNC32 hasInterestingStates32
 #define INNER_DEAD_FUNC32 dummyFunc
@@ -382,7 +382,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef INNER_ACCEL_FUNC
 #undef OUTER_ACCEL_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef INTERESTING_FUNC32
 #undef INNER_DEAD_FUNC32
@@ -402,7 +402,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define INNER_ACCEL_FUNC dummyFunc
 #define OUTER_ACCEL_FUNC dummyFunc
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_4_co
 #define INTERESTING_FUNC32 hasInterestingStates32
 #define INNER_DEAD_FUNC32 dummyFunc
@@ -425,7 +425,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef INNER_ACCEL_FUNC
 #undef OUTER_ACCEL_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef INTERESTING_FUNC32
 #undef INNER_DEAD_FUNC32
@@ -449,7 +449,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define INNER_ACCEL_FUNC isAccelState
 #define OUTER_ACCEL_FUNC dummyFunc
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_4_samda
 #define INTERESTING_FUNC32 hasInterestingStates32
 #define INNER_DEAD_FUNC32 isDeadState32
@@ -468,7 +468,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef INNER_ACCEL_FUNC
 #undef OUTER_ACCEL_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef INTERESTING_FUNC32
 #undef INNER_DEAD_FUNC32
@@ -488,7 +488,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define INNER_ACCEL_FUNC dummyFunc
 #define OUTER_ACCEL_FUNC dummyFunc
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_4_samd
 #define INTERESTING_FUNC32 hasInterestingStates32
 #define INNER_DEAD_FUNC32 isDeadState32
@@ -511,7 +511,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef INNER_ACCEL_FUNC
 #undef OUTER_ACCEL_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef INTERESTING_FUNC32
 #undef INNER_DEAD_FUNC32
@@ -535,7 +535,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define INNER_ACCEL_FUNC isAccelState
 #define OUTER_ACCEL_FUNC dummyFunc
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_4_sama
 #define INTERESTING_FUNC32 hasInterestingStates32
 #define INNER_DEAD_FUNC32 dummyFunc
@@ -554,7 +554,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef INNER_ACCEL_FUNC
 #undef OUTER_ACCEL_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef INTERESTING_FUNC32
 #undef INNER_DEAD_FUNC32
@@ -574,7 +574,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define INNER_ACCEL_FUNC dummyFunc
 #define OUTER_ACCEL_FUNC dummyFunc
 #define ACCEPT_FUNC isAcceptState
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_4_sam
 #define INTERESTING_FUNC32 hasInterestingStates32
 #define INNER_DEAD_FUNC32 dummyFunc
@@ -597,7 +597,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef INNER_ACCEL_FUNC
 #undef OUTER_ACCEL_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef INTERESTING_FUNC32
 #undef INNER_DEAD_FUNC32
@@ -623,7 +623,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define INNER_ACCEL_FUNC dummyFunc
 #define OUTER_ACCEL_FUNC isAccelState
 #define ACCEPT_FUNC dummyFunc
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_4_nmda
 #define INTERESTING_FUNC32 dummyFunc4
 #define INNER_DEAD_FUNC32 dummyFunc
@@ -642,7 +642,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef INNER_ACCEL_FUNC
 #undef OUTER_ACCEL_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef INTERESTING_FUNC32
 #undef INNER_DEAD_FUNC32
@@ -662,7 +662,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define INNER_ACCEL_FUNC dummyFunc
 #define OUTER_ACCEL_FUNC dummyFunc
 #define ACCEPT_FUNC dummyFunc
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_4_nmd
 #define INTERESTING_FUNC32 dummyFunc4
 #define INNER_DEAD_FUNC32 dummyFunc
@@ -685,7 +685,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef INNER_ACCEL_FUNC
 #undef OUTER_ACCEL_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef INTERESTING_FUNC32
 #undef INNER_DEAD_FUNC32
@@ -712,7 +712,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #define INNER_ACCEL_FUNC dummyFunc
 #define OUTER_ACCEL_FUNC dummyFunc
 #define ACCEPT_FUNC dummyFunc
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define SHENG32_IMPL sheng32_4_nm
 #define INTERESTING_FUNC32 dummyFunc4
 #define INNER_DEAD_FUNC32 dummyFunc
@@ -735,7 +735,7 @@ u8 dummyFunc(UNUSED const u8 a) {
 #undef INNER_ACCEL_FUNC
 #undef OUTER_ACCEL_FUNC
 #undef ACCEPT_FUNC
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #undef SHENG32_IMPL
 #undef INTERESTING_FUNC32
 #undef INNER_DEAD_FUNC32

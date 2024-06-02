@@ -102,10 +102,10 @@ public:
     using category = boost::read_write_property_map_tag;
 
     small_color_map(size_t n_in, const IndexMap &index_map_in)
-        : n(n_in), index_map(index_map_in) {
-        size_t num_bytes = (n + entries_per_byte - 1) / entries_per_byte;
-        data = std::make_shared<std::vector<unsigned char>>(num_bytes);
-        fill(small_color::white);
+    : n(n_in), 
+      index_map(index_map_in),
+      data(std::make_shared<std::vector<unsigned char>>((n_in + entries_per_byte - 1) / entries_per_byte)) {
+    fill(small_color::white);
     }
 
     void fill(small_color color) {

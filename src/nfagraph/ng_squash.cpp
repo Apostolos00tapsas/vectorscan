@@ -255,19 +255,19 @@ void buildSquashMask(NFAStateSet &mask, const NGHolder &g, NFAVertex v,
 }
 
 static
-void buildSucc(NFAStateSet &succ, const NGHolder &g, NFAVertex v) {
+void buildSucc(NFAStateSet &ssucc, const NGHolder &g, NFAVertex v) {
     for (auto w : adjacent_vertices_range(v, g)) {
         if (!is_special(w, g)) {
-            succ.set(g[w].index);
+            ssucc.set(g[w].index);
         }
     }
 }
 
 static
-void buildPred(NFAStateSet &pred, const NGHolder &g, NFAVertex v) {
+void buildPred(NFAStateSet &spred, const NGHolder &g, NFAVertex v) {
     for (auto u : inv_adjacent_vertices_range(v, g)) {
         if (!is_special(u, g)) {
-            pred.set(g[u].index);
+            spred.set(g[u].index);
         }
     }
 }
@@ -280,9 +280,8 @@ void findDerivedSquashers(const NGHolder &g, const vector<NFAVertex> &vByIndex,
                           const unordered_map<NFAVertex, u32> &region_map,
                           smgb_cache &cache) {
     deque<NFAVertex> remaining;
-    for (const auto &m : *squash) {
-        remaining.emplace_back(m.first);
-    }
+    auto mfirst = [](const pair<NFAVertex, NFAStateSet> &m) { return m.first; };
+    std::transform(squash->begin(), squash->end(), std::back_inserter(remaining), mfirst);
 
     while (!remaining.empty()) {
         NFAVertex v = remaining.back();
@@ -408,19 +407,19 @@ unordered_map<NFAVertex, NFAStateSet> findSquashers(const NGHolder &g,
 
         DEBUG_PRINTF("state %u is cyclic\n", i);
 
-        NFAStateSet mask(numStates), succ(numStates), pred(numStates);
+        NFAStateSet mask(numStates), ssucc(numStates), spred(numStates);
         buildSquashMask(mask, g, v, cr, initStates, vByIndex, pdom_tree, som,
                         som_depths, region_map, cache);
-        buildSucc(succ, g, v);
-        buildPred(pred, g, v);
+        buildSucc(ssucc, g, v);
+        buildPred(spred, g, v);
         const auto &reports = g[v].reports;
 
-        for (size_t j = succ.find_first(); j != succ.npos;
-             j = succ.find_next(j)) {
+        for (size_t j = ssucc.find_first(); j != ssucc.npos;
+             j = ssucc.find_next(j)) {
             NFAVertex vj = vByIndex[j];
             NFAStateSet pred2(numStates);
             buildPred(pred2, g, vj);
-            if (pred2 == pred) {
+            if (pred2 == spred) {
                 DEBUG_PRINTF("adding the sm from %zu to %u's sm\n", j, i);
                 NFAStateSet tmp(numStates);
                 buildSquashMask(tmp, g, vj, cr, initStates, vByIndex, pdom_tree,
@@ -429,14 +428,14 @@ unordered_map<NFAVertex, NFAStateSet> findSquashers(const NGHolder &g,
             }
         }
 
-        for (size_t j = pred.find_first(); j != pred.npos;
-             j = pred.find_next(j)) {
+        for (size_t j = spred.find_first(); j != spred.npos;
+             j = spred.find_next(j)) {
             NFAVertex vj = vByIndex[j];
             NFAStateSet succ2(numStates);
             buildSucc(succ2, g, vj);
             /* we can use j as a basis for squashing if its succs are a subset
              * of ours */
-            if ((succ2 & ~succ).any()) {
+            if ((succ2 & ~ssucc).any()) {
                 continue;
             }
 
@@ -589,7 +588,7 @@ void getHighlanderReporters(const NGHolder &g, const NFAVertex accept,
 
         verts.insert(v);
     next_vertex:
-        continue;
+        ;
     }
 }
 

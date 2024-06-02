@@ -83,9 +83,9 @@ hs_error_t alloc_scratch(const hs_scratch_t *proto, hs_scratch_t **scratch) {
     u32 anchored_literal_fatbit_size = proto->anchored_literal_fatbit_size;
 
     u32 som_store_size = proto->som_store_count * sizeof(u64a);
-    u32 som_attempted_store_size = proto->som_store_count * sizeof(u64a);
+    u32 som_attempted_store_size = som_store_size; // Same as som_store_size
     u32 som_now_size = proto->som_fatbit_size;
-    u32 som_attempted_size = proto->som_fatbit_size;
+    u32 som_attempted_size = som_now_size; // Same as som_now_size
 
     struct hs_scratch *s;
     struct hs_scratch *s_tmp;

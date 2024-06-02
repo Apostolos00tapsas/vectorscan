@@ -102,7 +102,7 @@ void storeSomToStream(struct hs_scratch *scratch, const u64a offset) {
     const u32 som_store_count = rose->somLocationCount;
     assert(som_store_count); // Caller should ensure that we have work to do.
 
-    u8 *som_store_valid = (u8 *)ci->state + rose->stateOffsets.somValid;
+    const u8 *som_store_valid = (u8 *)ci->state + rose->stateOffsets.somValid;
     char *stream_som_store = ci->state + rose->stateOffsets.somLocation;
     const u64a *som_store = scratch->som_store;
     const u8 som_size = rose->somHorizon;

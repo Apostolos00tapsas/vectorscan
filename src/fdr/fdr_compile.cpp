@@ -127,7 +127,7 @@ void andMask(u8 *dest, const u8 *a, const u8 *b, u32 num_bytes) {
 }
 
 void FDRCompiler::createInitialState(FDR *fdr) {
-    u8 *start = (u8 *)&fdr->start;
+    u8 *start = reinterpret_cast<u8 *>(&fdr->start);
 
     /* initial state should to be 1 in each slot in the bucket up to bucket
      * minlen - 1, and 0 thereafter */
@@ -135,8 +135,9 @@ void FDRCompiler::createInitialState(FDR *fdr) {
         // Find the minimum length for the literals in this bucket.
         const vector<LiteralIndex> &bucket_lits = bucketToLits[b];
         u32 min_len = ~0U;
-        for (const LiteralIndex &lit_idx : bucket_lits) {
-            min_len = min(min_len, verify_u32(lits[lit_idx].s.length()));
+        for (const LiteralIndex &lit_idx : bucket_lits) {		
+            // cppcheck-suppress useStlAlgorithm		
+            min_len = min(min_len, verify_u32(lits[lit_idx].s.length()));		
         }
 
         DEBUG_PRINTF("bucket %u has min_len=%u\n", b, min_len);
@@ -175,7 +176,7 @@ bytecode_ptr<FDR> FDRCompiler::setupFDR() {
     auto fdr = make_zeroed_bytecode_ptr<FDR>(size, 64);
     assert(fdr); // otherwise would have thrown std::bad_alloc
 
-    u8 *fdr_base = (u8 *)fdr.get();
+    u8 *fdr_base = reinterpret_cast<u8 *>(fdr.get());
 
     // Write header.
     fdr->size = size;

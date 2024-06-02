@@ -146,6 +146,7 @@ bool verify_neighbour(const GoughGraph &g, GoughVertex u,
                       const map<gough_edge_id, vector<gough_ins> > &blocks,
                       const set<GoughVertex> &succs,
                       const vector<gough_ins> &block_sl) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &e : out_edges_range(u, g)) {
         if (!g[e].reach.any()) { /* ignore top edges */
             continue;
@@ -172,6 +173,7 @@ static
 bool verify_neighbour_no_block(const GoughGraph &g, GoughVertex u,
                         const map<gough_edge_id, vector<gough_ins> > &blocks,
                         const set<GoughVertex> &succs) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &e : out_edges_range(u, g)) {
         if (!g[e].reach.any()) { /* ignore top edges */
             continue;
@@ -229,6 +231,7 @@ bool allow_two_byte_accel(const GoughGraph &g,
             succs.insert(target(e, g));
         }
 
+        // cppcheck-suppress useStlAlgorithm
         for (auto w : adjacent_vertices_range(v, g)) {
             if (w != v && !verify_neighbour(g, w, blocks, succs, block_sl)) {
                 return false;
@@ -249,6 +252,7 @@ bool allow_two_byte_accel(const GoughGraph &g,
             }
             succs.insert(target(e, g));
 
+            // cppcheck-suppress useStlAlgorithm
             for (auto w : adjacent_vertices_range(v, g)) {
                 if (w != v && !verify_neighbour_no_block(g, w, blocks, succs)) {
                     return false;

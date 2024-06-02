@@ -44,6 +44,7 @@ namespace ue2 {
 
 static
 bool is_end_anchored(const RoseGraph &g, RoseVertex v) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto w : adjacent_vertices_range(v, g)) {
         if (g[w].eod_accept) {
             return true;
@@ -64,12 +65,11 @@ u32 findMinWidth(const RoseBuildImpl &tbi, enum rose_literal_table table) {
     const RoseGraph &g = tbi.g;
 
     vector<RoseVertex> table_verts;
-
-    for (auto v : vertices_range(g)) {
-        if (tbi.hasLiteralInTable(v, table)) {
-            table_verts.emplace_back(v);
-        }
-    }
+    auto tvs = [&tbi=tbi, table](const RoseVertex &v) {
+        return (tbi.hasLiteralInTable(v, table));
+    };
+    const auto &vr = vertices_range(g);
+    std::copy_if(begin(vr), end(vr),  std::back_inserter(table_verts), tvs);
 
     set<RoseVertex> reachable;
     find_reachable(g, table_verts, &reachable);
@@ -95,7 +95,7 @@ u32 findMinWidth(const RoseBuildImpl &tbi, enum rose_literal_table table) {
         }
 
         if (g[v].suffix) {
-            depth suffix_width = findMinWidth(g[v].suffix, g[v].suffix.top);
+            depth suffix_width = findMinWidth(suffix_id(g[v].suffix), g[v].suffix.top);
             assert(suffix_width.is_reachable());
             DEBUG_PRINTF("%zu has suffix with top %u (width %s), can fire "
                          "report at %u\n",
@@ -145,10 +145,10 @@ u32 findMaxBAWidth(const RoseBuildImpl &tbi) {
         u64a w = g[v].max_offset;
 
         if (g[v].suffix) {
-            if (has_non_eod_accepts(g[v].suffix)) {
+            if (has_non_eod_accepts(suffix_id(g[v].suffix))) {
                 return ROSE_BOUND_INF;
             }
-            depth suffix_width = findMaxWidth(g[v].suffix, g[v].suffix.top);
+            depth suffix_width = findMaxWidth(suffix_id(g[v].suffix), g[v].suffix.top);
             DEBUG_PRINTF("suffix max width for top %u is %s\n", g[v].suffix.top,
                          suffix_width.str().c_str());
             assert(suffix_width.is_reachable());
@@ -189,13 +189,12 @@ u32 findMaxBAWidth(const RoseBuildImpl &tbi, enum rose_literal_table table) {
                   table == ROSE_FLOATING ? "floating" : "anchored");
 
     vector<RoseVertex> table_verts;
-
-    for (auto v : vertices_range(g)) {
-        if ((table == ROSE_FLOATING && tbi.isFloating(v))
-            || (table == ROSE_ANCHORED && tbi.isAnchored(v))) {
-            table_verts.emplace_back(v);
-        }
-    }
+    auto tvs = [&tbi=tbi, table](const RoseVertex &v) {
+        return ((table == ROSE_FLOATING && tbi.isFloating(v))
+               || (table == ROSE_ANCHORED && tbi.isAnchored(v)));
+    };
+    const auto &vr = vertices_range(g);
+    std::copy_if(begin(vr), end(vr),  std::back_inserter(table_verts), tvs);
 
     set<RoseVertex> reachable;
     find_reachable(g, table_verts, &reachable);
@@ -222,11 +221,11 @@ u32 findMaxBAWidth(const RoseBuildImpl &tbi, enum rose_literal_table table) {
                                                       accept_eod node */
 
         if (g[v].suffix) {
-            if (has_non_eod_accepts(g[v].suffix)) {
+            if (has_non_eod_accepts(suffix_id(g[v].suffix))) {
                 DEBUG_PRINTF("has accept\n");
                 return ROSE_BOUND_INF;
             }
-            depth suffix_width = findMaxWidth(g[v].suffix);
+            depth suffix_width = findMaxWidth(suffix_id(g[v].suffix));
             DEBUG_PRINTF("suffix max width %s\n", suffix_width.str().c_str());
             assert(suffix_width.is_reachable());
             if (!suffix_width.is_finite()) {

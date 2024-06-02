@@ -145,7 +145,7 @@ namespace {
 /** Key used to group sets of leftfixes by the dedupeLeftfixes path. */
 struct RoseGroup {
     RoseGroup(const RoseBuildImpl &build, RoseVertex v)
-        : left_hash(hashLeftfix(build.g[v].left)),
+        : left_hash(hashLeftfix(left_id(build.g[v].left))),
           lag(build.g[v].left.lag), eod_table(build.isInETable(v)) {
         const RoseGraph &g = build.g;
         assert(in_degree(v, g) == 1);
@@ -262,8 +262,8 @@ bool dedupeLeftfixes(RoseBuildImpl &tbi) {
             // Scan the rest of the list for dupes.
             for (auto kt = std::next(jt); kt != jte; ++kt) {
                 if (g[v].left == g[*kt].left
-                    || !is_equal(g[v].left, g[v].left.leftfix_report,
-                                 g[*kt].left, g[*kt].left.leftfix_report)) {
+                    || !is_equal(left_id(g[v].left), g[v].left.leftfix_report,
+                                 left_id(g[*kt].left), g[*kt].left.leftfix_report)) {
                     continue;
                 }
 
@@ -547,8 +547,8 @@ bool checkPrefix(const rose_literal_id &ul, const u32 ulag,
 static
 bool hasSameEngineType(const RoseVertexProps &u_prop,
                        const RoseVertexProps &v_prop) {
-    const left_id u_left = u_prop.left;
-    const left_id v_left = v_prop.left;
+    const left_id u_left = left_id(u_prop.left);
+    const left_id v_left = left_id(v_prop.left);
 
     return !u_left.haig() == !v_left.haig()
         && !u_left.dfa() == !v_left.dfa()
@@ -582,6 +582,7 @@ bool compatibleLiteralsForMerge(
     }
 
     // We don't handle delayed cases yet.
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &ue : ulits) {
         const rose_literal_id &ul = *ue.first;
         if (ul.delay) {
@@ -589,6 +590,7 @@ bool compatibleLiteralsForMerge(
         }
     }
 
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &ve : vlits) {
         const rose_literal_id &vl = *ve.first;
         if (vl.delay) {
@@ -601,10 +603,12 @@ bool compatibleLiteralsForMerge(
        checked its status at offset X and X > Y). If we can not establish that
        the literals used for triggering will satisfy this property, then it is
        not safe to merge the engine. */
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &ue : ulits) {
         const rose_literal_id &ul = *ue.first;
         u32 ulag = ue.second;
 
+        // cppcheck-suppress useStlAlgorithm
         for (const auto &ve : vlits) {
             const rose_literal_id &vl = *ve.first;
             u32 vlag = ve.second;
@@ -743,6 +747,7 @@ bool mergeableRoseVertices(const RoseBuildImpl &tbi, RoseVertex u,
     vector<pair<const rose_literal_id *, u32>> ulits;
     ulits.reserve(tbi.g[u].literals.size());
     for (u32 id : tbi.g[u].literals) {
+        // cppcheck-suppress useStlAlgorithm
         ulits.emplace_back(&tbi.literals.at(id), ulag);
     }
 
@@ -750,6 +755,7 @@ bool mergeableRoseVertices(const RoseBuildImpl &tbi, RoseVertex u,
     vector<pair<const rose_literal_id *, u32>> vlits;
     vlits.reserve(tbi.g[v].literals.size());
     for (u32 id : tbi.g[v].literals) {
+        // cppcheck-suppress useStlAlgorithm
         vlits.emplace_back(&tbi.literals.at(id), vlag);
     }
 
@@ -794,9 +800,9 @@ template<typename VertexCont>
 static never_inline
 bool checkPredDelays(const RoseBuildImpl &build, const VertexCont &v1,
                      const VertexCont &v2) {
-    flat_set<RoseVertex> preds;
+    flat_set<RoseVertex> fpreds;
     for (auto v : v1) {
-        insert(&preds, inv_adjacent_vertices(v, build.g));
+        insert(&fpreds, inv_adjacent_vertices(v, build.g));
     }
 
     flat_set<u32> pred_lits;
@@ -811,7 +817,7 @@ bool checkPredDelays(const RoseBuildImpl &build, const VertexCont &v1,
         insert(&known_good_preds, inv_adjacent_vertices(v, build.g));
     }
 
-    for (auto u : preds) {
+    for (auto u : fpreds) {
         if (!contains(known_good_preds, u)) {
             insert(&pred_lits, build.g[u].literals);
         }
@@ -820,6 +826,7 @@ bool checkPredDelays(const RoseBuildImpl &build, const VertexCont &v1,
     vector<const rose_literal_id *> pred_rose_lits;
     pred_rose_lits.reserve(pred_lits.size());
     for (const auto &p : pred_lits) {
+        // cppcheck-suppress useStlAlgorithm
         pred_rose_lits.emplace_back(&build.literals.at(p));
     }
 
@@ -885,6 +892,7 @@ bool mergeableRoseVertices(const RoseBuildImpl &tbi,
 
         u32 ulag = tbi.g[a].left.lag;
         for (u32 id : tbi.g[a].literals) {
+            // cppcheck-suppress useStlAlgorithm
             ulits.emplace_back(&tbi.literals.at(id), ulag);
         }
     }
@@ -897,6 +905,7 @@ bool mergeableRoseVertices(const RoseBuildImpl &tbi,
 
         u32 vlag = tbi.g[a].left.lag;
         for (u32 id : tbi.g[a].literals) {
+            // cppcheck-suppress useStlAlgorithm
             vlits.emplace_back(&tbi.literals.at(id), vlag);
         }
     }
@@ -1050,6 +1059,7 @@ bool checkVerticesOkForLeftfixMerge(const RoseBuildImpl &build,
     for (auto a : targets_1) {
         u32 ulag = build.g[a].left.lag;
         for (u32 id : build.g[a].literals) {
+            // cppcheck-suppress useStlAlgorithm
             ulits.emplace_back(&build.literals.at(id), ulag);
         }
     }
@@ -1058,6 +1068,7 @@ bool checkVerticesOkForLeftfixMerge(const RoseBuildImpl &build,
     for (auto a : targets_2) {
         u32 vlag = build.g[a].left.lag;
         for (u32 id : build.g[a].literals) {
+            // cppcheck-suppress useStlAlgorithm
             vlits.emplace_back(&build.literals.at(id), vlag);
         }
     }
@@ -1186,8 +1197,8 @@ bool mergeLeftVL_tryMergeCandidate(RoseBuildImpl &build, left_id &r1,
 
     assert(!r1.graph() == !r2.graph());
     if (r1.graph()) {
-        NGHolder *h1 = r1.graph();
-        NGHolder *h2 = r2.graph();
+        const NGHolder *h1 = r1.graph();
+        const NGHolder *h2 = r2.graph();
         CharReach stop1 = findStopAlphabet(*h1, SOM_NONE);
         CharReach stop2 = findStopAlphabet(*h2, SOM_NONE);
         CharReach stopboth = stop1 & stop2;
@@ -1338,15 +1349,15 @@ void chunk(vector<T> in, vector<vector<T>> *out, size_t chunk_size) {
 }
 
 static
-insertion_ordered_map<left_id, vector<RoseVertex>> get_eng_verts(RoseGraph &g) {
+insertion_ordered_map<left_id, vector<RoseVertex>> get_eng_verts(const RoseGraph &g) {
     insertion_ordered_map<left_id, vector<RoseVertex>> eng_verts;
     for (auto v : vertices_range(g)) {
         const auto &left = g[v].left;
         if (!left) {
             continue;
         }
-        assert(contains(all_reports(left), left.leftfix_report));
-        eng_verts[left].emplace_back(v);
+        assert(contains(all_reports(left_id(left)), left.leftfix_report));
+        eng_verts[left_id(left)].emplace_back(v);
     }
 
     return eng_verts;
@@ -1536,11 +1547,11 @@ private:
 
 static
 flat_set<pair<size_t, u32>> get_pred_tops(RoseVertex v, const RoseGraph &g) {
-    flat_set<pair<size_t, u32>> preds;
+    flat_set<pair<size_t, u32>> fpreds;
     for (const auto &e : in_edges_range(v, g)) {
-        preds.emplace(g[source(e, g)].index, g[e].rose_top);
+        fpreds.emplace(g[source(e, g)].index, g[e].rose_top);
     }
-    return preds;
+    return fpreds;
 }
 
 /**
@@ -1592,14 +1603,15 @@ void dedupeLeftfixesVariableLag(RoseBuildImpl &build) {
             assert(!is_triggered(*left.graph()) || onlyOneTop(*left.graph()));
         }
 
-        auto preds = get_pred_tops(verts.front(), g);
+        auto vpreds = get_pred_tops(verts.front(), g);
         for (RoseVertex v : verts) {
-            if (preds != get_pred_tops(v, g)) {
+            if (vpreds != get_pred_tops(v, g)) {
                 DEBUG_PRINTF("distinct pred sets\n");
                 continue;
             }
         }
-        engine_groups[DedupeLeftKey(build, std::move(preds), left)].emplace_back(left);
+        auto preds_copy = std::move(vpreds);
+        engine_groups[DedupeLeftKey(build, preds_copy , left)].emplace_back(left);
     }
 
     /* We don't bother chunking as we expect deduping to be successful if the
@@ -1686,7 +1698,7 @@ void replaceTops(NGHolder &h, const map<u32, u32> &top_mapping) {
 }
 
 static
-bool setDistinctTops(NGHolder &h1, const NGHolder &h2,
+void setDistinctTops(NGHolder &h1, const NGHolder &h2,
                      map<u32, u32> &top_mapping) {
     flat_set<u32> tops1 = getTops(h1), tops2 = getTops(h2);
 
@@ -1696,7 +1708,7 @@ bool setDistinctTops(NGHolder &h1, const NGHolder &h2,
     // If our tops don't intersect, we're OK to merge with no changes.
     if (!has_intersection(tops1, tops2)) {
         DEBUG_PRINTF("tops don't intersect\n");
-        return true;
+        return ;
     }
 
     // Otherwise, we have to renumber the tops in h1 so that they don't overlap
@@ -1711,18 +1723,17 @@ bool setDistinctTops(NGHolder &h1, const NGHolder &h2,
     }
 
     replaceTops(h1, top_mapping);
-    return true;
+    return ;
 }
 
-bool setDistinctRoseTops(RoseGraph &g, NGHolder &h1, const NGHolder &h2,
+void setDistinctRoseTops(RoseGraph &g, NGHolder &h1, const NGHolder &h2,
                          const deque<RoseVertex> &verts1) {
     map<u32, u32> top_mapping;
-    if (!setDistinctTops(h1, h2, top_mapping)) {
-        return false;
-    }
+
+    setDistinctTops(h1, h2, top_mapping);
 
     if (top_mapping.empty()) {
-        return true; // No remapping necessary.
+        return ; // No remapping necessary.
     }
 
     for (auto v : verts1) {
@@ -1740,19 +1751,17 @@ bool setDistinctRoseTops(RoseGraph &g, NGHolder &h1, const NGHolder &h2,
         }
     }
 
-    return true;
+    return ;
 }
 
 static
-bool setDistinctSuffixTops(RoseGraph &g, NGHolder &h1, const NGHolder &h2,
+void setDistinctSuffixTops(RoseGraph &g, NGHolder &h1, const NGHolder &h2,
                            const deque<RoseVertex> &verts1) {
     map<u32, u32> top_mapping;
-    if (!setDistinctTops(h1, h2, top_mapping)) {
-        return false;
-    }
+    setDistinctTops(h1, h2, top_mapping);
 
     if (top_mapping.empty()) {
-        return true; // No remapping necessary.
+        return ; // No remapping necessary.
     }
 
     for (auto v : verts1) {
@@ -1762,7 +1771,7 @@ bool setDistinctSuffixTops(RoseGraph &g, NGHolder &h1, const NGHolder &h2,
         g[v].suffix.top = top_mapping[t];
     }
 
-    return true;
+    return ;
 }
 
 /** \brief Estimate the number of accel states in the given graph when built as
@@ -1836,10 +1845,7 @@ void mergeNfaLeftfixes(RoseBuildImpl &tbi, LeftfixBouquet &roses) {
                 }
             }
 
-            if (!setDistinctRoseTops(g, victim, *r1.graph(), verts2)) {
-                DEBUG_PRINTF("can't set distinct tops\n");
-                continue; // next h2
-            }
+            setDistinctRoseTops(g, victim, *r1.graph(), verts2);
 
             assert(victim.kind == r1.graph()->kind);
             assert(!generates_callbacks(*r1.graph()));
@@ -1892,7 +1898,7 @@ void mergeSmallLeftfixes(RoseBuildImpl &tbi) {
         return;
     }
 
-    RoseGraph &g = tbi.g;
+    const RoseGraph &g = tbi.g;
 
     LeftfixBouquet nfa_leftfixes;
 
@@ -1924,7 +1930,7 @@ void mergeSmallLeftfixes(RoseBuildImpl &tbi) {
         }
 
         assert(left.graph());
-        NGHolder &h = *left.graph();
+        const NGHolder &h = *left.graph();
 
         /* Ensure that kind on the graph is correct */
         assert(h.kind == (tbi.isRootSuccessor(v) ? NFA_PREFIX : NFA_INFIX));
@@ -2024,7 +2030,7 @@ void mergeCastleLeftfixes(RoseBuildImpl &build) {
         return;
     }
 
-    RoseGraph &g = build.g;
+    const RoseGraph &g = build.g;
 
     insertion_ordered_map<left_id, vector<RoseVertex>> eng_verts;
 
@@ -2038,7 +2044,7 @@ void mergeCastleLeftfixes(RoseBuildImpl &build) {
             continue;
         }
 
-        eng_verts[g[v].left].emplace_back(v);
+        eng_verts[left_id(g[v].left)].emplace_back(v);
     }
 
     map<CharReach, vector<left_id>> by_reach;
@@ -2054,8 +2060,8 @@ void mergeCastleLeftfixes(RoseBuildImpl &build) {
 
     DEBUG_PRINTF("chunked castles into %zu groups\n", chunks.size());
 
-    for (auto &chunk : chunks) {
-        mergeCastleChunk(build, chunk, eng_verts);
+    for (auto &cchunk : chunks) {
+        mergeCastleChunk(build, cchunk, eng_verts);
     }
 }
 
@@ -2119,10 +2125,7 @@ void mergeSuffixes(RoseBuildImpl &tbi, SuffixBouquet &suffixes,
                 old_tops[v] = g[v].suffix.top;
             }
 
-            if (!setDistinctSuffixTops(g, victim, *s1.graph(), verts2)) {
-                DEBUG_PRINTF("can't set distinct tops\n");
-                continue; // next h2
-            }
+            setDistinctSuffixTops(g, victim, *s1.graph(), verts2);
 
             if (!mergeNfaPair(victim, *s1.graph(), &tbi.rm, tbi.cc)) {
                 DEBUG_PRINTF("merge failed\n");
@@ -2188,7 +2191,7 @@ void mergeAcyclicSuffixes(RoseBuildImpl &tbi) {
 
     SuffixBouquet suffixes;
 
-    RoseGraph &g = tbi.g;
+    const RoseGraph &g = tbi.g;
 
     for (auto v : vertices_range(g)) {
         shared_ptr<NGHolder> h = g[v].suffix.graph;
@@ -2206,7 +2209,7 @@ void mergeAcyclicSuffixes(RoseBuildImpl &tbi) {
             continue;
         }
 
-        suffixes.insert(g[v].suffix, v);
+        suffixes.insert(suffix_id(g[v].suffix), v);
     }
 
     deque<SuffixBouquet> suff_groups;
@@ -2248,7 +2251,7 @@ void mergeSmallSuffixes(RoseBuildImpl &tbi) {
         return;
     }
 
-    RoseGraph &g = tbi.g;
+    const RoseGraph &g = tbi.g;
     SuffixBouquet suffixes;
 
     for (auto v : vertices_range(g)) {
@@ -2268,7 +2271,7 @@ void mergeSmallSuffixes(RoseBuildImpl &tbi) {
             continue;
         }
 
-        suffixes.insert(g[v].suffix, v);
+        suffixes.insert(suffix_id(g[v].suffix), v);
     }
 
     deque<SuffixBouquet> suff_groups;
@@ -2306,7 +2309,7 @@ void mergeOutfixInfo(OutfixInfo &winner, const OutfixInfo &victim) {
 }
 
 static
-map<NGHolder *, NGHolder *> chunkedNfaMerge(RoseBuildImpl &build,
+map<NGHolder *, NGHolder *> chunkedNfaMerge(const RoseBuildImpl &build,
                                             const vector<NGHolder *> &nfas) {
     map<NGHolder *, NGHolder *> merged;
 
@@ -2449,13 +2452,13 @@ void chunkedDfaMerge(vector<RawDfa *> &dfas,
     DEBUG_PRINTF("begin merge of %zu dfas\n", dfas.size());
 
     vector<RawDfa *> out_dfas;
-    vector<RawDfa *> chunk;
+    vector<RawDfa *> dchunk;
     for (auto it = begin(dfas), ite = end(dfas); it != ite; ++it) {
-        chunk.emplace_back(*it);
-        if (chunk.size() >= DFA_CHUNK_SIZE_MAX || next(it) == ite) {
-            pairwiseDfaMerge(chunk, dfa_mapping, outfixes, merge_func);
-            out_dfas.insert(end(out_dfas), begin(chunk), end(chunk));
-            chunk.clear();
+        dchunk.emplace_back(*it);
+        if (dchunk.size() >= DFA_CHUNK_SIZE_MAX || next(it) == ite) {
+            pairwiseDfaMerge(dchunk, dfa_mapping, outfixes, merge_func);
+            out_dfas.insert(end(out_dfas), begin(dchunk), end(dchunk));
+            dchunk.clear();
         }
     }
 
@@ -2798,8 +2801,8 @@ void mergeCastleSuffixes(RoseBuildImpl &build) {
         eng_verts[c].emplace_back(v);
     }
 
-    for (auto &chunk : by_reach | map_values) {
-        mergeCastleSuffixChunk(g, chunk, eng_verts);
+    for (auto &cchunk : by_reach | map_values) {
+        mergeCastleSuffixChunk(g, cchunk, eng_verts);
     }
 }
 

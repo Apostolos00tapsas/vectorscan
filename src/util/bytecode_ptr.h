@@ -66,7 +66,7 @@ public:
         }
     }
 
-    bytecode_ptr(std::nullptr_t) {}
+    explicit bytecode_ptr(std::nullptr_t) {}
 
     T *get() const { return ptr.get(); }
 

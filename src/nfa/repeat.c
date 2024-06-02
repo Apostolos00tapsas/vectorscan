@@ -785,7 +785,7 @@ enum RepeatMatch repeatHasMatchRange(const struct RepeatInfo *info,
     if (diff > info->repeatMax) {
         DEBUG_PRINTF("range list is stale\n");
         return REPEAT_STALE;
-    } else if (diff >= info->repeatMin && diff <= info->repeatMax) {
+    } else if (diff >= info->repeatMin) {
         return REPEAT_MATCH;
     }
 
@@ -836,7 +836,7 @@ enum RepeatMatch repeatHasMatchBitmap(const struct RepeatInfo *info,
     if (diff > info->repeatMax) {
         DEBUG_PRINTF("stale\n");
         return REPEAT_STALE;
-    } else if (diff >= info->repeatMin && diff <= info->repeatMax) {
+    } else if (diff >= info->repeatMin) {
         return REPEAT_MATCH;
     }
 

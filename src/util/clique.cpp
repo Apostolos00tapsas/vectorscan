@@ -79,7 +79,7 @@ vector<u32> findCliqueGroup(CliqueGraph &cg) {
 
         // Choose a vertex from the graph
         u32 id = g[0];
-        CliqueVertex &n = vertexMap.at(id);
+        const CliqueVertex &n = vertexMap.at(id);
         clique.emplace_back(id);
         // Corresponding vertex in the original graph
         set<u32> subgraphId(g.begin(), g.end());

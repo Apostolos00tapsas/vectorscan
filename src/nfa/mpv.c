@@ -512,7 +512,7 @@ size_t find_last_bad(const struct mpv_kilopuff *kp, const u8 *buf,
 
     verm_restart:;
         assert(buf[curr] == kp->u.verm.c);
-        size_t test = curr;
+        size_t test;
         if (curr + min_rep < length) {
             test = curr + min_rep;
         } else {
@@ -534,7 +534,7 @@ size_t find_last_bad(const struct mpv_kilopuff *kp, const u8 *buf,
         m128 hi = kp->u.shuf.mask_hi;
     shuf_restart:
         assert(do_single_shufti(lo, hi, buf[curr]));
-        size_t test = curr;
+        size_t test;
         if (curr + min_rep < length) {
             test = curr + min_rep;
         } else {
@@ -556,7 +556,7 @@ size_t find_last_bad(const struct mpv_kilopuff *kp, const u8 *buf,
         const m128 mask1 = kp->u.truffle.mask1;
         const m128 mask2 = kp->u.truffle.mask2;
     truffle_restart:;
-        size_t test = curr;
+        size_t test;
         if (curr + min_rep < length) {
             test = curr + min_rep;
         } else {
@@ -582,7 +582,7 @@ size_t find_last_bad(const struct mpv_kilopuff *kp, const u8 *buf,
 
     nverm_restart:;
         assert(buf[curr] != kp->u.verm.c);
-        size_t test = curr;
+        size_t test;
         if (curr + min_rep < length) {
             test = curr + min_rep;
         } else {
@@ -607,7 +607,7 @@ size_t find_last_bad(const struct mpv_kilopuff *kp, const u8 *buf,
 }
 
 static really_inline
-void restartKilo(const struct mpv *m, UNUSED u8 *active, u8 *reporters,
+void restartKilo(const struct mpv *m, UNUSED const u8 *active, u8 *reporters,
                  struct mpv_decomp_state *dstate, struct mpv_pq_item *pq,
                  const u8 *buf, u64a prev_limit, size_t buf_length, u32 i) {
     const struct mpv_kilopuff *kp = (const void *)(m + 1);
@@ -1074,7 +1074,7 @@ s64a nfaExecMpv_QueueExecRaw(const struct NFA *nfa, struct mq *q, s64a end) {
         return 0;
     } else {
         const struct mpv *m = getImplNfa(nfa);
-        u8 *reporters = (u8 *)q->state + m->reporter_offset;
+        const u8 *reporters = (u8 *)q->state + m->reporter_offset;
 
         if (mmbit_any_precise(reporters, m->kilo_count)) {
             DEBUG_PRINTF("next byte\n");
@@ -1087,7 +1087,7 @@ s64a nfaExecMpv_QueueExecRaw(const struct NFA *nfa, struct mq *q, s64a end) {
                 next_event = q->items[q->cur].location;
             }
 
-            struct mpv_decomp_state *s = (struct mpv_decomp_state *)q->state;
+            const struct mpv_decomp_state *s = (struct mpv_decomp_state *)q->state;
             struct mpv_pq_item *pq
                 = (struct mpv_pq_item *)(q->state + m->pq_offset);
             if (s->pq_size) {

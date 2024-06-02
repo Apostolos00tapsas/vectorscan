@@ -62,12 +62,12 @@ namespace ue2 {
 static
 void findAccelFriendGeneration(const NGHolder &g, const CharReach &cr,
                                const flat_set<NFAVertex> &cands,
-                               const flat_set<NFAVertex> &preds,
+                               const flat_set<NFAVertex> &f_preds,
                                flat_set<NFAVertex> *next_cands,
                                flat_set<NFAVertex> *next_preds,
                                flat_set<NFAVertex> *friends) {
     for (auto v : cands) {
-        if (contains(preds, v)) {
+        if (contains(f_preds, v)) {
             continue;
         }
 
@@ -80,7 +80,7 @@ void findAccelFriendGeneration(const NGHolder &g, const CharReach &cr,
         }
 
         for (auto u : inv_adjacent_vertices_range(v, g)) {
-            if (!contains(preds, u)) {
+            if (!contains(f_preds, u)) {
                 DEBUG_PRINTF("bad pred\n");
                 goto next_cand;
             }
@@ -116,8 +116,8 @@ void findAccelFriends(const NGHolder &g, NFAVertex v,
 
     u32 friend_depth = offset + 1;
 
-    flat_set<NFAVertex> preds;
-    insert(&preds, inv_adjacent_vertices(v, g));
+    flat_set<NFAVertex> f_preds;
+    insert(&f_preds, inv_adjacent_vertices(v, g));
     const CharReach &cr = g[v].char_reach;
 
     flat_set<NFAVertex> cands;
@@ -126,9 +126,9 @@ void findAccelFriends(const NGHolder &g, NFAVertex v,
     flat_set<NFAVertex> next_preds;
     flat_set<NFAVertex> next_cands;
     for (u32 i = 0; i < friend_depth; i++) {
-        findAccelFriendGeneration(g, cr, cands, preds, &next_cands, &next_preds,
+        findAccelFriendGeneration(g, cr, cands, f_preds, &next_cands, &next_preds,
                                   friends);
-        preds.insert(next_preds.begin(), next_preds.end());
+        f_preds.insert(next_preds.begin(), next_preds.end());
         next_preds.clear();
         cands.swap(next_cands);
         next_cands.clear();
@@ -321,7 +321,7 @@ struct DAccelScheme {
             bool cd_a = buildDvermMask(a.double_byte);
             bool cd_b = buildDvermMask(b.double_byte);
             if (cd_a != cd_b) {
-                return cd_a > cd_b;
+                return cd_a;
             }
         }
 
@@ -463,6 +463,7 @@ void blowoutPathsLessStrictSegment(vector<vector<CharReach> > &paths) {
     /* paths segments which are a superset of an earlier segment should never be
      * picked as an acceleration segment -> to improve processing just replace
      * with dot */
+    // cppcheck-suppress constVariableReference
     for (auto &p : paths) {
         for (auto it = p.begin(); it != p.end();  ++it) {
             for (auto jt = next(it); jt != p.end(); ++jt) {
@@ -811,11 +812,9 @@ depth_done:
                 return true;
             }
         }
-    }
 
     // Second option: a two-byte shufti (i.e. less than eight 2-byte
     // literals)
-    if (depth > 1) {
         for (unsigned int i = 0; i < (depth - 1); i++) {
             if (depthReach[i].count() * depthReach[i+1].count()
                 <= DOUBLE_SHUFTI_LIMIT) {

@@ -89,7 +89,6 @@ ostream& operator<<(ostream &os, const hs_expr_ext &ext) {
             os << ", ";
         }
         os << "hamming_distance=" << ext.hamming_distance;
-        first = false;
     }
     return os;
 }

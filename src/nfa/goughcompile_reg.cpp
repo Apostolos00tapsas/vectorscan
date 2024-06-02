@@ -51,6 +51,7 @@ namespace ue2 {
 template<typename VarP, typename VarQ>
 void emplace_back_all_raw(vector<VarP> *out, const vector<VarQ> &in) {
     for (const auto &var : in) {
+        // cppcheck-suppress useStlAlgorithm
         out->emplace_back(var.get());
     }
 }
@@ -194,7 +195,7 @@ void handle_pending_vars(GoughSSAVar *def, const GoughGraph &g,
         if (contains(aux.containing_v, var)) {
             /* def is used by join vertex, value only needs to be live on some
              * incoming edges */
-            GoughSSAVarJoin *vj = (GoughSSAVarJoin *)var;
+            const GoughSSAVarJoin *vj = reinterpret_cast<const GoughSSAVarJoin *>(var);
             const flat_set<GoughEdge> &live_edges
                 = vj->get_edges_for_input(def);
             for (const auto &e : live_edges) {
@@ -278,7 +279,7 @@ set<const GoughSSAVar *> live_during(GoughSSAVar *def, const GoughGraph &g,
 
 template<typename VarP>
 void set_initial_slots(const vector<VarP> &vars, u32 *next_slot) {
-    for (auto &var : vars) {
+    for (const auto &var : vars) {
         assert(var->slot == INVALID_SLOT);
         var->slot = (*next_slot)++;
     }
@@ -380,6 +381,7 @@ template<typename VarP>
 void add_to_dom_ordering(const vector<VarP> &vars,
                          vector<GoughSSAVar *> *out) {
     for (const auto &var : vars) {
+        // cppcheck-suppress useStlAlgorithm
         out->emplace_back(var.get());
     }
 }
@@ -438,7 +440,7 @@ void create_slot_mapping(const GoughGraph &cfg, UNUSED u32 old_slot_count,
 }
 
 static
-void update_local_slots(GoughGraph &g, set<GoughSSAVar *> &locals,
+void update_local_slots(GoughGraph &g, const set<GoughSSAVar *> &locals,
                         u32 local_base) {
     DEBUG_PRINTF("%zu local variables\n", locals.size());
     /* local variables only occur on edges (joins are never local) */

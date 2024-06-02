@@ -167,7 +167,7 @@ void pushQueueNoMerge(struct mq * restrict q, u32 e, s64a loc) {
     // We assert that the event is different from its predecessor. If it's a
     // dupe, you should have used the ordinary pushQueue call.
     if (q->end) {
-        UNUSED struct mq_item *prev = &q->items[q->end - 1];
+        UNUSED const struct mq_item *prev = &q->items[q->end - 1];
         assert(prev->type != e || prev->location != loc);
     }
 #endif
@@ -251,6 +251,10 @@ void q_skip_forward_to(struct mq *q, s64a min_loc) {
 // Dump the contents of the given queue.
 static never_inline UNUSED
 void debugQueue(const struct mq *q) {
+    if (q == nullptr) {
+       DEBUG_PRINTF("q=NULL!\n");
+       return;
+    }
     DEBUG_PRINTF("q=%p, nfa=%p\n", q, q->nfa);
     DEBUG_PRINTF("q offset=%llu, buf={%p, len=%zu}, history={%p, len=%zu}\n",
                  q->offset, q->buffer, q->length, q->history, q->hlength);

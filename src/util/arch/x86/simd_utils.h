@@ -290,6 +290,7 @@ static really_inline m128 andnot128(m128 a, m128 b) {
 static really_inline m128 load128(const void *ptr) {
     assert(ISALIGNED_N(ptr, alignof(m128)));
     ptr = vectorscan_assume_aligned(ptr, 16);
+    // cppcheck-suppress cstyleCast
     return _mm_load_si128((const m128 *)ptr);
 }
 
@@ -297,16 +298,19 @@ static really_inline m128 load128(const void *ptr) {
 static really_inline void store128(void *ptr, m128 a) {
     assert(ISALIGNED_N(ptr, alignof(m128)));
     ptr = vectorscan_assume_aligned(ptr, 16);
+    // cppcheck-suppress cstyleCast
     *(m128 *)ptr = a;
 }
 
 // unaligned load
 static really_inline m128 loadu128(const void *ptr) {
+    // cppcheck-suppress cstyleCast
     return _mm_loadu_si128((const m128 *)ptr);
 }
 
 // unaligned store
 static really_inline void storeu128(void *ptr, m128 a) {
+    // cppcheck-suppress cstyleCast
     _mm_storeu_si128 ((m128 *)ptr, a);
 }
 

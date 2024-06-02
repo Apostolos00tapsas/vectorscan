@@ -67,7 +67,7 @@
  * to pass in the pattern that was being searched for so we can print it out.
  */
 static int eventHandler(unsigned int id, unsigned long long from,
-                        unsigned long long to, unsigned int flags, void *ctx) {
+                        unsigned long long to, unsigned int flags, void *ctx) { // cppcheck-suppress constParameterCallback
     printf("Match for pattern \"%s\" at offset %llu\n", (char *)ctx, to);
     return 0;
 }
@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
     }
 
     char *pattern = argv[1];
-    char *inputFN = argv[2];
+    const char *inputFN = argv[2];
 
     /* First, we attempt to compile the pattern provided on the command line.
      * We assume 'DOTALL' semantics, meaning that the '.' meta-character will

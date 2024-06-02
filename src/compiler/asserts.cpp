@@ -176,7 +176,8 @@ void replaceAssertVertex(NGHolder &g, NFAVertex t, const ExpressionInfo &expr,
             auto ecit = edge_cache.find(cache_key);
             if (ecit == edge_cache.end()) {
                 DEBUG_PRINTF("adding edge %zu %zu\n", g[u].index, g[v].index);
-                NFAEdge e = add_edge(u, v, g);
+                NFAEdge e;
+                std::tie(e, std::ignore) = add_edge(u, v, g);
                 edge_cache.emplace(cache_key, e);
                 g[e].assert_flags = flags;
                 if (++assert_edge_count > MAX_ASSERT_EDGES) {
@@ -229,11 +230,12 @@ void checkForMultilineStart(ReportManager &rm, NGHolder &g,
 
         /* we need to interpose a dummy dot vertex between v and accept if
          * required so that ^ doesn't match trailing \n */
-         for (const auto &e : out_edges_range(v, g)) {
-            if (target(e, g) == g.accept) {
-                dead.emplace_back(e);
-            }
-        }
+        auto deads = [&g=g](const NFAEdge &e) {
+            return (target(e, g) == g.accept);
+        };
+        const auto &er = out_edges_range(v, g);
+        std::copy_if(begin(er), end(er),  std::back_inserter(dead), deads);
+
         /* assert has been resolved; clear flag */
         g[v].assert_flags &= ~POS_FLAG_MULTILINE_START;
     }
@@ -251,6 +253,7 @@ void checkForMultilineStart(ReportManager &rm, NGHolder &g,
 
 static
 bool hasAssertVertices(const NGHolder &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : vertices_range(g)) {
         int flags = g[v].assert_flags;
         if (flags & WORDBOUNDARY_FLAGS) {

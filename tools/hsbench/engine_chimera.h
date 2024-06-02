@@ -55,7 +55,7 @@ struct CompileCHStats {
 class EngineCHContext : public EngineContext{
 public:
     explicit EngineCHContext(const ch_database_t *db);
-    ~EngineCHContext();
+    virtual ~EngineCHContext() override;
 
     ch_scratch_t *scratch = nullptr;
 };
@@ -64,34 +64,34 @@ public:
 class EngineChimera : public Engine {
 public:
     explicit EngineChimera(ch_database_t *db, CompileCHStats cs);
-    ~EngineChimera();
+    virtual ~EngineChimera() override;
 
-    std::unique_ptr<EngineContext> makeContext() const;
+    std::unique_ptr<EngineContext> makeContext() const override;
 
     void scan(const char *data, unsigned int len, unsigned int id,
-              ResultEntry &result, EngineContext &ectx) const;
+              ResultEntry &result, EngineContext &ectx) const override;
 
     void scan_vectored(const char *const *data, const unsigned int *len,
                        unsigned int count, unsigned int streamId,
-                       ResultEntry &result, EngineContext &ectx) const;
+                       ResultEntry &result, EngineContext &ectx) const override;
 
     std::unique_ptr<EngineStream> streamOpen(EngineContext &ectx,
-                                             unsigned id) const;
+                                             unsigned id) const override;
 
     void streamClose(std::unique_ptr<EngineStream> stream,
-                     ResultEntry &result) const;
+                     ResultEntry &result) const override;
 
     void streamCompressExpand(EngineStream &stream,
-                              std::vector<char> &temp) const;
+                              std::vector<char> &temp) const override;
 
     void streamScan(EngineStream &stream, const char *data, unsigned int len,
-                    unsigned int id, ResultEntry &result) const;
+                    unsigned int id, ResultEntry &result) const override;
 
-    void printStats() const;
+    void printStats() const override;
 
-    void printCsvStats() const;
+    void printCsvStats() const override;
 
-    void sqlStats(SqlDB &db) const;
+    void sqlStats(SqlDB &db) const override;
 
 private:
     ch_database_t *db;

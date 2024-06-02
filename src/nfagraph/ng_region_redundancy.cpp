@@ -62,6 +62,7 @@ bool regionHasUnexpectedAccept(const NGHolder &g, const u32 region,
                        const flat_set<ReportID> &expected_reports,
                        const unordered_map<NFAVertex, u32> &region_map) {
     /* TODO: only check vertices connected to accept/acceptEOD */
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : vertices_range(g)) {
         if (region != region_map.at(v)) {
             continue;
@@ -71,7 +72,7 @@ bool regionHasUnexpectedAccept(const NGHolder &g, const u32 region,
             return true; /* encountering an actual special in the region is
                           * possible but definitely unexpected */
         }
-
+        // cppcheck-suppress useStlAlgorithm
         for (auto w : adjacent_vertices_range(v, g)) {
             if (is_any_accept(w, g) && g[v].reports != expected_reports) {
                 return true;
@@ -200,6 +201,7 @@ map<u32, RegionInfo> buildRegionInfoMap(const NGHolder &g,
 
 static
 bool hasNoStartAnchoring(const NGHolder &h) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : adjacent_vertices_range(h.start, h)) {
         if (!edge(h.startDs, v, h).second) {
             return false;

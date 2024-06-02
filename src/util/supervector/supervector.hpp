@@ -205,21 +205,21 @@ public:
   constexpr SuperVector() {};
   SuperVector(SuperVector const &other)
   :u(other.u) {};
-  SuperVector(typename base_type::type const v);
+  explicit SuperVector(typename base_type::type const v);
 
   template<typename T>
-  SuperVector(T const other);
+  explicit SuperVector(T const other);
 
   SuperVector(SuperVector<SIZE/2> const lo, SuperVector<SIZE/2> const hi);
   SuperVector(previous_type const lo, previous_type const hi);
 
-  static SuperVector dup_u8 (uint8_t  other) { return {other}; };
-  static SuperVector dup_s8 (int8_t   other) { return {other}; };
+  static SuperVector dup_u8 (uint8_t  other) { return {SuperVector(other)}; };
+  static SuperVector dup_s8 (int8_t   other) { return {SuperVector(other)}; };
   static SuperVector dup_u16(uint16_t other) { return {other}; };
   static SuperVector dup_s16(int16_t  other) { return {other}; };
   static SuperVector dup_u32(uint32_t other) { return {other}; };
   static SuperVector dup_s32(int32_t  other) { return {other}; };
-  static SuperVector dup_u64(uint64_t other) { return {other}; };
+  static SuperVector dup_u64(uint64_t other) { return {SuperVector(other)}; };
   static SuperVector dup_s64(int64_t  other) { return {other}; };
 
   void operator=(SuperVector const &other);

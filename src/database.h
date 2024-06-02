@@ -79,21 +79,18 @@ static UNUSED
 const platform_t hs_current_platform_no_avx2 = {
     HS_PLATFORM_NOAVX2 |
     HS_PLATFORM_NOAVX512 |
-    HS_PLATFORM_NOAVX512VBMI |
-    0,
+    HS_PLATFORM_NOAVX512VBMI 
 };
 
 static UNUSED
 const platform_t hs_current_platform_no_avx512 = {
     HS_PLATFORM_NOAVX512 |
-    HS_PLATFORM_NOAVX512VBMI |
-    0,
+    HS_PLATFORM_NOAVX512VBMI
 };
 
 static UNUSED
 const platform_t hs_current_platform_no_avx512vbmi = {
-    HS_PLATFORM_NOAVX512VBMI |
-    0,
+    HS_PLATFORM_NOAVX512VBMI 
 };
 
 /*
@@ -115,6 +112,7 @@ struct hs_database {
 
 static really_inline
 const void *hs_get_bytecode(const struct hs_database *db) {
+    // cppcheck-suppress cstyleCast
     return ((const char *)db + db->bytecode);
 }
 

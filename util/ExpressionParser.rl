@@ -152,7 +152,6 @@ bool HS_CDECL readExpression(const std::string &input, std::string &expr,
     UNUSED const char *eof = pe;
     UNUSED const char *ts = p, *te = p;
     int cs;
-    UNUSED int act;
 
     assert(p);
     assert(pe);

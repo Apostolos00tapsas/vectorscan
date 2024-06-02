@@ -58,7 +58,7 @@ char nfaExecSheng_reportCurrent(const struct NFA *n, struct mq *q);
 char nfaExecSheng_B(const struct NFA *n, u64a offset, const u8 *buffer,
                     size_t length, NfaCallback cb, void *context);
 
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 #define nfaExecSheng32_B_Reverse NFA_API_NO_IMPL
 #define nfaExecSheng32_zombie_status NFA_API_ZOMBIE_NO_IMPL
 
@@ -106,8 +106,7 @@ char nfaExecSheng64_reportCurrent(const struct NFA *n, struct mq *q);
 
 char nfaExecSheng64_B(const struct NFA *n, u64a offset, const u8 *buffer,
                       size_t length, NfaCallback cb, void *context);
-
-#else // !HAVE_AVX512VBMI
+#else // !HAVE_AVX512VBMI && !HAVE_SVE
 
 #define nfaExecSheng32_B_Reverse NFA_API_NO_IMPL
 #define nfaExecSheng32_zombie_status NFA_API_ZOMBIE_NO_IMPL
@@ -138,6 +137,7 @@ char nfaExecSheng64_B(const struct NFA *n, u64a offset, const u8 *buffer,
 #define nfaExecSheng64_testEOD NFA_API_NO_IMPL
 #define nfaExecSheng64_reportCurrent NFA_API_NO_IMPL
 #define nfaExecSheng64_B NFA_API_NO_IMPL
-#endif // end of HAVE_AVX512VBMI
+#endif // end of HAVE_AVX512VBMI || defined(HAVE_SVE)
+
 
 #endif /* SHENG_H_ */

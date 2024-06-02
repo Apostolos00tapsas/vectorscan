@@ -37,6 +37,7 @@ namespace ue2 {
 /** Class representing a component state. */
 class PositionInfo {
 public:
+    // cppcheck-suppress noExplicitConstructor
     PositionInfo(unsigned int p) : pos(p), flags(0) {}
 
     bool operator<(const PositionInfo &other) const {

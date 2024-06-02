@@ -68,7 +68,7 @@ void two_aligned_free(void *mem) {
         return;
     }
     // Allocated with two_aligned_malloc above.
-    free((char *)mem - 2);
+    free(static_cast<char *>(mem) - 2);
 }
 
 TEST(CustomAllocator, TwoAlignedCompile) {

@@ -59,7 +59,7 @@ Component * ComponentAssertion::accept(ComponentVisitor &v) {
     }
 
     for (auto i = children.begin(), e = children.end(); i != e; ++i) {
-        Component *child = i->get();
+        const Component *child = i->get();
         c = (*i)->accept(v);
         if (c != child) {
             // Child has been replaced (new Component pointer) or we've been

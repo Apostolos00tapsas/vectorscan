@@ -679,7 +679,7 @@ hwlmcb_rv_t buildSufPQ(const struct RoseEngine *t, char *state, s64a safe_loc,
                        s64a final_loc, struct hs_scratch *scratch) {
     assert(scratch->catchup_pq.qm_size <= t->outfixEndQueue);
 
-    struct RoseContext *tctxt = &scratch->tctxt;
+    const struct RoseContext *tctxt = &scratch->tctxt;
     assert(t->activeArrayCount);
 
     assert(scratch->core_info.buf_offset + final_loc

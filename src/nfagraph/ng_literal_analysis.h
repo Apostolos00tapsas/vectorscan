@@ -70,7 +70,7 @@ bool bad_mixed_sensitivity(const ue2_literal &s);
  * Score all the edges in the given graph, returning them in \p scores indexed
  * by edge_index. */
 std::vector<u64a> scoreEdges(const NGHolder &h,
-                             const flat_set<NFAEdge> &known_bad = {});
+                             const flat_set<NFAEdge> &known_bad = flat_set<NFAEdge>());
 
 /** Returns a score for a literal set. Lower scores are better. */
 u64a scoreSet(const std::set<ue2_literal> &s);

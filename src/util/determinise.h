@@ -102,7 +102,7 @@ bool determinise(Auto &n, std::vector<ds> &dstates, size_t state_limit,
         dstates.emplace_back(ds(alphabet_size));
     }
 
-    std::vector<StateSet> succs(alphabet_size, n.dead);
+    std::vector<StateSet> succrs(alphabet_size, n.dead);
 
     while (!q.empty()) {
         auto m = std::move(q.front());
@@ -133,13 +133,13 @@ bool determinise(Auto &n, std::vector<ds> &dstates, size_t state_limit,
         }
 
         /* fill in successor states */
-        n.transition(curr, &succs[0]);
+        n.transition(curr, &succrs[0]);
         for (symbol_t s = 0; s < n.alphasize; s++) {
             dstate_id_t succ_id;
-            if (s && succs[s] == succs[s - 1]) {
+            if (s && succrs[s] == succrs[s - 1]) {
                 succ_id = dstates[curr_id].next[s - 1];
             } else {
-                auto p = dstate_ids.find(succs[s]);
+                auto p = dstate_ids.find(succrs[s]);
                 if (p != dstate_ids.end()) { // succ[s] is already present
                     succ_id = p->second;
                     if (succ_id > curr_id && !dstates[succ_id].daddy
@@ -148,10 +148,10 @@ bool determinise(Auto &n, std::vector<ds> &dstates, size_t state_limit,
                     }
                 } else {
                     succ_id = dstate_ids.size();
-                    dstate_ids.emplace(succs[s], succ_id);
+                    dstate_ids.emplace(succrs[s], succ_id);
                     dstates.emplace_back(ds(alphabet_size));
                     dstates.back().daddy = n.unalpha[s] < N_CHARS ? curr_id : 0;
-                    q.emplace(succs[s], succ_id);
+                    q.emplace(succrs[s], succ_id);
                 }
 
                 DEBUG_PRINTF("-->%hu on %02hx\n", succ_id, n.unalpha[s]);

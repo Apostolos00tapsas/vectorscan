@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2020, Intel Corporation
+ * Copyright (c) 2024, VectorCamp PC
  * Copyright (c) 2021, Arm Limited
  *
  * Redistribution and use in source and binary forms, with or without
@@ -133,6 +134,7 @@ struct ALIGN_CL_DIRECTIVE NFA {
     /* Note: implementation (e.g. a LimEx) directly follows struct in memory */
 } ;
 
+#ifndef __cplusplus
 // Accessor macro for the implementation NFA: we do things this way to avoid
 // type-punning warnings.
 #define getImplNfa(nfa) \
@@ -140,6 +142,13 @@ struct ALIGN_CL_DIRECTIVE NFA {
 
 // Non-const version of the above, used at compile time.
 #define getMutableImplNfa(nfa)     ((char *)(nfa) + sizeof(struct NFA))
+#else
+// Same versions without C casts to avoid Cppcheck warnings
+#define getImplNfa(nfa) \
+    (reinterpret_cast<const void *>(reinterpret_cast<const char *>(nfa) + sizeof(struct NFA)))
+
+#define getMutableImplNfa(nfa)     (reinterpret_cast<char *>(nfa) + sizeof(struct NFA))
+#endif
 
 static really_inline u32 nfaAcceptsEod(const struct NFA *nfa) {
     return nfa->flags & NFA_ACCEPTS_EOD;

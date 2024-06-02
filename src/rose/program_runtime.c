@@ -2991,7 +2991,7 @@ hwlmcb_rv_t roseRunProgram(const struct RoseEngine *t,
 
                     pc = getByOffset(t, ri->child_offset);
                     pc_base = pc;
-                    programOffset = (const u8 *)pc_base -(const u8 *)t;
+                    programOffset = (const u8 *)pc_base -(const u8 *)t;         //NOLINT (clang-analyzer-deadcode.DeadStores)
                     DEBUG_PRINTF("pc_base %p pc %p child_offset %u squash %u\n",
                                  pc_base, pc, ri->child_offset, ri->squash);
                     work_done = 0;
@@ -3428,7 +3428,7 @@ hwlmcb_rv_t roseRunProgram_l(const struct RoseEngine *t,
 
                     pc = getByOffset(t, ri->child_offset);
                     pc_base = pc;
-                    programOffset = (const u8 *)pc_base -(const u8 *)t;
+                    programOffset = (const u8 *)pc_base -(const u8 *)t;         //NOLINT (clang-analyzer-deadcode.DeadStores)
                     DEBUG_PRINTF("pc_base %p pc %p child_offset %u squash %u\n",
                                  pc_base, pc, ri->child_offset, ri->squash);
                     work_done = 0;

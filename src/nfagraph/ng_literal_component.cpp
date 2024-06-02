@@ -98,7 +98,7 @@ void addToString(string &s, const NGHolder &g, NFAVertex v) {
 }
 
 static
-bool splitOffLiteral(NG &ng, NGHolder &g, NFAVertex v, const bool anchored,
+bool splitOffLiteral(NG &ng, const NGHolder &g, NFAVertex v, const bool anchored,
                      set<NFAVertex> &dead) {
     DEBUG_PRINTF("examine vertex %zu\n", g[v].index);
     bool nocase = false, casefixed = false;

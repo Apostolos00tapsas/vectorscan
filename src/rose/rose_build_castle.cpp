@@ -130,6 +130,7 @@ vector<rose_literal_id> literals_for_vertex(const RoseBuildImpl &tbi,
     vector<rose_literal_id> rv;
 
     for (const u32 id : tbi.g[v].literals) {
+        // cppcheck-suppress useStlAlgorithm
         rv.emplace_back(tbi.literals.at(id));
     }
 
@@ -170,7 +171,6 @@ void renovateCastle(RoseBuildImpl &tbi, CastleProto *castle,
                 return; /* bail - TODO: be less lazy */
             }
 
-            vector<CharReach> rem_local_cr;
             u32 ok_count = 0;
             for (auto it = e.s.end() - g[v].left.lag; it != e.s.end(); ++it) {
                 if (!isSubsetOf(*it, cr)) {
@@ -253,11 +253,11 @@ bool unmakeCastles(RoseBuildImpl &tbi) {
     for (auto v : vertices_range(g)) {
         const LeftEngInfo &left = g[v].left;
         if (left.castle && left.castle->repeats.size() > 1) {
-            left_castles[left].emplace_back(v);
+            left_castles[left_id(left)].emplace_back(v);
         }
         const RoseSuffixInfo &suffix = g[v].suffix;
         if (suffix.castle && suffix.castle->repeats.size() > 1) {
-            suffix_castles[suffix].emplace_back(v);
+            suffix_castles[suffix_id(suffix)].emplace_back(v);
         }
     }
 

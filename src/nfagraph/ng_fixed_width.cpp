@@ -66,15 +66,15 @@ bool findMask(const NGHolder &g, vector<CharReach> *mask, bool *anchored,
         return false;
     }
 
-    set<NFAVertex> &succs = *anchored ? s_succ : sds_succ;
-    succs.erase(g.startDs);
-    if (succs.size() != 1) {
+    set<NFAVertex> &succrs = *anchored ? s_succ : sds_succ;
+    succrs.erase(g.startDs);
+    if (succrs.size() != 1) {
         DEBUG_PRINTF("branchy root\n");
         return false;
     }
 
     NFAVertex u = *anchored ? g.start : g.startDs;
-    NFAVertex v = *succs.begin();
+    NFAVertex v = *succrs.begin();
 
     while (true) {
         DEBUG_PRINTF("validating vertex %zu\n", g[v].index);

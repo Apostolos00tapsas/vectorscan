@@ -64,7 +64,7 @@ public:
         assert(none());
     }
 
-    bitfield(const boost::dynamic_bitset<> &a) : bits{{0}} {
+    explicit bitfield(const boost::dynamic_bitset<> &a) : bits{{0}} {
         assert(a.size() == requested_size);
         assert(none());
         for (auto i = a.find_first(); i != a.npos; i = a.find_next(i)) {
@@ -89,9 +89,7 @@ public:
 
     /// Set all bits.
     void setall() {
-        for (auto &e : bits) {
-            e = all_ones;
-        }
+        std::fill(bits.begin(), bits.end(), all_ones);
         clear_trailer();
     }
 
@@ -102,9 +100,7 @@ public:
 
     /// Clear all bits.
     void clear() {
-        for (auto &e : bits) {
-            e = 0;
-        }
+        std::fill(bits.begin(), bits.end(), 0);
     }
 
     /// Clear all bits (alias for bitset::clear).
@@ -200,6 +196,8 @@ public:
 
     /// Are no bits set?
     bool none() const {
+        // cppcheck-suppress useStlAlgorithm
+        // XXX maybe do this one.. 
         for (const auto &e : bits) {
             if (e != 0) {
                 return false;

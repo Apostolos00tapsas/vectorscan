@@ -55,11 +55,11 @@ public:
     }
     operator u8 *() {
         assert(data);
-        return data.get() + 7;
+        return reinterpret_cast<u8 *>(data.get()) + 7;
     }
     operator const u8 *() const {
         assert(data);
-        return data.get() + 7;
+        return reinterpret_cast<u8 *>(data.get()) + 7;
     }
 
 private:
@@ -305,7 +305,7 @@ TEST(MultiBit, It3) {
     const size_t test_size = 60;
     mmbit_holder ba(test_size, 4);
 
-    fill_n((u8 *)ba, mmbit_size(test_size) + 4, 0xff);
+    fill_n(static_cast<u8 *>(ba), mmbit_size(test_size) + 4, 0xff);
 
     mmbit_clear(ba, test_size);
 

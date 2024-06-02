@@ -106,9 +106,10 @@ static really_inline
 const char *findShermanState(UNUSED const struct mcclellan *m,
                              const char *sherman_base_offset, u32 sherman_base,
                              u32 s) {
-    const char *rv
-        = sherman_base_offset + SHERMAN_FIXED_SIZE * (s - sherman_base);
+    const char *rv = sherman_base_offset + SHERMAN_FIXED_SIZE * (s - sherman_base);
+    // cppcheck-suppress cstyleCast
     assert(rv < (const char *)m + m->length - sizeof(struct NFA));
+    // cppcheck-suppress cstyleCast
     UNUSED u8 type = *(const u8 *)(rv + SHERMAN_TYPE_OFFSET);
     assert(type == SHERMAN_STATE);
     return rv;
@@ -123,13 +124,15 @@ char *findMutableShermanState(char *sherman_base_offset, u16 sherman_base,
 static really_inline
 const char *findWideEntry8(UNUSED const struct mcclellan *m,
                            const char *wide_base, u32 wide_limit, u32 s) {
+    // cppcheck-suppress cstyleCast
     UNUSED u8 type = *(const u8 *)wide_base;
     assert(type == WIDE_STATE);
-    const u32 entry_offset
-        = *(const u32 *)(wide_base
+    // cppcheck-suppress cstyleCast
+    const u32 entry_offset = *(const u32 *)(wide_base
         + WIDE_ENTRY_OFFSET8((s - wide_limit) * sizeof(u32)));
 
     const char *rv = wide_base + entry_offset;
+    // cppcheck-suppress cstyleCast
     assert(rv < (const char *)m + m->length - sizeof(struct NFA));
     return rv;
 }
@@ -137,21 +140,23 @@ const char *findWideEntry8(UNUSED const struct mcclellan *m,
 static really_inline
 const char *findWideEntry16(UNUSED const struct mcclellan *m,
                             const char *wide_base, u32 wide_limit, u32 s) {
+    // cppcheck-suppress cstyleCast
     UNUSED u8 type = *(const u8 *)wide_base;
     assert(type == WIDE_STATE);
-    const u32 entry_offset
-        = *(const u32 *)(wide_base
+    // cppcheck-suppress cstyleCast
+    const u32 entry_offset = *(const u32 *)(wide_base
         + WIDE_ENTRY_OFFSET16((s - wide_limit) * sizeof(u32)));
 
     const char *rv = wide_base + entry_offset;
+    // cppcheck-suppress cstyleCast
     assert(rv < (const char *)m + m->length - sizeof(struct NFA));
     return rv;
 }
 
 static really_inline
 char *findMutableWideEntry16(char *wide_base, u32 wide_limit, u32 s) {
-    u32 entry_offset
-        = *(const u32 *)(wide_base
+    // cppcheck-suppress cstyleCast
+    u32 entry_offset = *(const u32 *)(wide_base
         + WIDE_ENTRY_OFFSET16((s - wide_limit) * sizeof(u32)));
 
     return wide_base + entry_offset;

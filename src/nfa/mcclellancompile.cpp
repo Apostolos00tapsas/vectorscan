@@ -55,6 +55,7 @@
 #include <cstring>
 #include <map>
 #include <memory>
+#include <numeric>
 #include <queue>
 #include <set>
 #include <vector>
@@ -176,11 +177,11 @@ static
 mstate_aux *getAux(NFA *n, dstate_id_t i) {
     assert(isMcClellanType(n->type));
 
-    mcclellan *m = (mcclellan *)getMutableImplNfa(n);
-    mstate_aux *aux_base = (mstate_aux *)((char *)n + m->aux_offset);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(n));
+    mstate_aux *aux_base = reinterpret_cast<mstate_aux *>(reinterpret_cast<u8 *>(n) + m->aux_offset);
 
     mstate_aux *aux = aux_base + i;
-    assert((const char *)aux < (const char *)n + m->length);
+    assert(reinterpret_cast<const char *>(aux) < reinterpret_cast<const char *>(n) + m->length);
     return aux;
 }
 
@@ -190,7 +191,7 @@ void markEdges(NFA *n, u16 *succ_table, const dfa_info &info) {
     assert(n->type == MCCLELLAN_NFA_16);
     u8 alphaShift = info.getAlphaShift();
     u16 alphaSize = info.impl_alpha_size;
-    mcclellan *m = (mcclellan *)getMutableImplNfa(n);
+    mcclellan *m = reinterpret_cast<mcclellan *>(getMutableImplNfa(n));
 
     /* handle the normal states */
     for (u32 i = 0; i < m->sherman_limit; i++) {
@@ -202,7 +203,7 @@ void markEdges(NFA *n, u16 *succ_table, const dfa_info &info) {
                 continue;
             }
 
-            mstate_aux *aux = getAux(n, succ_table[c_prime]);
+            const mstate_aux *aux = getAux(n, succ_table[c_prime]);
 
             if (aux->accept) {
                 succ_table[c_prime] |= ACCEPT_FLAG;
@@ -215,23 +216,23 @@ void markEdges(NFA *n, u16 *succ_table, const dfa_info &info) {
     }
 
     /* handle the sherman states */
-    char *sherman_base_offset = (char *)n + m->sherman_offset;
+    char *sherman_base_offset = reinterpret_cast<char *>(n) + m->sherman_offset;
     u16 sherman_ceil = m->has_wide == 1 ? m->wide_limit : m->state_count;
     for (u16 j = m->sherman_limit; j < sherman_ceil; j++) {
         char *sherman_cur
             = findMutableShermanState(sherman_base_offset, m->sherman_limit, j);
         assert(*(sherman_cur + SHERMAN_TYPE_OFFSET) == SHERMAN_STATE);
-        u8 len = *(u8 *)(sherman_cur + SHERMAN_LEN_OFFSET);
-        u16 *succs = (u16 *)(sherman_cur + SHERMAN_STATES_OFFSET(len));
+        u8 len = *(reinterpret_cast<u8 *>(sherman_cur + SHERMAN_LEN_OFFSET));
+        u16 *succs = reinterpret_cast<u16 *>(sherman_cur + SHERMAN_STATES_OFFSET(len));
 
         for (u8 i = 0; i < len; i++) {
-            u16 succ_i = unaligned_load_u16((u8 *)&succs[i]);
+            u16 succ_i = unaligned_load_u16(reinterpret_cast<u8 *>(&succs[i]));
             // wide state has no aux structure.
             if (m->has_wide && succ_i >= m->wide_limit) {
                 continue;
             }
 
-            mstate_aux *aux = getAux(n, succ_i);
+            const mstate_aux *aux = getAux(n, succ_i);
 
             if (aux->accept) {
                 succ_i |= ACCEPT_FLAG;
@@ -241,51 +242,51 @@ void markEdges(NFA *n, u16 *succ_table, const dfa_info &info) {
                 succ_i |= ACCEL_FLAG;
             }
 
-            unaligned_store_u16((u8 *)&succs[i], succ_i);
+            unaligned_store_u16(reinterpret_cast<u8 *>(&succs[i]), succ_i);
         }
     }
 
     /* handle the wide states */
     if (m->has_wide) {
         u32 wide_limit = m->wide_limit;
-        char *wide_base = (char *)n + m->wide_offset;
+        char *wide_base = reinterpret_cast<char *>(n) + m->wide_offset;
         assert(*wide_base == WIDE_STATE);
         u16 wide_number = verify_u16(info.wide_symbol_chain.size());
         // traverse over wide head states.
         for (u16 j = wide_limit; j < wide_limit + wide_number; j++) {
             char *wide_cur
                 = findMutableWideEntry16(wide_base, wide_limit, j);
-            u16 width = *(const u16 *)(wide_cur + WIDE_WIDTH_OFFSET);
-            u16 *trans = (u16 *)(wide_cur + WIDE_TRANSITION_OFFSET16(width));
+            u16 width = *(reinterpret_cast<const u16 *>(wide_cur + WIDE_WIDTH_OFFSET));
+            u16 *trans = reinterpret_cast<u16 *>(wide_cur + WIDE_TRANSITION_OFFSET16(width));
 
             // check successful transition
-            u16 next = unaligned_load_u16((u8 *)trans);
+            u16 next = unaligned_load_u16(reinterpret_cast<u8 *>(trans));
             if (next < wide_limit) {
-                mstate_aux *aux = getAux(n, next);
+                const mstate_aux *aux = getAux(n, next);
                 if (aux->accept) {
                     next |= ACCEPT_FLAG;
                 }
                 if (aux->accel_offset) {
                     next |= ACCEL_FLAG;
                 }
-                unaligned_store_u16((u8 *)trans, next);
+                unaligned_store_u16(reinterpret_cast<u8 *>(trans), next);
             }
             trans++;
 
             // check failure transition
             for (symbol_t k = 0; k < alphaSize; k++) {
-                u16 next_k = unaligned_load_u16((u8 *)&trans[k]);
+                u16 next_k = unaligned_load_u16(reinterpret_cast<u8 *>(&trans[k]));
                 if (next_k >= wide_limit) {
                     continue;
                 }
-                mstate_aux *aux_k = getAux(n, next_k);
+                const mstate_aux *aux_k = getAux(n, next_k);
                 if (aux_k->accept) {
                     next_k |= ACCEPT_FLAG;
                 }
                 if (aux_k->accel_offset) {
                     next_k |= ACCEL_FLAG;
                 }
-                unaligned_store_u16((u8 *)&trans[k], next_k);
+                unaligned_store_u16(reinterpret_cast<u8 *>(&trans[k]), next_k);
             }
         }
     }
@@ -321,7 +322,7 @@ void populateBasicInfo(size_t state_size, const dfa_info &info,
         nfa->type = MCCLELLAN_NFA_16;
     }
 
-    mcclellan *m = (mcclellan *)getMutableImplNfa(nfa);
+    mcclellan *m = reinterpret_cast<mcclellan *>(getMutableImplNfa(nfa));
     for (u32 i = 0; i < 256; i++) {
         m->remap[i] = verify_u8(info.alpha_remap[i]);
     }
@@ -361,7 +362,7 @@ struct raw_report_list {
     raw_report_list(const flat_set<ReportID> &reports_in,
                     const ReportManager &rm, bool do_remap) {
         if (do_remap) {
-            for (auto &id : reports_in) {
+            for (const auto &id : reports_in) {
                 reports.insert(rm.getProgramOffset(id));
             }
         } else {
@@ -485,7 +486,7 @@ void raw_report_info_impl::fillReportLists(NFA *n, size_t base_offset,
     for (const auto &reps : rl) {
         ro.emplace_back(base_offset);
 
-        report_list *p = (report_list *)((char *)n + base_offset);
+        report_list *p = reinterpret_cast<report_list *>(reinterpret_cast<char *>(n) + base_offset);
 
         u32 i = 0;
         for (const ReportID report : reps.reports) {
@@ -529,10 +530,11 @@ size_t calcWideRegionSize(const dfa_info &info) {
     size_t rv = info.wide_symbol_chain.size() * sizeof(u32) + 4;
 
     // wide info body
-    for (const auto &chain : info.wide_symbol_chain) {
-        rv += ROUNDUP_N(chain.size(), 2) +
-              (info.impl_alpha_size + 1) * sizeof(u16) + 2;
-    }
+    auto chainz = [info=info](size_t z, const vector<symbol_t> &chain) {
+        return z + (size_t)(ROUNDUP_N(chain.size(), 2) +   
+               (info.impl_alpha_size + 1) * sizeof(u16) + 2);
+    };
+    rv += std::accumulate(info.wide_symbol_chain.begin(), info.wide_symbol_chain.end(), 0, chainz);
 
     return ROUNDUP_16(rv);
 }
@@ -540,7 +542,7 @@ size_t calcWideRegionSize(const dfa_info &info) {
 static
 void fillInAux(mstate_aux *aux, dstate_id_t i, const dfa_info &info,
                const vector<u32> &reports, const vector<u32> &reports_eod,
-               vector<u32> &reportOffsets) {
+               const vector<u32> &reportOffsets) {
     const dstate &raw_state = info.states[i];
     aux->accept = raw_state.reports.empty() ? 0 : reportOffsets[reports[i]];
     aux->accept_eod = raw_state.reports_eod.empty() ? 0
@@ -625,7 +627,7 @@ bytecode_ptr<NFA> mcclellanCompile16(dfa_info &info, const CompileContext &cc,
     if (!allocateFSN16(info, &count_real_states, &wide_limit)) {
         DEBUG_PRINTF("failed to allocate state numbers, %zu states total\n",
                      info.size());
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     DEBUG_PRINTF("count_real_states: %d\n", count_real_states);
@@ -665,7 +667,7 @@ bytecode_ptr<NFA> mcclellanCompile16(dfa_info &info, const CompileContext &cc,
     DEBUG_PRINTF("total_size %zu\n", total_size);
 
     auto nfa = make_zeroed_bytecode_ptr<NFA>(total_size);
-    char *nfa_base = (char *)nfa.get();
+    char *nfa_base = reinterpret_cast<char *>(nfa.get());
 
     populateBasicInfo(sizeof(u16), info, total_size, aux_offset, accel_offset,
                       accel_escape_info.size(), arb, single, nfa.get());
@@ -674,9 +676,9 @@ bytecode_ptr<NFA> mcclellanCompile16(dfa_info &info, const CompileContext &cc,
 
     ri->fillReportLists(nfa.get(), aux_offset + aux_size, reportOffsets);
 
-    u16 *succ_table = (u16 *)(nfa_base + sizeof(NFA) + sizeof(mcclellan));
-    mstate_aux *aux = (mstate_aux *)(nfa_base + aux_offset);
-    mcclellan *m = (mcclellan *)getMutableImplNfa(nfa.get());
+    u16 *succ_table = reinterpret_cast<u16 *>(nfa_base + sizeof(NFA) + sizeof(mcclellan));
+    mstate_aux *aux = reinterpret_cast<mstate_aux *>(nfa_base + aux_offset);
+    mcclellan *m = reinterpret_cast<mcclellan *>(getMutableImplNfa(nfa.get()));
 
     m->wide_limit = wide_limit;
     m->wide_offset = wide_offset;
@@ -710,7 +712,7 @@ bytecode_ptr<NFA> mcclellanCompile16(dfa_info &info, const CompileContext &cc,
             assert(accel_offset + sizeof(NFA) <= sherman_offset);
             assert(ISALIGNED_N(accel_offset, alignof(union AccelAux)));
             info.strat.buildAccel(i, accel_escape_info.at(i),
-                                  (void *)((char *)m + this_aux->accel_offset));
+                                  reinterpret_cast<void *>(reinterpret_cast<char *>(m) + this_aux->accel_offset));
         }
     }
 
@@ -740,17 +742,17 @@ bytecode_ptr<NFA> mcclellanCompile16(dfa_info &info, const CompileContext &cc,
             assert(accel_offset + sizeof(NFA) <= sherman_offset);
             assert(ISALIGNED_N(accel_offset, alignof(union AccelAux)));
             info.strat.buildAccel(i, accel_escape_info.at(i),
-                                  (void *)((char *)m + this_aux->accel_offset));
+                                  reinterpret_cast<void *>(reinterpret_cast<char *>(m) + this_aux->accel_offset));
         }
 
         u8 len = verify_u8(info.impl_alpha_size - info.extra[i].daddytaken);
         assert(len <= 9);
         dstate_id_t d = info.states[i].daddy;
 
-        *(u8 *)(curr_sherman_entry + SHERMAN_TYPE_OFFSET) = SHERMAN_STATE;
-        *(u8 *)(curr_sherman_entry + SHERMAN_LEN_OFFSET) = len;
-        *(u16 *)(curr_sherman_entry + SHERMAN_DADDY_OFFSET) = info.implId(d);
-        u8 *chars = (u8 *)(curr_sherman_entry + SHERMAN_CHARS_OFFSET);
+	*(reinterpret_cast<u8 *>(curr_sherman_entry + SHERMAN_TYPE_OFFSET)) = SHERMAN_STATE;
+        *(reinterpret_cast<u8 *>(curr_sherman_entry + SHERMAN_LEN_OFFSET)) = len;
+        *(reinterpret_cast<u16 *>(curr_sherman_entry + SHERMAN_DADDY_OFFSET)) = info.implId(d);
+        u8 *chars = reinterpret_cast<u8 *>(curr_sherman_entry + SHERMAN_CHARS_OFFSET);
 
         for (u16 s = 0; s < info.impl_alpha_size; s++) {
             if (info.states[i].next[s] != info.states[d].next[s]) {
@@ -758,13 +760,13 @@ bytecode_ptr<NFA> mcclellanCompile16(dfa_info &info, const CompileContext &cc,
             }
         }
 
-        u16 *states = (u16 *)(curr_sherman_entry + SHERMAN_STATES_OFFSET(len));
+        u16 *states = reinterpret_cast<u16 *>(curr_sherman_entry + SHERMAN_STATES_OFFSET(len));
         for (u16 s = 0; s < info.impl_alpha_size; s++) {
             if (info.states[i].next[s] != info.states[d].next[s]) {
                 DEBUG_PRINTF("s overrider %hu dad %hu char next %hu\n",
                              fs, info.implId(d),
                              info.implId(info.states[i].next[s]));
-                unaligned_store_u16((u8 *)states++,
+                unaligned_store_u16(reinterpret_cast<u8 *>(states++),
                                     info.implId(info.states[i].next[s]));
             }
         }
@@ -777,13 +779,13 @@ bytecode_ptr<NFA> mcclellanCompile16(dfa_info &info, const CompileContext &cc,
         assert(ISALIGNED_16(wide_base));
 
         char *wide_top = wide_base;
-        *(u8 *)(wide_top++) = WIDE_STATE;
+        *(reinterpret_cast<u8 *>(wide_top++)) = WIDE_STATE;
         wide_top = ROUNDUP_PTR(wide_top, 2);
-        *(u16 *)(wide_top) = wide_number;
+        *(reinterpret_cast<u16 *>(wide_top)) = wide_number;
         wide_top += 2;
 
         char *curr_wide_entry = wide_top + wide_number * sizeof(u32);
-        u32 *wide_offset_list = (u32 *)wide_top;
+        u32 *wide_offset_list = reinterpret_cast<u32 *>(wide_top);
 
         /* get the order of writing wide states */
         vector<size_t> order(wide_number);
@@ -794,12 +796,12 @@ bytecode_ptr<NFA> mcclellanCompile16(dfa_info &info, const CompileContext &cc,
         }
 
         for (size_t i : order) {
-            vector<dstate_id_t> &state_chain = info.wide_state_chain[i];
-            vector<symbol_t> &symbol_chain = info.wide_symbol_chain[i];
+            const vector<dstate_id_t> &state_chain = info.wide_state_chain[i];
+            const vector<symbol_t> &symbol_chain = info.wide_symbol_chain[i];
 
             u16 width = verify_u16(symbol_chain.size());
-            *(u16 *)(curr_wide_entry + WIDE_WIDTH_OFFSET) = width;
-            u8 *chars = (u8 *)(curr_wide_entry + WIDE_SYMBOL_OFFSET16);
+            *(reinterpret_cast<u16 *>(curr_wide_entry + WIDE_WIDTH_OFFSET)) = width;
+            u8 *chars = reinterpret_cast<u8 *>(curr_wide_entry + WIDE_SYMBOL_OFFSET16);
 
             // store wide state symbol chain
             for (size_t j = 0; j < width; j++) {
@@ -807,7 +809,7 @@ bytecode_ptr<NFA> mcclellanCompile16(dfa_info &info, const CompileContext &cc,
             }
 
             // store wide state transition table
-            u16 *trans = (u16 *)(curr_wide_entry
+            u16 *trans = reinterpret_cast<u16 *>(curr_wide_entry
                                 + WIDE_TRANSITION_OFFSET16(width));
             dstate_id_t tail = state_chain[width - 1];
             symbol_t last = symbol_chain[width -1];
@@ -831,7 +833,7 @@ bytecode_ptr<NFA> mcclellanCompile16(dfa_info &info, const CompileContext &cc,
 
             *wide_offset_list++ = verify_u32(curr_wide_entry - wide_base);
 
-            curr_wide_entry = (char *)trans;
+            curr_wide_entry = reinterpret_cast<char *>(trans);
         }
     }
 
@@ -953,9 +955,9 @@ bytecode_ptr<NFA> mcclellanCompile8(dfa_info &info, const CompileContext &cc,
     assert(ISALIGNED_N(accel_offset, alignof(union AccelAux)));
 
     auto nfa = make_zeroed_bytecode_ptr<NFA>(total_size);
-    char *nfa_base = (char *)nfa.get();
+    char *nfa_base = reinterpret_cast<char *>(nfa.get());
 
-    mcclellan *m = (mcclellan *)getMutableImplNfa(nfa.get());
+    mcclellan *m = reinterpret_cast<mcclellan *>(getMutableImplNfa(nfa.get()));
 
     allocateFSN8(info, accel_escape_info, &m->accel_limit_8,
                  &m->accept_limit_8);
@@ -967,8 +969,8 @@ bytecode_ptr<NFA> mcclellanCompile8(dfa_info &info, const CompileContext &cc,
     ri->fillReportLists(nfa.get(), aux_offset + aux_size, reportOffsets);
 
     /* copy in the state information */
-    u8 *succ_table = (u8 *)(nfa_base + sizeof(NFA) + sizeof(mcclellan));
-    mstate_aux *aux = (mstate_aux *)(nfa_base + aux_offset);
+    u8 *succ_table = reinterpret_cast<u8 *>(nfa_base + sizeof(NFA) + sizeof(mcclellan));
+    mstate_aux *aux = reinterpret_cast<mstate_aux *>(nfa_base + aux_offset);
 
     for (size_t i = 0; i < info.size(); i++) {
         if (contains(accel_escape_info, i)) {
@@ -978,7 +980,7 @@ bytecode_ptr<NFA> mcclellanCompile8(dfa_info &info, const CompileContext &cc,
             accel_offset += info.strat.accelSize();
 
             info.strat.buildAccel(i, accel_escape_info.at(i),
-                                  (void *)((char *)m + aux[j].accel_offset));
+                                  reinterpret_cast<void *>(reinterpret_cast<char *>(m) + aux[j].accel_offset));
         }
 
         fillInBasicState8(info, aux, succ_table, reportOffsets, reports,
@@ -1367,11 +1369,11 @@ bool store_chain_longest(vector<vector<dstate_id_t>> &candidate_chain,
 /* \brief Generate wide_symbol_chain from wide_state_chain. */
 static
 void generate_symbol_chain(dfa_info &info, vector<symbol_t> &chain_tail) {
-    raw_dfa &rdfa = info.raw;
+    const raw_dfa &rdfa = info.raw;
     assert(chain_tail.size() == info.wide_state_chain.size());
 
     for (size_t i = 0; i < info.wide_state_chain.size(); i++) {
-        vector<dstate_id_t> &state_chain = info.wide_state_chain[i];
+        const vector<dstate_id_t> &state_chain = info.wide_state_chain[i];
         vector<symbol_t> symbol_chain;
 
         info.extra[state_chain[0]].wideHead = true;
@@ -1379,7 +1381,6 @@ void generate_symbol_chain(dfa_info &info, vector<symbol_t> &chain_tail) {
 
         for (size_t j = 0; j < width; j++) {
             dstate_id_t curr_id = state_chain[j];
-            dstate_id_t next_id = state_chain[j + 1];
 
             // The last state of the chain doesn't belong to a wide state.
             info.extra[curr_id].wideState = true;
@@ -1388,6 +1389,7 @@ void generate_symbol_chain(dfa_info &info, vector<symbol_t> &chain_tail) {
             if (j == width - 1) {
                 symbol_chain.emplace_back(chain_tail[i]);
             } else {
+                dstate_id_t next_id = state_chain[j + 1];
                 for (symbol_t sym = 0; sym < info.impl_alpha_size; sym++) {
                     if (rdfa.states[curr_id].next[sym] == next_id) {
                         symbol_chain.emplace_back(sym);
@@ -1550,7 +1552,7 @@ u32 mcclellanStartReachSize(const raw_dfa *raw) {
 }
 
 bool has_accel_mcclellan(const NFA *nfa) {
-    const mcclellan *m = (const mcclellan *)getImplNfa(nfa);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(nfa));
     return m->has_accel;
 }
 

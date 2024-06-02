@@ -202,10 +202,10 @@ void getForwardReach(const raw_dfa &rdfa, map<s32, CharReach> &look) {
             }
 
             for (unsigned c = 0; c < N_CHARS; c++) {
-                dstate_id_t succ = ds.next[rdfa.alpha_remap[c]];
-                if (succ != DEAD_STATE) {
+                dstate_id_t dnsucc = ds.next[rdfa.alpha_remap[c]];
+                if (dnsucc != DEAD_STATE) {
                     cr.set(c);
-                    next.insert(succ);
+                    next.insert(dnsucc);
                 }
             }
         }
@@ -280,13 +280,13 @@ void findForwardReach(const RoseGraph &g, const RoseVertex v,
             return;
         }
         rose_look.emplace_back(map<s32, CharReach>());
-        getRoseForwardReach(g[t].left, g[e].rose_top, rose_look.back());
+        getRoseForwardReach(left_id(g[t].left), g[e].rose_top, rose_look.back());
     }
 
     if (g[v].suffix) {
         DEBUG_PRINTF("suffix engine\n");
         rose_look.emplace_back(map<s32, CharReach>());
-        getSuffixForwardReach(g[v].suffix, g[v].suffix.top, rose_look.back());
+        getSuffixForwardReach(suffix_id(g[v].suffix), g[v].suffix.top, rose_look.back());
     }
 
     combineForwardMasks(rose_look, look);
@@ -347,6 +347,7 @@ private:
 
 static
 bool isFloodProne(const map<s32, CharReach> &look, const CharReach &flood_cr) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &m : look) {
         const CharReach &look_cr = m.second;
         if (!overlaps(look_cr, flood_cr)) {
@@ -365,6 +366,7 @@ bool isFloodProne(const map<s32, CharReach> &look,
         return false;
     }
 
+    // cppcheck-suppress useStlAlgorithm
     for (const CharReach &flood_cr : flood_reach) {
         if (isFloodProne(look, flood_cr)) {
             return true;
@@ -748,6 +750,7 @@ bool getTransientPrefixReach(const NGHolder &g, ReportID report, u32 lag,
             assert(!is_special(v, g));
 
             for (auto u : inv_adjacent_vertices_range(v, g)) {
+                // cppcheck-suppress useStlAlgorithm
                 if (u == g.start || u == g.startDs) {
                     curr[idx] = g.startDs;
                     break;

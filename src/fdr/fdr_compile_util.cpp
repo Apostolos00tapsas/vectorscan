@@ -39,6 +39,7 @@ namespace ue2 {
 size_t maxLen(const vector<hwlmLiteral> &lits) {
     size_t rv = 0;
     for (const auto &lit : lits) {
+        // cppcheck-suppress useStlAlgorithm
         rv = max(rv, lit.s.size());
     }
     return rv;

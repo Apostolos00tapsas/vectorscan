@@ -154,7 +154,7 @@ char fireReports(const struct sheng *sh, NfaCallback cb, void *ctxt,
     return MO_CONTINUE_MATCHING; /* continue execution */
 }
 
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 // Sheng32
 static really_inline
 const struct sheng32 *get_sheng32(const struct NFA *n) {
@@ -351,7 +351,7 @@ char fireReports64(const struct sheng64 *sh, NfaCallback cb, void *ctxt,
     }
     return MO_CONTINUE_MATCHING; /* continue execution */
 }
-#endif // end of HAVE_AVX512VBMI
+#endif // end of HAVE_AVX512VBMI || HAVE_SVE
 
 /* include Sheng function definitions */
 #include "sheng_defs.h"
@@ -814,7 +814,6 @@ char nfaExecSheng_testEOD(const struct NFA *nfa, const char *state,
 char nfaExecSheng_reportCurrent(const struct NFA *n, struct mq *q) {
     const struct sheng *sh = (const struct sheng *)getImplNfa(n);
     NfaCallback cb = q->cb;
-    void *ctxt = q->context;
     u8 s = *(u8 *)q->state;
     const struct sstate_aux *aux = get_aux(sh, s);
     u64a offset = q_cur_offset(q);
@@ -823,6 +822,7 @@ char nfaExecSheng_reportCurrent(const struct NFA *n, struct mq *q) {
     assert(q_cur_type(q) == MQE_START);
 
     if (aux->accept) {
+        void *ctxt = q->context;
         if (sh->flags & SHENG_FLAG_SINGLE_REPORT) {
             fireSingleReport(cb, ctxt, sh->report, offset);
         } else {
@@ -871,7 +871,7 @@ char nfaExecSheng_expandState(UNUSED const struct NFA *nfa, void *dest,
     return 0;
 }
 
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 // Sheng32
 static really_inline
 char runSheng32Cb(const struct sheng32 *sh, NfaCallback cb, void *ctxt,
@@ -1874,4 +1874,4 @@ char nfaExecSheng64_expandState(UNUSED const struct NFA *nfa, void *dest,
     *(u8 *)dest = *(const u8 *)src;
     return 0;
 }
-#endif // end of HAVE_AVX512VBMI
+#endif // end of HAVE_AVX512VBMI || HAVE_SVE

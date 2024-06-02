@@ -260,14 +260,14 @@ void ParsedLogical::parseLogicalCombination(unsigned id, const char *logical,
                                             u32 ekey, u64a min_offset,
                                             u64a max_offset) {
     u32 ckey = getCombKey(id);
-    vector<LogicalOperator> op_stack;
     vector<u32> subid_stack;
     u32 lkey_start = INVALID_LKEY; // logical operation's lkey
-    u32 paren = 0; // parentheses
     u32 digit = (u32)-1; // digit start offset, invalid offset is -1
     u32 subid = (u32)-1;
     u32 i;
     try {
+        vector<LogicalOperator> op_stack;
+        u32 paren = 0; // parentheses
         for (i = 0; logical[i]; i++) {
             if (isdigit(logical[i])) {
                 if (digit == (u32)-1) { // new digit start
@@ -284,7 +284,7 @@ void ParsedLogical::parseLogicalCombination(unsigned id, const char *logical,
                 if (logical[i] == '(') {
                     paren += 1;
                 } else if (logical[i] == ')') {
-                    if (paren <= 0) {
+                    if (paren == 0) {
                         throw LocatedParseError("Not enough left parentheses");
                     }
                     paren -= 1;

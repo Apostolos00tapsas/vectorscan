@@ -927,7 +927,7 @@ char JOIN(LIMEX_API_ROOT, _testEOD)(const struct NFA *n, const char *state,
                       context);
 }
 
-char JOIN(LIMEX_API_ROOT, _reportCurrent)(const struct NFA *n, struct mq *q) {
+char JOIN(LIMEX_API_ROOT, _reportCurrent)(const struct NFA *n, const struct mq *q) {
     const IMPL_NFA_T *limex = getImplNfa(n);
     REPORTCURRENT_FN(limex, q);
     return 1;
@@ -984,9 +984,9 @@ char JOIN(LIMEX_API_ROOT, _inAccept)(const struct NFA *nfa,
     assert(q->state && q->streamState);
 
     const IMPL_NFA_T *limex = getImplNfa(nfa);
-    union RepeatControl *repeat_ctrl =
+    const union RepeatControl *repeat_ctrl =
         getRepeatControlBase(q->state, sizeof(STATE_T));
-    char *repeat_state = q->streamState + limex->stateSize;
+    const char *repeat_state = q->streamState + limex->stateSize;
     STATE_T state = *(STATE_T *)q->state;
     u64a offset = q->offset + q_last_loc(q) + 1;
 
@@ -999,9 +999,9 @@ char JOIN(LIMEX_API_ROOT, _inAnyAccept)(const struct NFA *nfa, struct mq *q) {
     assert(q->state && q->streamState);
 
     const IMPL_NFA_T *limex = getImplNfa(nfa);
-    union RepeatControl *repeat_ctrl =
+    const union RepeatControl *repeat_ctrl =
         getRepeatControlBase(q->state, sizeof(STATE_T));
-    char *repeat_state = q->streamState + limex->stateSize;
+    const char *repeat_state = q->streamState + limex->stateSize;
     STATE_T state = *(STATE_T *)q->state;
     u64a offset = q->offset + q_last_loc(q) + 1;
 
@@ -1020,9 +1020,9 @@ enum nfa_zombie_status JOIN(LIMEX_API_ROOT, _zombie_status)(
 
     if (limex->repeatCount) {
         u64a offset = q->offset + loc + 1;
-        union RepeatControl *repeat_ctrl =
+        const union RepeatControl *repeat_ctrl =
             getRepeatControlBase(q->state, sizeof(STATE_T));
-        char *repeat_state = q->streamState + limex->stateSize;
+        const char *repeat_state = q->streamState + limex->stateSize;
         SQUASH_UNTUG_BR_FN(limex, repeat_ctrl, repeat_state, offset, &state);
     }
 

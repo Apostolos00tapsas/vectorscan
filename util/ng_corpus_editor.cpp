@@ -66,7 +66,7 @@ size_t choosePosition(const SeqT &corpus, CorpusProperties &props) {
 
 class CorpusEditor {
 public:
-    CorpusEditor(CorpusProperties &p) : props(p) {}
+    explicit CorpusEditor(CorpusProperties &p) : props(p) {}
 
     // Apply edits to a corpus
     void applyEdits(string &corpus);
@@ -171,7 +171,7 @@ u8 CorpusEditor::chooseByte() {
 
 class CorpusEditorUtf8 {
 public:
-    CorpusEditorUtf8(CorpusProperties &p) : props(p) {}
+    explicit CorpusEditorUtf8(CorpusProperties &p) : props(p) {}
 
     // Apply edits to a corpus.
     void applyEdits(vector<unichar> &corpus);

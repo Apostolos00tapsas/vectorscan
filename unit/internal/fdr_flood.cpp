@@ -55,10 +55,10 @@ using namespace ue2;
 #define CHECK_WITH_TEDDY_OK_TO_FAIL(fdr, hint)                                 \
     {                                                                          \
         auto descr = getTeddyDescription(hint);                                \
-        if (descr && fdr != nullptr) {                                         \
+        if (descr && fdr.get() != nullptr) {                                         \
             return;                                                            \
         } else {                                                               \
-            ASSERT_TRUE(fdr != nullptr);                                       \
+            ASSERT_TRUE(fdr.get() != nullptr);                                       \
         }                                                                      \
     }
 #endif
@@ -133,7 +133,7 @@ static vector<u32> getValidFdrEngines() {
 }
 
 static
-bytecode_ptr<FDR> buildFDREngineHinted(std::vector<hwlmLiteral> &lits,
+bytecode_ptr<FDR> buildFDREngineHinted(const std::vector<hwlmLiteral> &lits,
                                        bool make_small, u32 hint,
                                        const target_t &target,
                                        const Grey &grey) {
@@ -154,7 +154,7 @@ TEST_P(FDRFloodp, NoMask) {
 
     struct hs_scratch scratch;
     scratch.fdr_conf = NULL;
-    while (1) {
+    while (c != 255) {
         SCOPED_TRACE((unsigned int)c);
         u8 bit = 1 << (c & 0x7);
         u8 cAlt = c ^ bit;
@@ -233,9 +233,7 @@ TEST_P(FDRFloodp, NoMask) {
         }
         matchesCounts.clear();
 
-        if (++c == 0) {
-            break;
-        }
+        ++c;
     }
 }
 
@@ -248,7 +246,7 @@ TEST_P(FDRFloodp, WithMask) {
 
     struct hs_scratch scratch;
     scratch.fdr_conf = NULL;
-    while (1) {
+    while (c != 255) {
         u8 bit = 1 << (c & 0x7);
         u8 cAlt = c ^ bit;
         SCOPED_TRACE((unsigned int)c);
@@ -396,9 +394,7 @@ TEST_P(FDRFloodp, WithMask) {
         }
         matchesCounts.clear();
 
-        if (++c == '\0') {
-            break;
-        }
+        ++c;
     }
 }
 
@@ -414,7 +410,7 @@ TEST_P(FDRFloodp, StreamingMask) {
 
     struct hs_scratch scratch;
     scratch.fdr_conf = NULL;
-    while (1) {
+    while (c != 255) {
         u8 bit = 1 << (c & 0x7);
         u8 cAlt = c ^ bit;
         SCOPED_TRACE((unsigned int)c);
@@ -488,7 +484,6 @@ TEST_P(FDRFloodp, StreamingMask) {
                                         Grey());
         CHECK_WITH_TEDDY_OK_TO_FAIL(fdr, hint);
 
-        hwlm_error_t fdrStatus;
         const u32 cnt4 = dataSize - 4 + 1;
 
         for (u32 streamChunk = 1; streamChunk <= 16; streamChunk *= 2) {
@@ -496,7 +491,7 @@ TEST_P(FDRFloodp, StreamingMask) {
             const u8 *d = data.data();
             // reference past the end of fake history to allow headroom
             const u8 *fhist = fake_history.data() + fake_history_size;
-            fdrStatus = fdrExecStreaming(fdr.get(), fhist, 0, d, streamChunk, 0,
+            hwlm_error_t fdrStatus = fdrExecStreaming(fdr.get(), fhist, 0, d, streamChunk, 0,
                                          countCallback, &scratch,
                                          HWLM_ALL_GROUPS);
             ASSERT_EQ(0, fdrStatus);
@@ -549,9 +544,7 @@ TEST_P(FDRFloodp, StreamingMask) {
             }
         }
 
-        if (++c == '\0') {
-            break;
-        }
+        ++c;
     }
     matchesCounts.clear();
 }

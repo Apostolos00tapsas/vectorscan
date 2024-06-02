@@ -41,7 +41,7 @@ namespace ue2 {
 // Helper function: construct a graph from an expression, flags and context.
 inline
 std::unique_ptr<NGHolder> constructGraphWithCC(const std::string &expr,
-                                               CompileContext &cc,
+                                               const CompileContext &cc,
                                                unsigned flags) {
     ReportManager rm(cc.grey);
     ParsedExpression parsed(0, expr.c_str(), flags, 0);

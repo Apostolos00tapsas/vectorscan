@@ -182,6 +182,7 @@ vector<vector<CharReach>> generate_paths(const raw_dfa &rdfa,
     vector<vector<CharReach>> rv;
     rv.reserve(paths.size());
     for (auto &p : paths) {
+        // cppcheck-suppress useStlAlgorithm
         rv.emplace_back(vector<CharReach>(std::make_move_iterator(p.reach.begin()),
                                        std::make_move_iterator(p.reach.end())));
     }
@@ -426,7 +427,7 @@ void
 accel_dfa_build_strat::buildAccel(UNUSED dstate_id_t this_idx,
                                   const AccelScheme &info,
                                   void *accel_out) {
-    AccelAux *accel = (AccelAux *)accel_out;
+    AccelAux *accel = reinterpret_cast<AccelAux *>(accel_out);
 
     DEBUG_PRINTF("accelerations scheme has offset s%u/d%u\n", info.offset,
                  info.double_offset);
@@ -473,7 +474,8 @@ accel_dfa_build_strat::buildAccel(UNUSED dstate_id_t this_idx,
                 u8 c1 = info.double_byte.begin()->first & m1;
                 u8 c2 = info.double_byte.begin()->second & m2;
 #ifdef HAVE_SVE2
-                if (vermicelliDoubleMasked16Build(c1, c2, m1, m2, (u8 *)&accel->mdverm16.mask)) {
+                if (vermicelliDoubleMasked16Build(c1, c2, m1, m2,
+                                                  reinterpret_cast<u8 *>(&accel->mdverm16.mask))) {
                     accel->accel_type = ACCEL_DVERM16_MASKED;
                     accel->mdverm16.offset = verify_u8(info.double_offset);
                     accel->mdverm16.c1 = c1;
@@ -482,8 +484,9 @@ accel_dfa_build_strat::buildAccel(UNUSED dstate_id_t this_idx,
                                 c1, c2);
                     return;
                 } else if (info.double_byte.size() <= 8 &&
-                        vermicelliDouble16Build(info.double_byte, (u8 *)&accel->dverm16.mask,
-                                                (u8 *)&accel->dverm16.firsts)) {
+                        vermicelliDouble16Build(info.double_byte,
+                                                reinterpret_cast<u8 *>(&accel->dverm16.mask),
+                                                reinterpret_cast<u8 *>(&accel->dverm16.firsts))) {
                     accel->accel_type = ACCEL_DVERM16;
                     accel->dverm16.offset = verify_u8(info.double_offset);
                     DEBUG_PRINTF("building double16-vermicelli\n");
@@ -503,8 +506,9 @@ accel_dfa_build_strat::buildAccel(UNUSED dstate_id_t this_idx,
         }
 #ifdef HAVE_SVE2
         if (info.double_byte.size() <= 8 &&
-            vermicelliDouble16Build(info.double_byte, (u8 *)&accel->dverm16.mask,
-                                    (u8 *)&accel->dverm16.firsts)) {
+            vermicelliDouble16Build(info.double_byte,
+                                    reinterpret_cast<u8 *>(&accel->dverm16.mask),
+                                    reinterpret_cast<u8 *>(&accel->dverm16.firsts))) {
             accel->accel_type = ACCEL_DVERM16;
             accel->dverm16.offset = verify_u8(info.double_offset);
             DEBUG_PRINTF("building double16-vermicelli\n");
@@ -515,9 +519,11 @@ accel_dfa_build_strat::buildAccel(UNUSED dstate_id_t this_idx,
 
     if (double_byte_ok(info) &&
         shuftiBuildDoubleMasks(
-            info.double_cr, info.double_byte, (u8 *)&accel->dshufti.lo1,
-            (u8 *)&accel->dshufti.hi1, (u8 *)&accel->dshufti.lo2,
-            (u8 *)&accel->dshufti.hi2)) {
+            info.double_cr, info.double_byte,
+            reinterpret_cast<u8 *>(&accel->dshufti.lo1),
+            reinterpret_cast<u8 *>(&accel->dshufti.hi1),
+            reinterpret_cast<u8 *>(&accel->dshufti.lo2),
+            reinterpret_cast<u8 *>(&accel->dshufti.hi2))) {
         accel->accel_type = ACCEL_DSHUFTI;
         accel->dshufti.offset = verify_u8(info.double_offset);
         DEBUG_PRINTF("state %hu is double shufti\n", this_idx);
@@ -549,7 +555,7 @@ accel_dfa_build_strat::buildAccel(UNUSED dstate_id_t this_idx,
 #ifdef HAVE_SVE2
     if (info.cr.count() <= 16) {
         accel->accel_type = ACCEL_VERM16;
-        vermicelli16Build(info.cr, (u8 *)&accel->verm16.mask);
+        vermicelli16Build(info.cr, reinterpret_cast<u8 *>(&accel->verm16.mask));
         DEBUG_PRINTF("state %hu is vermicelli16\n", this_idx);
         return;
     }
@@ -562,16 +568,27 @@ accel_dfa_build_strat::buildAccel(UNUSED dstate_id_t this_idx,
     }
 
     accel->accel_type = ACCEL_SHUFTI;
-    if (-1 != shuftiBuildMasks(info.cr, (u8 *)&accel->shufti.lo,
-                               (u8 *)&accel->shufti.hi)) {
+    if (-1 != shuftiBuildMasks(info.cr,
+                               reinterpret_cast<u8 *>(&accel->shufti.lo),
+                               reinterpret_cast<u8 *>(&accel->shufti.hi))) {
         DEBUG_PRINTF("state %hu is shufti\n", this_idx);
         return;
     }
 
     assert(!info.cr.none());
-    accel->accel_type = ACCEL_TRUFFLE;
-    truffleBuildMasks(info.cr, (u8 *)&accel->truffle.mask1,
-                      (u8 *)&accel->truffle.mask2);
+#if defined(CAN_USE_WIDE_TRUFFLE)
+    if(CAN_USE_WIDE_TRUFFLE) {
+        accel->accel_type = ACCEL_TRUFFLE_WIDE;
+        truffleBuildMasksWide(info.cr,
+                              reinterpret_cast<u8 *>(&accel->truffle.mask));
+    } else
+#endif
+    {
+        accel->accel_type = ACCEL_TRUFFLE;
+        truffleBuildMasks(info.cr,
+                        reinterpret_cast<u8 *>(&accel->truffle.mask_lo),
+                        reinterpret_cast<u8 *>(&accel->truffle.mask_hi));
+    }
     DEBUG_PRINTF("state %hu is truffle\n", this_idx);
 }
 

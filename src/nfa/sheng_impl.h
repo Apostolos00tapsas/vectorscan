@@ -67,7 +67,7 @@ char SHENG_IMPL(u8 *state, NfaCallback cb, void *ctxt, const struct sheng *s,
 
         if (unlikely(ACCEPT_FUNC(tmp))) {
             DEBUG_PRINTF("Accept state %u reached\n", tmp & SHENG_STATE_MASK);
-            u64a match_offset = base_offset + (cur_buf - buf) + 1;
+            u64a match_offset = base_offset + (cur_buf - buf) + 1;  //NOLINT (clang-analyzer-deadcode.DeadStores)
             DEBUG_PRINTF("Match @ %llu\n", match_offset);
             if (STOP_AT_MATCH) {
                 DEBUG_PRINTF("Stopping at match @ %lli\n",
@@ -96,7 +96,7 @@ char SHENG_IMPL(u8 *state, NfaCallback cb, void *ctxt, const struct sheng *s,
     return MO_CONTINUE_MATCHING;
 }
 
-#if defined(HAVE_AVX512VBMI)
+#if defined(HAVE_AVX512VBMI) || defined(HAVE_SVE)
 static really_inline
 char SHENG32_IMPL(u8 *state, NfaCallback cb, void *ctxt,
                   const struct sheng32 *s,
@@ -114,14 +114,28 @@ char SHENG32_IMPL(u8 *state, NfaCallback cb, void *ctxt,
     }
     DEBUG_PRINTF("Scanning %lli bytes\n", (s64a)(end - start));
 
+#if defined(HAVE_SVE)
+    const svbool_t lane_pred_32 = svwhilelt_b8(0, 32);
+    svuint8_t cur_state = svdup_u8(*state);
+    svuint8_t tbl_mask = svdup_u8((unsigned char)0x1F);
+    const m512 *masks = s->succ_masks;
+#else
     m512 cur_state = set1_64x8(*state);
     const m512 *masks = s->succ_masks;
+#endif
 
     while (likely(cur_buf != end)) {
         const u8 c = *cur_buf;
+
+#if defined(HAVE_SVE)
+        svuint8_t succ_mask = svld1(lane_pred_32, (const u8*)(masks + c));
+        cur_state = svtbl(succ_mask, svand_x(svptrue_b8(), tbl_mask, cur_state));
+        const u8 tmp = svlastb(lane_pred_32, cur_state);
+#else
         const m512 succ_mask = masks[c];
         cur_state = vpermb512(cur_state, succ_mask);
         const u8 tmp = movd512(cur_state);
+#endif
 
         DEBUG_PRINTF("c: %02hhx '%c'\n", c, ourisprint(c) ? c : '?');
         DEBUG_PRINTF("s: %u (flag: %u)\n", tmp & SHENG32_STATE_MASK,
@@ -153,7 +167,11 @@ char SHENG32_IMPL(u8 *state, NfaCallback cb, void *ctxt,
         }
         cur_buf++;
     }
+#if defined(HAVE_SVE)
+    *state = svlastb(lane_pred_32, cur_state);
+#else
     *state = movd512(cur_state);
+#endif
     *scan_end = cur_buf;
     return MO_CONTINUE_MATCHING;
 }
@@ -175,14 +193,28 @@ char SHENG64_IMPL(u8 *state, NfaCallback cb, void *ctxt,
     }
     DEBUG_PRINTF("Scanning %lli bytes\n", (s64a)(end - start));
 
+#if defined(HAVE_SVE)
+    const svbool_t lane_pred_64 = svwhilelt_b8(0, 64);
+    svuint8_t cur_state = svdup_u8(*state);
+    svuint8_t tbl_mask = svdup_u8((unsigned char)0x3F);
+    const m512 *masks = s->succ_masks;
+#else
     m512 cur_state = set1_64x8(*state);
     const m512 *masks = s->succ_masks;
+#endif
 
     while (likely(cur_buf != end)) {
         const u8 c = *cur_buf;
+
+#if defined(HAVE_SVE)
+        svuint8_t succ_mask = svld1(lane_pred_64, (const u8*)(masks + c));
+        cur_state = svtbl(succ_mask, svand_x(svptrue_b8(), tbl_mask, cur_state));
+        const u8 tmp = svlastb(lane_pred_64, cur_state);
+#else
         const m512 succ_mask = masks[c];
         cur_state = vpermb512(cur_state, succ_mask);
         const u8 tmp = movd512(cur_state);
+#endif
 
         DEBUG_PRINTF("c: %02hhx '%c'\n", c, ourisprint(c) ? c : '?');
         DEBUG_PRINTF("s: %u (flag: %u)\n", tmp & SHENG64_STATE_MASK,
@@ -214,7 +246,11 @@ char SHENG64_IMPL(u8 *state, NfaCallback cb, void *ctxt,
         }
         cur_buf++;
     }
+#if defined(HAVE_SVE)
+    *state = svlastb(lane_pred_64, cur_state);
+#else
     *state = movd512(cur_state);
+#endif
     *scan_end = cur_buf;
     return MO_CONTINUE_MATCHING;
 }

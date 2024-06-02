@@ -52,7 +52,7 @@ using namespace std;
 namespace ue2 {
 
 void nfaExecTamarama_dump(const struct NFA *nfa, const string &base) {
-    const Tamarama *t = (const Tamarama *)getImplNfa(nfa);
+    const Tamarama *t = reinterpret_cast<const Tamarama *>(getImplNfa(nfa));
 
     StdioFile f(base + ".txt", "w");
 
@@ -65,10 +65,10 @@ void nfaExecTamarama_dump(const struct NFA *nfa, const string &base) {
     fprintf(f, "\n");
 
     const u32 *subOffset =
-        (const u32 *)((const char *)t + sizeof(struct Tamarama) +
+        reinterpret_cast<const u32 *>(reinterpret_cast<const char *>(t) + sizeof(struct Tamarama) +
                       t->numSubEngines * sizeof(u32));
     for (u32 i = 0; i < t->numSubEngines; i++) {
-        const NFA *sub = (const struct NFA *)((const char *)t + subOffset[i]);
+        const NFA *sub = reinterpret_cast<const struct NFA *>(reinterpret_cast<const char *>(t) + subOffset[i]);
 
         stringstream sssub;
         sssub << base << "_sub_" << i;

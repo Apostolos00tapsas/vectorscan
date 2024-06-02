@@ -4,14 +4,14 @@
 Tools
 #####
 
-This section describes the set of utilities included with the Hyperscan library.
+This section describes the set of utilities included with the Vectorscan library.
 
 ********************
 Quick Check: hscheck
 ********************
 
-The ``hscheck`` tool allows the user to quickly check whether Hyperscan supports
-a group of patterns. If a pattern is rejected by Hyperscan's compiler, the
+The ``hscheck`` tool allows the user to quickly check whether Vectorscan supports
+a group of patterns. If a pattern is rejected by Vectorscan's compiler, the
 compile error is provided on standard output.
 
 For example, given the following three patterns (the last of which contains a
@@ -34,7 +34,7 @@ syntax error) in a file called ``/tmp/test``::
 Benchmarker: hsbench
 ********************
 
-The ``hsbench`` tool provides an easy way to measure Hyperscan's performance
+The ``hsbench`` tool provides an easy way to measure Vectorscan's performance
 for a particular set of patterns and corpus of data to be scanned.
 
 Patterns are supplied in the format described below in
@@ -44,7 +44,7 @@ easy control of how a corpus is broken into blocks and streams.
 
 .. note:: A group of Python scripts for constructing corpora databases from
    various input types, such as PCAP network traffic captures or text files, can
-   be found in the Hyperscan source tree in ``tools/hsbench/scripts``.
+   be found in the Vectorscan source tree in ``tools/hsbench/scripts``.
 
 Running hsbench
 ===============
@@ -56,7 +56,7 @@ produce output like this::
     $ hsbench -e /tmp/patterns -c /tmp/corpus.db
 
     Signatures:        /tmp/patterns
-    Hyperscan info:    Version: 4.3.1 Features:  AVX2 Mode: STREAM
+    Vectorscan info:    Version: 5.4.11 Features:  AVX2 Mode: STREAM
     Expression count:  200
     Bytecode size:     342,540 bytes
     Database CRC:      0x6cd6b67c
@@ -77,7 +77,7 @@ takes to perform all twenty scans. The number of repeats can be changed with the
 ``-n`` argument, and the results of each scan will be displayed if the
 ``--per-scan`` argument is specified.
 
-To benchmark Hyperscan on more than one core, you can supply a list of cores
+To benchmark Vectorscan on more than one core, you can supply a list of cores
 with the ``-T`` argument, which will instruct ``hsbench`` to start one
 benchmark thread per core given and compute the throughput from the time taken
 to complete all of them.
@@ -91,17 +91,17 @@ Correctness Testing: hscollider
 *******************************
 
 The ``hscollider`` tool, or Pattern Collider, provides a way to verify
-Hyperscan's matching behaviour. It does this by compiling and scanning patterns
+Vectorscan's matching behaviour. It does this by compiling and scanning patterns
 (either singly or in groups) against known corpora and comparing the results
 against another engine (the "ground truth"). Two sources of ground truth for
 comparison are available:
 
  * The PCRE library (http://pcre.org/).
- * An NFA simulation run on Hyperscan's compile-time graph representation. This
+ * An NFA simulation run on Vectorscan's compile-time graph representation. This
    is used if PCRE cannot support the pattern or if PCRE execution fails due to
    a resource limit.
 
-Much of Hyperscan's testing infrastructure is built on ``hscollider``, and the
+Much of Vectorscan's testing infrastructure is built on ``hscollider``, and the
 tool is designed to take advantage of multiple cores and provide considerable
 flexibility in controlling the test. These options are described in the help
 (``hscollider -h``) and include:
@@ -116,11 +116,11 @@ flexibility in controlling the test. These options are described in the help
 Using hscollider to debug a pattern
 ===================================
 
-One common use-case for ``hscollider`` is to determine whether Hyperscan will
+One common use-case for ``hscollider`` is to determine whether Vectorscan will
 match a pattern in the expected location, and whether this accords with PCRE's
 behaviour for the same case.
 
-Here is an example. We put our pattern in a file in Hyperscan's pattern
+Here is an example. We put our pattern in a file in Vectorscan's pattern
 format::
 
     $ cat /tmp/pat
@@ -172,7 +172,7 @@ individual matches are displayed in the output::
 
     Total elapsed time: 0.00522815 secs.
 
-We can see from this output that both PCRE and Hyperscan find matches ending at
+We can see from this output that both PCRE and Vectorscan find matches ending at
 offset 33 and 45, and so ``hscollider`` considers this test case to have
 passed.
 
@@ -180,13 +180,13 @@ passed.
 corpus alignment 0, and ``-T 1`` instructs us to only use one thread.)
 
 .. note:: In default operation, PCRE produces only one match for a scan, unlike
-  Hyperscan's automata semantics. The ``hscollider`` tool uses libpcre's
-  "callout" functionality to match Hyperscan's semantics.
+  Vectorscan's automata semantics. The ``hscollider`` tool uses libpcre's
+  "callout" functionality to match Vectorscan's semantics.
 
 Running a larger scan test
 ==========================
 
-A set of patterns for testing purposes are distributed with Hyperscan, and these
+A set of patterns for testing purposes are distributed with Vectorscan, and these
 can be tested via ``hscollider`` on an in-tree build. Two CMake targets are
 provided to do this easily:
 
@@ -202,10 +202,10 @@ Debugging: hsdump
 *****************
 
 When built in debug mode (using the CMake directive ``CMAKE_BUILD_TYPE`` set to
-``Debug``), Hyperscan includes support for dumping information about its
+``Debug``), Vectorscan includes support for dumping information about its
 internals during pattern compilation with the ``hsdump`` tool.
 
-This information is mostly of use to Hyperscan developers familiar with the
+This information is mostly of use to Vectorscan developers familiar with the
 library's internal structure, but can be used to diagnose issues with patterns
 and provide more information in bug reports.
 
@@ -215,7 +215,7 @@ and provide more information in bug reports.
 Pattern Format
 **************
 
-All of the Hyperscan tools accept patterns in the same format, read from plain
+All of the Vectorscan tools accept patterns in the same format, read from plain
 text files with one pattern per line. Each line looks like this:
 
 * ``<integer id>:/<regex>/<flags>``
@@ -227,12 +227,12 @@ For example::
     3:/^.{10,20}hatstand/m
 
 The integer ID is the value that will be reported when a match is found by
-Hyperscan and must be unique.
+Vectorscan and must be unique.
 
 The pattern itself is a regular expression in PCRE syntax; see
 :ref:`compilation` for more information on supported features.
 
-The flags are single characters that map to Hyperscan flags as follows:
+The flags are single characters that map to Vectorscan flags as follows:
 
 =========   =================================    ===========
 Character   API Flag                             Description
@@ -256,7 +256,7 @@ between braces, separated by commas. For example::
 
     1:/hatstand.*teakettle/s{min_offset=50,max_offset=100}
 
-All Hyperscan tools will accept a pattern file (or a directory containing
+All Vectorscan tools will accept a pattern file (or a directory containing
 pattern files) with the ``-e`` argument. If no further arguments constraining
 the pattern set are given, all patterns in those files are used.
 

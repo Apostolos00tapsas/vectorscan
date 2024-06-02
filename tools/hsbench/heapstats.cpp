@@ -72,9 +72,8 @@ size_t getPeakHeap(void) {
 
     char *line = nullptr;
     size_t len = 0, maxheap = 0;
-    ssize_t read;
 
-    while ((read = getline(&line, &len, fstr)) != -1) {
+    while ((getline(&line, &len, fstr)) != -1) {
         if (strncmp(line, begin, begin_len) == 0) {
             errno = 0;
             maxheap = (size_t)strtoull(line + begin_len, nullptr, 10);

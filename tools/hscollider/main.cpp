@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2019, Intel Corporation
+ * Copyright (c) 2024, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -1830,11 +1831,11 @@ unique_ptr<CorporaSource> buildCorpora(const vector<string> &corporaFiles,
                 exit_with_fail();
             }
         }
-        return std::move(c); /* move allows unique_ptr<CorporaSource> conversion */
+        return c;
     } else {
         auto c = std::make_unique<NfaGeneratedCorpora>(
             exprMap, corpus_gen_prop, force_utf8, force_prefilter);
-        return std::move(c);
+        return c;
     }
 }
 

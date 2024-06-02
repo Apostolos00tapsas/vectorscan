@@ -542,14 +542,13 @@ u32 crc32c_sb8_64_bit(u32 running_crc, const unsigned char* p_buf,
 
     // Main aligned loop, processes eight bytes at a time.
 
-    u32 term1, term2;
     for (size_t li = 0; li < running_length/8; li++) {
         u32 block = *(const u32 *)p_buf;
         crc ^= block;
         p_buf += 4;
-        term1 = crc_tableil8_o88[crc & 0x000000FF] ^
+        u32 term1 = crc_tableil8_o88[crc & 0x000000FF] ^
                 crc_tableil8_o80[(crc >> 8) & 0x000000FF];
-        term2 = crc >> 16;
+        u32 term2 = crc >> 16;
         crc = term1 ^
               crc_tableil8_o72[term2 & 0x000000FF] ^
               crc_tableil8_o64[(term2 >> 8) & 0x000000FF];

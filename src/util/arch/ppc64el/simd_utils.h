@@ -255,22 +255,26 @@ static really_inline m128 andnot128(m128 a, m128 b) {
 // aligned load
 static really_inline m128 load128(const void *ptr) {
     assert(ISALIGNED_N(ptr, alignof(m128)));
+    // cppcheck-suppress cstyleCast
     return (m128) vec_xl(0, (const int32_t*)ptr);
 }
 
 // aligned store
 static really_inline void store128(void *ptr, m128 a) { 	
     assert(ISALIGNED_N(ptr, alignof(m128)));
+    // cppcheck-suppress cstyleCast
     vec_st(a, 0, (int32_t*)ptr);
 }
 
 // unaligned load
 static really_inline m128 loadu128(const void *ptr) {
+    // cppcheck-suppress cstyleCast
     return (m128) vec_xl(0, (const int32_t*)ptr);
 }
 
 // unaligned store
 static really_inline void storeu128(void *ptr, m128 a) {
+    // cppcheck-suppress cstyleCast
     vec_xst(a, 0, (int32_t*)ptr);
 }
 

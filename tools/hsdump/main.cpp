@@ -143,7 +143,7 @@ void usage(const char *name, const char *error) {
 }
 
 static
-void processArgs(int argc, char *argv[], Grey &grey) {
+void processArgs(int argc, char *argv[], Grey &grey) { // cppcheck-suppress constParameterReference
     static const char *options = "d:De:E:G:hLNo:Ps:VXx:z:8";
     static struct option longOptions[] = {
         {"dump_db",             no_argument,        nullptr, 'D'},
@@ -294,7 +294,7 @@ void dumpDb(const struct hs_database *out, const Grey &grey) {
     size_t len = 0;
     hs_error_t err = hs_serialize_database(out, &bytes, &len);
     if (err != HS_SUCCESS) {
-        printf("ERROR: hs_serialize_database() failed with error %u\n", err);
+        printf("ERROR: hs_serialize_database() failed with error %d\n", err);
         return;
     }
 
@@ -331,7 +331,7 @@ void clearDir(const string &path) {
         exit(1);
     }
 
-    struct dirent *d_ent;
+    const struct dirent *d_ent;
     while (nullptr != (d_ent = readdir(dir))) {
         string name(d_ent->d_name);
         if (name == "." || name == "..") {
@@ -423,7 +423,7 @@ void dumpScratch(const hs_database_t *db, const Grey &grey) {
                    (grey.dumpPath + "scratch.txt").c_str(), strerror(errno));
         }
     } else {
-        printf("ERROR: hs_alloc_scratch() failed with error %u\n", err);
+        printf("ERROR: hs_alloc_scratch() failed with error %d\n", err);
     }
     hs_free_scratch(scratch);
 }
@@ -442,7 +442,7 @@ void dumpInfo(const hs_database_t *db, const Grey &grey) {
                    (grey.dumpPath + "db_info.txt").c_str(), strerror(errno));
         }
     } else {
-        printf("ERROR: hs_database_info() failed with error %u\n", err);
+        printf("ERROR: hs_database_info() failed with error %d\n", err);
     }
     free(info);
 }
@@ -482,7 +482,7 @@ unsigned int dumpDataMulti(const vector<const char *> &patterns,
         if (compile_err && compile_err->message) {
             printf("ERROR: Compile failed: %s\n", compile_err->message);
         } else {
-            printf("ERROR: hs_compile_multi_int() returned error %u", err);
+            printf("ERROR: hs_compile_multi_int() returned error %d", err);
         }
         hs_free_compile_error(compile_err);
         return 1;

@@ -69,7 +69,7 @@ void prefetch_data(const char *data, unsigned length) {
 static
 int HS_CDECL null_onEvent(UNUSED unsigned id, UNUSED unsigned long long from,
                           UNUSED unsigned long long to, UNUSED unsigned flags,
-                          UNUSED void *ctxt) {
+                          UNUSED void *ctxt) { // cppcheck-suppress constParameterCallback
     return 0;
 }
 
@@ -576,7 +576,7 @@ hs_error_t HS_CDECL hs_open_stream(const hs_database_t *db,
 
 
 static really_inline
-void rawEodExec(hs_stream_t *id, hs_scratch_t *scratch) {
+void rawEodExec(const hs_stream_t *id, hs_scratch_t *scratch) {
     const struct RoseEngine *rose = id->rose;
 
     if (can_stop_matching(scratch)) {
@@ -593,7 +593,7 @@ void rawEodExec(hs_stream_t *id, hs_scratch_t *scratch) {
 }
 
 static never_inline
-void soleOutfixEodExec(hs_stream_t *id, hs_scratch_t *scratch) {
+void soleOutfixEodExec(const hs_stream_t *id, hs_scratch_t *scratch) {
     const struct RoseEngine *t = id->rose;
 
     if (can_stop_matching(scratch)) {

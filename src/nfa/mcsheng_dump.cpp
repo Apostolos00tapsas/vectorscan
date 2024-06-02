@@ -58,18 +58,18 @@ namespace ue2 {
 
 static
 const mstate_aux *getAux(const NFA *n, dstate_id_t i) {
-    auto *m = (const mcsheng *)getImplNfa(n);
-    auto *aux_base = (const mstate_aux *)((const char *)n + m->aux_offset);
+    auto *m = reinterpret_cast<const mcsheng *>(getImplNfa(n));
+    auto *aux_base = reinterpret_cast<const mstate_aux *>(reinterpret_cast<const char *>(n) + m->aux_offset);
 
     const mstate_aux *aux = aux_base + i;
 
-    assert((const char *)aux < (const char *)n + m->length);
+    assert(reinterpret_cast<const char *>(aux) < reinterpret_cast<const char *>(n) + m->length);
     return aux;
 }
 
 static
 void next_states(const NFA *n, u16 s, u16 *t) {
-    const mcsheng *m = (const mcsheng *)getImplNfa(n);
+    const mcsheng *m = reinterpret_cast<const mcsheng *>(getImplNfa(n));
     const mstate_aux *aux = getAux(n, s);
     const u32 as = m->alphaShift;
     assert(s != DEAD_STATE);
@@ -77,7 +77,7 @@ void next_states(const NFA *n, u16 s, u16 *t) {
     if (s < m->sheng_end) {
         for (u16 c = 0; c < N_CHARS; c++) {
             u8 sheng_s = s - 1;
-            auto trans_for_c = (const char *)&m->sheng_masks[c];
+            auto trans_for_c = reinterpret_cast<const char *>(&m->sheng_masks[c]);
             assert(sheng_s < sizeof(m128));
             u8 raw_succ = trans_for_c[sheng_s];
             if (raw_succ == m->sheng_end - 1) {
@@ -89,14 +89,14 @@ void next_states(const NFA *n, u16 s, u16 *t) {
             }
         }
     } else  if (n->type == MCSHENG_NFA_8) {
-        const u8 *succ_table = (const u8 *)((const char *)m + sizeof(mcsheng));
+        const u8 *succ_table = reinterpret_cast<const u8 *>(reinterpret_cast<const char *>(m) + sizeof(mcsheng));
         for (u16 c = 0; c < N_CHARS; c++) {
             u32 normal_id = s - m->sheng_end;
             t[c] = succ_table[(normal_id << as) + m->remap[c]];
         }
     } else {
         u16 base_s = s;
-        const char *winfo_base = (const char *)n + m->sherman_offset;
+        const char *winfo_base = reinterpret_cast<const char *>(n) + m->sherman_offset;
         const char *state_base
                 = winfo_base + SHERMAN_FIXED_SIZE * (s - m->sherman_limit);
 
@@ -105,7 +105,7 @@ void next_states(const NFA *n, u16 s, u16 *t) {
             assert(base_s >= m->sheng_end);
         }
 
-        const u16 *succ_table = (const u16 *)((const char *)m
+        const u16 *succ_table = reinterpret_cast<const u16 *>(reinterpret_cast<const char *>(m)
                                               + sizeof(mcsheng));
         for (u16 c = 0; c < N_CHARS; c++) {
             u32 normal_id = base_s - m->sheng_end;
@@ -115,15 +115,15 @@ void next_states(const NFA *n, u16 s, u16 *t) {
         if (s >= m->sherman_limit) {
             UNUSED char type = *(state_base + SHERMAN_TYPE_OFFSET);
             assert(type == SHERMAN_STATE);
-            u8 len = *(const u8 *)(SHERMAN_LEN_OFFSET + state_base);
+            u8 len = *(reinterpret_cast<const u8 *>(SHERMAN_LEN_OFFSET + state_base));
             const char *chars = state_base + SHERMAN_CHARS_OFFSET;
-            const u16 *states = (const u16 *)(state_base
+            const u16 *states = reinterpret_cast<const u16 *>(state_base
                                               + SHERMAN_STATES_OFFSET(len));
 
             for (u8 i = 0; i < len; i++) {
                 for (u16 c = 0; c < N_CHARS; c++) {
                     if (m->remap[c] == chars[i]) {
-                        t[c] = unaligned_load_u16((const u8*)&states[i]);
+                        t[c] = unaligned_load_u16(reinterpret_cast<const u8*>(&states[i]));
                     }
                 }
             }
@@ -176,18 +176,18 @@ void describeEdge(FILE *f, const mcsheng *m, const u16 *t, u16 i) {
 
 static
 const mstate_aux *getAux64(const NFA *n, dstate_id_t i) {
-    auto *m = (const mcsheng64 *)getImplNfa(n);
-    auto *aux_base = (const mstate_aux *)((const char *)n + m->aux_offset);
+    auto *m = reinterpret_cast<const mcsheng64 *>(getImplNfa(n));
+    auto *aux_base = reinterpret_cast<const mstate_aux *>(reinterpret_cast<const char *>(n) + m->aux_offset);
 
     const mstate_aux *aux = aux_base + i;
 
-    assert((const char *)aux < (const char *)n + m->length);
+    assert(reinterpret_cast<const char *>(aux) < reinterpret_cast<const char *>(n) + m->length);
     return aux;
 }
 
 static
 void next_states64(const NFA *n, u16 s, u16 *t) {
-    const mcsheng64 *m = (const mcsheng64 *)getImplNfa(n);
+    const mcsheng64 *m = reinterpret_cast<const mcsheng64 *>(getImplNfa(n));
     const mstate_aux *aux = getAux64(n, s);
     const u32 as = m->alphaShift;
     assert(s != DEAD_STATE);
@@ -195,7 +195,7 @@ void next_states64(const NFA *n, u16 s, u16 *t) {
     if (s < m->sheng_end) {
         for (u16 c = 0; c < N_CHARS; c++) {
             u8 sheng_s = s - 1;
-            auto trans_for_c = (const char *)&m->sheng_succ_masks[c];
+            auto trans_for_c = reinterpret_cast<const char *>(&m->sheng_succ_masks[c]);
             assert(sheng_s < sizeof(m512));
             u8 raw_succ = trans_for_c[sheng_s];
             if (raw_succ == m->sheng_end - 1) {
@@ -207,14 +207,14 @@ void next_states64(const NFA *n, u16 s, u16 *t) {
             }
         }
     } else  if (n->type == MCSHENG_64_NFA_8) {
-        const u8 *succ_table = (const u8 *)((const char *)m + sizeof(mcsheng64));
+        const u8 *succ_table = reinterpret_cast<const u8 *>(reinterpret_cast<const char *>(m) + sizeof(mcsheng64));
         for (u16 c = 0; c < N_CHARS; c++) {
             u32 normal_id = s - m->sheng_end;
             t[c] = succ_table[(normal_id << as) + m->remap[c]];
         }
     } else {
         u16 base_s = s;
-        const char *winfo_base = (const char *)n + m->sherman_offset;
+        const char *winfo_base = reinterpret_cast<const char *>(n) + m->sherman_offset;
         const char *state_base
                 = winfo_base + SHERMAN_FIXED_SIZE * (s - m->sherman_limit);
 
@@ -223,7 +223,7 @@ void next_states64(const NFA *n, u16 s, u16 *t) {
             assert(base_s >= m->sheng_end);
         }
 
-        const u16 *succ_table = (const u16 *)((const char *)m
+        const u16 *succ_table = reinterpret_cast<const u16 *>(reinterpret_cast<const char *>(m)
                                               + sizeof(mcsheng64));
         for (u16 c = 0; c < N_CHARS; c++) {
             u32 normal_id = base_s - m->sheng_end;
@@ -233,15 +233,15 @@ void next_states64(const NFA *n, u16 s, u16 *t) {
         if (s >= m->sherman_limit) {
             UNUSED char type = *(state_base + SHERMAN_TYPE_OFFSET);
             assert(type == SHERMAN_STATE);
-            u8 len = *(const u8 *)(SHERMAN_LEN_OFFSET + state_base);
+            u8 len = *(reinterpret_cast<const u8 *>(SHERMAN_LEN_OFFSET + state_base));
             const char *chars = state_base + SHERMAN_CHARS_OFFSET;
-            const u16 *states = (const u16 *)(state_base
+            const u16 *states = reinterpret_cast<const u16 *>(state_base
                                               + SHERMAN_STATES_OFFSET(len));
 
             for (u8 i = 0; i < len; i++) {
                 for (u16 c = 0; c < N_CHARS; c++) {
                     if (m->remap[c] == chars[i]) {
-                        t[c] = unaligned_load_u16((const u8*)&states[i]);
+                        t[c] = unaligned_load_u16(reinterpret_cast<const u8*>(&states[i]));
                     }
                 }
             }
@@ -306,6 +306,7 @@ void dumpAccelDot(FILE *f, u16 i, const union AccelAux *accel) {
     case ACCEL_SHUFTI:
     case ACCEL_DSHUFTI:
     case ACCEL_TRUFFLE:
+    case ACCEL_TRUFFLE_WIDE:
         fprintf(f, "%u [ color = darkgreen style=diagonals ];\n", i);
         break;
     default:
@@ -324,8 +325,8 @@ void describeNode(const NFA *n, const mcsheng *m, u16 i, FILE *f) {
             "label = \"%u%s\" ]; \n", i, i, isSherman ? "w":"");
 
     if (aux->accel_offset) {
-        dumpAccelDot(f, i, (const union AccelAux *)
-                     ((const char *)m + aux->accel_offset));
+        dumpAccelDot(f, i, reinterpret_cast<const union AccelAux *>
+                     (reinterpret_cast<const char *>(m) + aux->accel_offset));
     }
 
     if (i && i < m->sheng_end) {
@@ -354,14 +355,14 @@ void describeNode(const NFA *n, const mcsheng *m, u16 i, FILE *f) {
     }
 
     if (isSherman) {
-        const char *winfo_base = (const char *)n + m->sherman_offset;
+        const char *winfo_base = reinterpret_cast<const char *>(n) + m->sherman_offset;
         const char *state_base
                 = winfo_base + SHERMAN_FIXED_SIZE * (i - m->sherman_limit);
-        assert(state_base < (const char *)m + m->length - sizeof(NFA));
-        UNUSED u8 type = *(const u8 *)(state_base + SHERMAN_TYPE_OFFSET);
+        assert(state_base < reinterpret_cast<const char *>(m) + m->length - sizeof(NFA));
+        UNUSED u8 type = *(reinterpret_cast<const u8 *>(state_base + SHERMAN_TYPE_OFFSET));
         assert(type == SHERMAN_STATE);
         fprintf(f, "%u [ fillcolor = lightblue style=filled ];\n", i);
-        u16 daddy = *(const u16 *)(state_base + SHERMAN_DADDY_OFFSET);
+        u16 daddy = *(reinterpret_cast<const u16 *>(state_base + SHERMAN_DADDY_OFFSET));
         if (daddy) {
             fprintf(f, "%u -> %u [ color=royalblue style=dashed weight=0.1]\n",
                     i, daddy);
@@ -384,8 +385,8 @@ void describeNode64(const NFA *n, const mcsheng64 *m, u16 i, FILE *f) {
             "label = \"%u%s\" ]; \n", i, i, isSherman ? "w":"");
 
     if (aux->accel_offset) {
-        dumpAccelDot(f, i, (const union AccelAux *)
-                     ((const char *)m + aux->accel_offset));
+        dumpAccelDot(f, i, reinterpret_cast<const union AccelAux *>
+                     (reinterpret_cast<const char *>(m) + aux->accel_offset));
     }
 
     if (i && i < m->sheng_end) {
@@ -414,14 +415,14 @@ void describeNode64(const NFA *n, const mcsheng64 *m, u16 i, FILE *f) {
     }
 
     if (isSherman) {
-        const char *winfo_base = (const char *)n + m->sherman_offset;
+        const char *winfo_base = reinterpret_cast<const char *>(n) + m->sherman_offset;
         const char *state_base
                 = winfo_base + SHERMAN_FIXED_SIZE * (i - m->sherman_limit);
-        assert(state_base < (const char *)m + m->length - sizeof(NFA));
-        UNUSED u8 type = *(const u8 *)(state_base + SHERMAN_TYPE_OFFSET);
+        assert(state_base < reinterpret_cast<const char *>(m) + m->length - sizeof(NFA));
+        UNUSED u8 type = *(reinterpret_cast<const u8 *>(state_base + SHERMAN_TYPE_OFFSET));
         assert(type == SHERMAN_STATE);
         fprintf(f, "%u [ fillcolor = lightblue style=filled ];\n", i);
-        u16 daddy = *(const u16 *)(state_base + SHERMAN_DADDY_OFFSET);
+        u16 daddy = *(reinterpret_cast<const u16 *>(state_base + SHERMAN_DADDY_OFFSET));
         if (daddy) {
             fprintf(f, "%u -> %u [ color=royalblue style=dashed weight=0.1]\n",
                     i, daddy);
@@ -447,7 +448,7 @@ void dumpDotPreambleDfa(FILE *f) {
 
 static
 void dump_dot_16(const NFA *nfa, FILE *f) {
-    auto  *m = (const mcsheng *)getImplNfa(nfa);
+    auto  *m = reinterpret_cast<const mcsheng *>(getImplNfa(nfa));
 
     dumpDotPreambleDfa(f);
 
@@ -466,7 +467,7 @@ void dump_dot_16(const NFA *nfa, FILE *f) {
 
 static
 void dump_dot_8(const NFA *nfa, FILE *f) {
-    auto m = (const mcsheng *)getImplNfa(nfa);
+    auto m = reinterpret_cast<const mcsheng *>(getImplNfa(nfa));
 
     dumpDotPreambleDfa(f);
 
@@ -494,7 +495,7 @@ void dumpAccelMasks(FILE *f, const mcsheng *m, const mstate_aux *aux) {
             continue;
         }
 
-        auto accel = (const AccelAux *)((const char *)m + aux[i].accel_offset);
+        auto accel = reinterpret_cast<const AccelAux *>(reinterpret_cast<const char *>(m) + aux[i].accel_offset);
         fprintf(f, "%05hu ", i);
         dumpAccelInfo(f, *accel);
     }
@@ -529,15 +530,15 @@ void dumpCommonHeader(FILE *f, const mcsheng *m) {
     fprintf(f, "astart: %hu, fstart: %hu\n", m->start_anchored,
             m->start_floating);
     fprintf(f, "single accept: %d, has_accel: %d\n",
-            !!(int)m->flags & MCSHENG_FLAG_SINGLE, m->has_accel);
+            !!(m->flags & MCSHENG_FLAG_SINGLE), m->has_accel);
     fprintf(f, "sheng_end:         %hu\n", m->sheng_end);
     fprintf(f, "sheng_accel_limit: %hu\n", m->sheng_accel_limit);
 }
 
 static
 void dump_text_16(const NFA *nfa, FILE *f) {
-    auto *m = (const mcsheng *)getImplNfa(nfa);
-    auto *aux = (const mstate_aux *)((const char *)nfa + m->aux_offset);
+    auto *m = reinterpret_cast<const mcsheng *>(getImplNfa(nfa));
+    auto *aux = reinterpret_cast<const mstate_aux *>(reinterpret_cast<const char *>(nfa) + m->aux_offset);
 
     fprintf(f, "mcsheng 16\n");
     dumpCommonHeader(f, m);
@@ -554,8 +555,8 @@ void dump_text_16(const NFA *nfa, FILE *f) {
 
 static
 void dump_text_8(const NFA *nfa, FILE *f) {
-    auto m = (const mcsheng *)getImplNfa(nfa);
-    auto aux = (const mstate_aux *)((const char *)nfa + m->aux_offset);
+    auto m = reinterpret_cast<const mcsheng *>(getImplNfa(nfa));
+    auto aux = reinterpret_cast<const mstate_aux *>(reinterpret_cast<const char *>(nfa) + m->aux_offset);
 
     fprintf(f, "mcsheng 8\n");
     dumpCommonHeader(f, m);
@@ -572,7 +573,7 @@ void dump_text_8(const NFA *nfa, FILE *f) {
 
 static
 void dump64_dot_16(const NFA *nfa, FILE *f) {
-    auto  *m = (const mcsheng64 *)getImplNfa(nfa);
+    auto  *m = reinterpret_cast<const mcsheng64 *>(getImplNfa(nfa));
 
     dumpDotPreambleDfa(f);
 
@@ -591,7 +592,7 @@ void dump64_dot_16(const NFA *nfa, FILE *f) {
 
 static
 void dump64_dot_8(const NFA *nfa, FILE *f) {
-    auto m = (const mcsheng64 *)getImplNfa(nfa);
+    auto m = reinterpret_cast<const mcsheng64 *>(getImplNfa(nfa));
 
     dumpDotPreambleDfa(f);
 
@@ -619,7 +620,7 @@ void dumpAccelMasks64(FILE *f, const mcsheng64 *m, const mstate_aux *aux) {
             continue;
         }
 
-        auto accel = (const AccelAux *)((const char *)m + aux[i].accel_offset);
+        auto accel = reinterpret_cast<const AccelAux *>(reinterpret_cast<const char *>(m) + aux[i].accel_offset);
         fprintf(f, "%05hu ", i);
         dumpAccelInfo(f, *accel);
     }
@@ -654,15 +655,15 @@ void dumpCommonHeader64(FILE *f, const mcsheng64 *m) {
     fprintf(f, "astart: %hu, fstart: %hu\n", m->start_anchored,
             m->start_floating);
     fprintf(f, "single accept: %d, has_accel: %d\n",
-            !!(int)m->flags & MCSHENG_FLAG_SINGLE, m->has_accel);
+            !!(m->flags & MCSHENG_FLAG_SINGLE), m->has_accel);
     fprintf(f, "sheng_end:         %hu\n", m->sheng_end);
     fprintf(f, "sheng_accel_limit: %hu\n", m->sheng_accel_limit);
 }
 
 static
 void dump64_text_8(const NFA *nfa, FILE *f) {
-    auto m = (const mcsheng64 *)getImplNfa(nfa);
-    auto aux = (const mstate_aux *)((const char *)nfa + m->aux_offset);
+    auto m = reinterpret_cast<const mcsheng64 *>(getImplNfa(nfa));
+    auto aux = reinterpret_cast<const mstate_aux *>(reinterpret_cast<const char *>(nfa) + m->aux_offset);
 
     fprintf(f, "mcsheng 64-8\n");
     dumpCommonHeader64(f, m);
@@ -679,8 +680,8 @@ void dump64_text_8(const NFA *nfa, FILE *f) {
 
 static
 void dump64_text_16(const NFA *nfa, FILE *f) {
-    auto *m = (const mcsheng64 *)getImplNfa(nfa);
-    auto *aux = (const mstate_aux *)((const char *)nfa + m->aux_offset);
+    auto *m = reinterpret_cast<const mcsheng64 *>(getImplNfa(nfa));
+    auto *aux = reinterpret_cast<const mstate_aux *>(reinterpret_cast<const char *>(nfa) + m->aux_offset);
 
     fprintf(f, "mcsheng 64-16\n");
     dumpCommonHeader64(f, m);

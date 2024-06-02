@@ -299,7 +299,7 @@ char nfaExecTamarama_QR(const struct NFA *n, struct mq *q, ReportID report) {
         rv = nfaQueueExecRose(q1.nfa, &q1, report);
     }
 
-    DEBUG_PRINTF("exec rose rv:%u\n", rv);
+    DEBUG_PRINTF("exec rose rv:%d\n", rv);
     return rv;
 }
 

@@ -132,7 +132,7 @@ void EngineHyperscan::scan(const char *data, unsigned int len, unsigned int id,
                            ResultEntry &result, EngineContext &ectx) const {
     assert(data);
 
-    EngineHSContext &ctx = static_cast<EngineHSContext &>(ectx);
+    const EngineHSContext &ctx = static_cast<EngineHSContext &>(ectx);
     ScanHSContext sc(id, result, nullptr);
     auto callback = echo_matches ? onMatchEcho : onMatch;
     hs_error_t rv = hs_scan(db, data, len, 0, ctx.scratch, callback, &sc);
@@ -150,7 +150,7 @@ void EngineHyperscan::scan_vectored(const char *const *data,
     assert(data);
     assert(len);
 
-    EngineHSContext &ctx = static_cast<EngineHSContext &>(ectx);
+    const EngineHSContext &ctx = static_cast<EngineHSContext &>(ectx);
     ScanHSContext sc(streamId, result, nullptr);
     auto callback = echo_matches ? onMatchEcho : onMatch;
     hs_error_t rv =
@@ -198,8 +198,8 @@ void EngineHyperscan::streamScan(EngineStream &stream, const char *data,
                                  ResultEntry &result) const {
     assert(data);
 
-    auto &s = static_cast<EngineHSStream &>(stream);
-    EngineHSContext &ctx = *s.ctx;
+    const auto &s = static_cast<EngineHSStream &>(stream);
+    const EngineHSContext &ctx = *s.ctx;
 
     ScanHSContext sc(id, result, &s);
     auto callback = echo_matches ? onMatchEcho : onMatch;
@@ -215,7 +215,7 @@ void EngineHyperscan::streamScan(EngineStream &stream, const char *data,
 void EngineHyperscan::streamCompressExpand(EngineStream &stream,
                                            vector<char> &temp) const {
     size_t used = 0;
-    auto &s = static_cast<EngineHSStream &>(stream);
+    const auto &s = static_cast<EngineHSStream &>(stream);
     hs_error_t err = hs_compress_stream(s.id, temp.data(), temp.size(),
                                         &used);
     if (err == HS_INSUFFICIENT_SPACE) {
@@ -248,7 +248,7 @@ void EngineHyperscan::printStats() const {
         printf("Signature set:        %s\n", compile_stats.sigs_name.c_str());
     }
     printf("Signatures:        %s\n", compile_stats.signatures.c_str());
-    printf("Hyperscan info:    %s\n", compile_stats.db_info.c_str());
+    printf("Vectorscan info:    %s\n", compile_stats.db_info.c_str());
     printf("Expression count:  %'zu\n", compile_stats.expressionCount);
     printf("Bytecode size:     %'zu bytes\n", compile_stats.compiledSize);
     printf("Database CRC:      0x%x\n", compile_stats.crc32);
@@ -456,7 +456,7 @@ buildEngineHyperscan(const ExpressionMap &expressions, ScanMode scan_mode,
 
         if (err == HS_COMPILER_ERROR) {
             if (compile_err->expression >= 0) {
-                printf("Compile error for signature #%u: %s\n",
+                printf("Compile error for signature #%d: %s\n",
                        compile_err->expression, compile_err->message);
             } else {
                 printf("Compile error: %s\n", compile_err->message);

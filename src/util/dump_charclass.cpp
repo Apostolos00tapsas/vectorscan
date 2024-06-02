@@ -178,9 +178,9 @@ size_t describeClassInt(ostream &os, const CharReach &incr, size_t maxLength,
 
     // Render charclass as a series of ranges
     size_t c_start = cr.find_first();
-    size_t c = c_start, c_last = 0;
+    size_t c = c_start;
     while (c != CharReach::npos) {
-        c_last = c;
+        size_t c_last = c;
         c = cr.find_next(c);
         if (c != c_last + 1 || c_last == 0xff) {
             describeRange(os, c_start, c_last, out_type);
@@ -227,8 +227,6 @@ void describeClass(ostream &os, const CharReach &incr, size_t maxLength,
     int out_count = describeClassInt(out, incr, maxLength, out_type);
 
     std::ostringstream neg;
-    UNUSED int neg_count = describeClassInt(neg, ~incr, maxLength, out_type);
-
     if (out.tellp() <= neg.tellp()) {
         if (out_count > 1) {
             os << '[' << out.str() << ']';

@@ -37,18 +37,18 @@ TEST(Vermicelli, ExecNoMatch1) {
 
     for (size_t i = 0; i < 16; i++) {
         for (size_t j = 0; j < 16; j++) {
-            const u8 *rv = vermicelliExec('a', 0, (u8 *)t1 + i,
-                                          (u8 *)t1 + strlen(t1) - j);
+            const u8 *rv = vermicelliExec('a', 0, reinterpret_cast<u8 *>(t1) + i,
+                                          reinterpret_cast<u8 *>(t1) + strlen(t1) - j);
 
             ASSERT_EQ(((size_t)t1 + strlen(t1) - j), (size_t)rv);
 
-            rv = vermicelliExec('B', 0, (u8 *)t1 + i,
-                                (u8 *)t1 + strlen(t1) - j);
+            rv = vermicelliExec('B', 0, reinterpret_cast<u8 *>(t1) + i,
+                                reinterpret_cast<u8 *>(t1) + strlen(t1) - j);
 
             ASSERT_EQ(((size_t)t1 + strlen(t1) - j), (size_t)rv);
 
-            rv = vermicelliExec('A', 1, (u8 *)t1 + i,
-                                (u8 *)t1 + strlen(t1) - j);
+            rv = vermicelliExec('A', 1, reinterpret_cast<u8 *>(t1) + i,
+                                reinterpret_cast<u8 *>(t1) + strlen(t1) - j);
 
             ASSERT_EQ(((size_t)t1 + strlen(t1) - j), (size_t)rv);
         }
@@ -59,13 +59,13 @@ TEST(Vermicelli, Exec1) {
     char t1[] = "bbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbb";
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = vermicelliExec('a', 0, (u8 *)t1 + i,
-                                      (u8 *)t1 + strlen(t1));
+        const u8 *rv = vermicelliExec('a', 0, reinterpret_cast<u8 *>(t1) + i,
+                                      reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
 
-        rv = vermicelliExec('A', 1, (u8 *)t1 + i,
-                            (u8 *)t1 + strlen(t1));
+        rv = vermicelliExec('A', 1, reinterpret_cast<u8 *>(t1) + i,
+                            reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
     }
@@ -75,13 +75,13 @@ TEST(Vermicelli,  Exec2) {
     char t1[] = "bbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbabbbbbbbbbbbb";
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = vermicelliExec('a', 0, (u8 *)t1 + i,
-                                      (u8 *)t1 + strlen(t1));
+        const u8 *rv = vermicelliExec('a', 0, reinterpret_cast<u8 *>(t1) + i,
+                                      reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
 
-        rv = vermicelliExec('A', 1, (u8 *)t1 + i,
-                            (u8 *)t1 + strlen(t1));
+        rv = vermicelliExec('A', 1, reinterpret_cast<u8 *>(t1) + i,
+                            reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
     }
@@ -91,13 +91,13 @@ TEST(Vermicelli,  Exec3) {
     char t1[] = "bbbbbbbbbbbbbbbbbAaaaaaaaaaaaaaaaaaaaaaabbbbbbbbabbbbbbbbbbbb";
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = vermicelliExec('a', 0, (u8 *)t1 + i,
-                                      (u8 *)t1 + strlen(t1));
+        const u8 *rv = vermicelliExec('a', 0, reinterpret_cast<u8 *>(t1) + i,
+                                      reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 18, (size_t)rv);
 
-        rv = vermicelliExec('A', 1, (u8 *)t1 + i,
-                            (u8 *)t1 + strlen(t1));
+        rv = vermicelliExec('A', 1, reinterpret_cast<u8 *>(t1) + i,
+                            reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
     }
@@ -109,11 +109,11 @@ TEST(Vermicelli, Exec4) {
 
     for (size_t i = 0; i < 31; i++) {
         t1[48 - i] = 'a';
-        const u8 *rv = vermicelliExec('a', 0, (u8 *)t1, (u8 *)t1 + strlen(t1));
+        const u8 *rv = vermicelliExec('a', 0, reinterpret_cast<u8 *>(t1), reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)&t1[48 - i], (size_t)rv);
 
-        rv = vermicelliExec('A', 1, (u8 *)t1, (u8 *)t1 + strlen(t1));
+        rv = vermicelliExec('A', 1, reinterpret_cast<u8 *>(t1), reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)&t1[48 - i], (size_t)rv);
     }
@@ -124,30 +124,30 @@ TEST(DoubleVermicelli, ExecNoMatch1) {
 
     for (size_t i = 0; i < 16; i++) {
         for (size_t j = 0; j < 16; j++) {
-            const u8 *rv = vermicelliDoubleExec('a', 'b', 0, (u8 *)t1 + i,
-                                                (u8 *)t1 + strlen(t1) - j);
+            const u8 *rv = vermicelliDoubleExec('a', 'b', 0, reinterpret_cast<u8 *>(t1) + i,
+                                                reinterpret_cast<u8 *>(t1) + strlen(t1) - j);
 
             ASSERT_EQ(((size_t)t1 + strlen(t1) - j), (size_t)rv);
 
-            rv = vermicelliDoubleExec('B', 'b', 0, (u8 *)t1 + i,
-                                (u8 *)t1 + strlen(t1) - j);
+            rv = vermicelliDoubleExec('B', 'b', 0, reinterpret_cast<u8 *>(t1) + i,
+                                reinterpret_cast<u8 *>(t1) + strlen(t1) - j);
 
             ASSERT_EQ(((size_t)t1 + strlen(t1) - j), (size_t)rv);
 
-            rv = vermicelliDoubleExec('A', 'B', 1, (u8 *)t1 + i,
-                                (u8 *)t1 + strlen(t1) - j);
+            rv = vermicelliDoubleExec('A', 'B', 1, reinterpret_cast<u8 *>(t1) + i,
+                                reinterpret_cast<u8 *>(t1) + strlen(t1) - j);
 
             ASSERT_EQ(((size_t)t1 + strlen(t1) - j), (size_t)rv);
 
             /* partial match */
-            rv = vermicelliDoubleExec('b', 'B', 0, (u8 *)t1 + i,
-                                (u8 *)t1 + strlen(t1) - j);
+            rv = vermicelliDoubleExec('b', 'B', 0, reinterpret_cast<u8 *>(t1) + i,
+                                reinterpret_cast<u8 *>(t1) + strlen(t1) - j);
 
             ASSERT_EQ(((size_t)t1 + strlen(t1) - j - 1), (size_t)rv);
 
             /* partial match */
-            rv = vermicelliDoubleExec('B', 'A', 1, (u8 *)t1 + i,
-                                (u8 *)t1 + strlen(t1) - j);
+            rv = vermicelliDoubleExec('B', 'A', 1, reinterpret_cast<u8 *>(t1) + i,
+                                reinterpret_cast<u8 *>(t1) + strlen(t1) - j);
 
             ASSERT_EQ(((size_t)t1 + strlen(t1) - j - 1), (size_t)rv);
         }
@@ -158,23 +158,23 @@ TEST(DoubleVermicelli, Exec1) {
     char t1[] = "bbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbb";
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = vermicelliDoubleExec('a', 'b', 0, (u8 *)t1 + i,
-                                      (u8 *)t1 + strlen(t1));
+        const u8 *rv = vermicelliDoubleExec('a', 'b', 0, reinterpret_cast<u8 *>(t1) + i,
+                                      reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 18, (size_t)rv);
 
-        rv = vermicelliDoubleExec('A', 'B', 1, (u8 *)t1 + i,
-                            (u8 *)t1 + strlen(t1));
+        rv = vermicelliDoubleExec('A', 'B', 1, reinterpret_cast<u8 *>(t1) + i,
+                            reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 18, (size_t)rv);
 
-        rv = vermicelliDoubleExec('b', 'a', 0, (u8 *)t1 + i,
-                            (u8 *)t1 + strlen(t1));
+        rv = vermicelliDoubleExec('b', 'a', 0, reinterpret_cast<u8 *>(t1) + i,
+                            reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
 
-        rv = vermicelliDoubleExec('B', 'A', 1, (u8 *)t1 + i,
-                            (u8 *)t1 + strlen(t1));
+        rv = vermicelliDoubleExec('B', 'A', 1, reinterpret_cast<u8 *>(t1) + i,
+                            reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
     }
@@ -184,13 +184,13 @@ TEST(DoubleVermicelli,  Exec2) {
     char t1[] = "bbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbaaaaabbbbbbbb";
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = vermicelliDoubleExec('a', 'a', 0, (u8 *)t1 + i,
-                                      (u8 *)t1 + strlen(t1));
+        const u8 *rv = vermicelliDoubleExec('a', 'a', 0, reinterpret_cast<u8 *>(t1) + i,
+                                      reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
 
-        rv = vermicelliDoubleExec('A', 'A', 1, (u8 *)t1 + i,
-                            (u8 *)t1 + strlen(t1));
+        rv = vermicelliDoubleExec('A', 'A', 1, reinterpret_cast<u8 *>(t1) + i,
+                            reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
     }
@@ -201,23 +201,23 @@ TEST(DoubleVermicelli,  Exec3) {
     char t1[] = "bbbbbbbbbbbbbbbbbaAaaAAaaaaaaaaaaaaaaaaaabbbbbbbaaaaabbbbbbbb";
 
     for (size_t i = 0; i < 16; i++) {
-        const u8 *rv = vermicelliDoubleExec('A', 'a', 0, (u8 *)t1 + i,
-                                      (u8 *)t1 + strlen(t1));
+        const u8 *rv = vermicelliDoubleExec('A', 'a', 0, reinterpret_cast<u8 *>(t1) + i,
+                                      reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 18, (size_t)rv);
 
-        rv = vermicelliDoubleExec('A', 'A', 1, (u8 *)t1 + i,
-                                  (u8 *)t1 + strlen(t1));
+        rv = vermicelliDoubleExec('A', 'A', 1, reinterpret_cast<u8 *>(t1) + i,
+                                  reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
 
-        rv = vermicelliDoubleExec('A', 'A', 0, (u8 *)t1 + i,
-                                  (u8 *)t1 + strlen(t1));
+        rv = vermicelliDoubleExec('A', 'A', 0, reinterpret_cast<u8 *>(t1) + i,
+                                  reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 21, (size_t)rv);
 
-        rv = vermicelliDoubleExec('a', 'A', 0, (u8 *)t1 + i,
-                                  (u8 *)t1 + strlen(t1));
+        rv = vermicelliDoubleExec('a', 'A', 0, reinterpret_cast<u8 *>(t1) + i,
+                                  reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
     }
@@ -230,12 +230,12 @@ TEST(DoubleVermicelli, Exec4) {
     for (size_t i = 0; i < 31; i++) {
         t1[48 - i] = 'a';
         t1[48 - i + 1] = 'a';
-        const u8 *rv = vermicelliDoubleExec('a', 'a', 0, (u8 *)t1,
-                                            (u8 *)t1 + strlen(t1));
+        const u8 *rv = vermicelliDoubleExec('a', 'a', 0, reinterpret_cast<u8 *>(t1),
+                                            reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)&t1[48 - i], (size_t)rv);
 
-        rv = vermicelliDoubleExec('A', 'A', 1, (u8 *)t1, (u8 *)t1 + strlen(t1));
+        rv = vermicelliDoubleExec('A', 'A', 1, reinterpret_cast<u8 *>(t1), reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)&t1[48 - i], (size_t)rv);
     }
@@ -244,7 +244,7 @@ TEST(DoubleVermicelli, Exec4) {
 TEST(Vermicelli, noodEarlyExit) {
 
     // searches that should fail
-    static const u8 *lowerAlpha = (const u8*) "abcdefghijklmnopqrstuvwxyz";
+    static const u8 *lowerAlpha = reinterpret_cast<const u8 *>("abcdefghijklmnopqrstuvwxyz");
     const u8 *la_end = lowerAlpha + 26;
     EXPECT_EQ(la_end, vermicelliExec('0', 0, lowerAlpha, la_end));
     EXPECT_EQ(la_end, vermicelliExec('A', 0, lowerAlpha, la_end));
@@ -266,13 +266,13 @@ TEST(NVermicelli, ExecNoMatch1) {
         SCOPED_TRACE(i);
         for (size_t j = 0; j < 16; j++) {
             SCOPED_TRACE(j);
-            const u8 *rv = nvermicelliExec('b', 0, (u8 *)t1 + i,
-                                          (u8 *)t1 + strlen(t1) - j);
+            const u8 *rv = nvermicelliExec('b', 0, reinterpret_cast<u8 *>(t1) + i,
+                                          reinterpret_cast<u8 *>(t1) + strlen(t1) - j);
 
             ASSERT_EQ(((size_t)t1 + strlen(t1) - j), (size_t)rv);
 
-            rv = nvermicelliExec('B', 1, (u8 *)t1 + i,
-                                (u8 *)t1 + strlen(t1) - j);
+            rv = nvermicelliExec('B', 1, reinterpret_cast<u8 *>(t1) + i,
+                                reinterpret_cast<u8 *>(t1) + strlen(t1) - j);
 
             ASSERT_EQ(((size_t)t1 + strlen(t1) - j), (size_t)rv);
         }
@@ -284,13 +284,13 @@ TEST(NVermicelli, Exec1) {
 
     for (size_t i = 0; i < 16; i++) {
         SCOPED_TRACE(i);
-        const u8 *rv = nvermicelliExec('b', 0, (u8 *)t1 + i,
-                                      (u8 *)t1 + strlen(t1));
+        const u8 *rv = nvermicelliExec('b', 0, reinterpret_cast<u8 *>(t1) + i,
+                                      reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
 
-        rv = nvermicelliExec('B', 1, (u8 *)t1 + i,
-                            (u8 *)t1 + strlen(t1));
+        rv = nvermicelliExec('B', 1, reinterpret_cast<u8 *>(t1) + i,
+                            reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
     }
@@ -301,13 +301,13 @@ TEST(NVermicelli,  Exec2) {
 
     for (size_t i = 0; i < 16; i++) {
         SCOPED_TRACE(i);
-        const u8 *rv = nvermicelliExec('b', 0, (u8 *)t1 + i,
-                                      (u8 *)t1 + strlen(t1));
+        const u8 *rv = nvermicelliExec('b', 0, reinterpret_cast<u8 *>(t1) + i,
+                                      reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
 
-        rv = nvermicelliExec('B', 1, (u8 *)t1 + i,
-                            (u8 *)t1 + strlen(t1));
+        rv = nvermicelliExec('B', 1, reinterpret_cast<u8 *>(t1) + i,
+                            reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
     }
@@ -318,13 +318,13 @@ TEST(NVermicelli,  Exec3) {
 
     for (size_t i = 0; i < 16; i++) {
         SCOPED_TRACE(i);
-        const u8 *rv = nvermicelliExec('b', 0, (u8 *)t1 + i,
-                                      (u8 *)t1 + strlen(t1));
+        const u8 *rv = nvermicelliExec('b', 0, reinterpret_cast<u8 *>(t1) + i,
+                                      reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 17, (size_t)rv);
 
-        rv = nvermicelliExec('B', 1, (u8 *)t1 + i,
-                            (u8 *)t1 + strlen(t1));
+        rv = nvermicelliExec('B', 1, reinterpret_cast<u8 *>(t1) + i,
+                            reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)t1 + 18, (size_t)rv);
     }
@@ -336,11 +336,11 @@ TEST(NVermicelli, Exec4) {
     for (size_t i = 0; i < 31; i++) {
         SCOPED_TRACE(i);
         t1[48 - i] = 'a';
-        const u8 *rv = nvermicelliExec('b', 0, (u8 *)t1, (u8 *)t1 + strlen(t1));
+        const u8 *rv = nvermicelliExec('b', 0, reinterpret_cast<u8 *>(t1), reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)&t1[48 - i], (size_t)rv);
 
-        rv = nvermicelliExec('B', 1, (u8 *)t1, (u8 *)t1 + strlen(t1));
+        rv = nvermicelliExec('B', 1, reinterpret_cast<u8 *>(t1), reinterpret_cast<u8 *>(t1) + strlen(t1));
 
         ASSERT_EQ((size_t)&t1[48 - i], (size_t)rv);
     }
@@ -348,7 +348,7 @@ TEST(NVermicelli, Exec4) {
 
 TEST(DoubleVermicelliMasked, ExecNoMatch1) {
     std::string t1("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     for (size_t i = 0; i < 16; i++) {
         for (size_t j = 0; j < 16; j++) {
@@ -388,7 +388,7 @@ TEST(DoubleVermicelliMasked, ExecNoMatch1) {
 
 TEST(DoubleVermicelliMasked, Exec1) {
     std::string t1("bbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     for (size_t i = 0; i < 16; i++) {
         const u8 *rv = vermicelliDoubleMaskedExec('a', 'b', 0xff, 0xff,
@@ -431,7 +431,7 @@ TEST(DoubleVermicelliMasked, Exec1) {
 
 TEST(DoubleVermicelliMasked,  Exec2) {
     std::string t1("bbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbaaaaabbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     for (size_t i = 0; i < 16; i++) {
         const u8 *rv = vermicelliDoubleMaskedExec('a', 'a', 0xff, 0xff,
@@ -463,7 +463,7 @@ TEST(DoubleVermicelliMasked,  Exec2) {
 TEST(DoubleVermicelliMasked,  Exec3) {
     /*              012345678901234567890123 */
     std::string t1("bbbbbbbbbbbbbbbbbaAaaAAaaaaaaaaaaaaaaaaaabbbbbbbaaaaabbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     for (size_t i = 0; i < 16; i++) {
         const u8 *rv = vermicelliDoubleMaskedExec('A', 'a', 0xff, 0xff,
@@ -506,7 +506,7 @@ TEST(DoubleVermicelliMasked,  Exec3) {
 
 TEST(DoubleVermicelliMasked, Exec4) {
     std::string t1("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     for (size_t i = 0; i < 31; i++) {
         t1[48 - i] = 'a';
@@ -530,7 +530,7 @@ using namespace ue2;
 
 TEST(Vermicelli16, ExecNoMatch1) {
     char t1[] = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     chars.set('a');
@@ -550,7 +550,7 @@ TEST(Vermicelli16, ExecNoMatch1) {
 
 TEST(Vermicelli16, Exec1) {
     char t1[] = "bbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbb";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     chars.set('a');
@@ -567,7 +567,7 @@ TEST(Vermicelli16, Exec1) {
 
 TEST(Vermicelli16,  Exec2) {
     char t1[] = "bbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbabbbbbbbbbbbb";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     chars.set('a');
@@ -584,7 +584,7 @@ TEST(Vermicelli16,  Exec2) {
 
 TEST(Vermicelli16,  Exec3) {
     char t1[] = "bbbbbbbbbbbbbbbbbAaaaaaaaaaaaaaaaaaaaaaabbbbbbbbabbbbbbbbbbbb";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     chars.set('a');
@@ -608,7 +608,7 @@ TEST(Vermicelli16,  Exec3) {
 
 TEST(Vermicelli16, Exec4) {
     char t1[] = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     chars.set('a');
@@ -633,7 +633,7 @@ TEST(Vermicelli16, Exec4) {
 
 TEST(Vermicelli16, Exec5) {
     char t1[] = "qqqqqqqqqqqqqqqqqabcdefghijklmnopqqqqqqqqqqqqqqqqqqqqq";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     m128 matches[16];
@@ -655,7 +655,7 @@ TEST(Vermicelli16, Exec5) {
 
 TEST(NVermicelli16, ExecNoMatch1) {
     char t1[] = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     chars.set('b');
@@ -675,7 +675,7 @@ TEST(NVermicelli16, ExecNoMatch1) {
 
 TEST(NVermicelli16, Exec1) {
     char t1[] = "bbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbbb";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     chars.set('b');
@@ -692,7 +692,7 @@ TEST(NVermicelli16, Exec1) {
 
 TEST(NVermicelli16,  Exec2) {
     char t1[] = "bbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbabbbbbbbbbbbb";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     chars.set('b');
@@ -709,7 +709,7 @@ TEST(NVermicelli16,  Exec2) {
 
 TEST(NVermicelli16,  Exec3) {
     char t1[] = "bbbbbbbbbbbbbbbbbAaaaaaaaaaaaaaaaaaaaaaabbbbbbbbabbbbbbbbbbbb";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     chars.set('b');
@@ -733,7 +733,7 @@ TEST(NVermicelli16,  Exec3) {
 
 TEST(NVermicelli16, Exec4) {
     char t1[] = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     chars.set('b');
@@ -758,7 +758,7 @@ TEST(NVermicelli16, Exec4) {
 
 TEST(NVermicelli16, Exec5) {
     char t1[] = "aaaaaaaaaaaaaaaaaabcdefghijklmnopqaaaaaaaaaaaaaaaaaaaaa";
-    const u8 *buf = (const u8 *)t1;
+    const u8 *buf = reinterpret_cast<const u8 *>(t1);
 
     CharReach chars;
     m128 matches[16];
@@ -780,7 +780,7 @@ TEST(NVermicelli16, Exec5) {
 
 TEST(DoubleVermicelli16, ExecNoMatch1) {
     std::string t1("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     m128 matches;
     u64a firsts;
@@ -802,7 +802,7 @@ TEST(DoubleVermicelli16, ExecNoMatch1) {
 
 TEST(DoubleVermicelli16, ExecNoMatch2) {
     std::string t1("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     m128 matches;
     u64a firsts;
@@ -825,7 +825,7 @@ TEST(DoubleVermicelli16, ExecNoMatch2) {
 
 TEST(DoubleVermicelli16, ExecNoMatch3) {
     std::string t1("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     m128 matches;
     u64a firsts;
@@ -849,7 +849,7 @@ TEST(DoubleVermicelli16, ExecNoMatch3) {
 
 TEST(DoubleVermicelli16, Exec1) {
     std::string t1("bbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     m128 matches;
     u64a firsts;
@@ -877,7 +877,7 @@ TEST(DoubleVermicelli16, Exec1) {
 
 TEST(DoubleVermicelli16,  Exec2) {
     std::string t1("bbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbaaaaabbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     m128 matches;
     u64a firsts;
@@ -895,7 +895,7 @@ TEST(DoubleVermicelli16,  Exec2) {
 
 TEST(DoubleVermicelliMasked16, ExecNoMatch1) {
     std::string t1("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     m128 matches1;
     bool ret = vermicelliDoubleMasked16Build('a', 'b', 0xff, 0xff, (u8 *)&matches1);
@@ -941,7 +941,7 @@ TEST(DoubleVermicelliMasked16, ExecNoMatch1) {
 
 TEST(DoubleVermicelliMasked16, Exec1) {
     std::string t1("bbbbbbbbbbbbbbbbbbabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbabbbbbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     m128 matches1;
     bool ret = vermicelliDoubleMasked16Build('a', 'b', 0xff, 0xff, (u8 *)&matches1);
@@ -991,7 +991,7 @@ TEST(DoubleVermicelliMasked16, Exec1) {
 
 TEST(DoubleVermicelliMasked16,  Exec2) {
     std::string t1("bbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbaaaaabbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     m128 matches1;
     bool ret = vermicelliDoubleMasked16Build('a', 'a', 0xff, 0xff, (u8 *)&matches1);
@@ -1028,7 +1028,7 @@ TEST(DoubleVermicelliMasked16,  Exec2) {
 TEST(DoubleVermicelliMasked16,  Exec3) {
     /*              012345678901234567890123 */
     std::string t1("bbbbbbbbbbbbbbbbbaAaaAAaaaaaaaaaaaaaaaaaabbbbbbbaaaaabbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     m128 matches1;
     bool ret = vermicelliDoubleMasked16Build('A', 'a', 0xff, 0xff, (u8 *)&matches1);
@@ -1078,7 +1078,7 @@ TEST(DoubleVermicelliMasked16,  Exec3) {
 
 TEST(DoubleVermicelliMasked16, Exec4) {
     std::string t1("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     m128 matches1;
     bool ret = vermicelliDoubleMasked16Build('a', 'a', 0xff, 0xff, (u8 *)&matches1);
@@ -1102,7 +1102,7 @@ TEST(DoubleVermicelliMasked16, Exec4) {
 
 TEST(DoubleVermicelliMasked16,  Exec5) {
     std::string t1("bbbbbbbbbbbbbbbbbaCaGaOCaChBfcNgBFGiLbbbbbbbbbbbbbbbbbbbbbbbb");
-    const u8 *t1_raw = (const u8 *)t1.c_str();
+    const u8 *t1_raw = reinterpret_cast<const u8 *>(t1.c_str());
 
     m128 matches1;
     bool ret = vermicelliDoubleMasked16Build('a', 'B', 0xff, 0xde, (u8 *)&matches1);

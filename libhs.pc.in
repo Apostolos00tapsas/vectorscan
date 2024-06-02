@@ -4,7 +4,7 @@ libdir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@
 includedir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@
 
 Name: libhs
-Description: Intel(R) Hyperscan Library
+Description: A portable fork of the high-performance regular expression matching library
 Version: @HS_VERSION@
 Libs: -L${libdir} -lhs
 Cflags: -I${includedir}/hs

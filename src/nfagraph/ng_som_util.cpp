@@ -58,11 +58,12 @@ vector<DepthMinMax> getDistancesFromSOM(const NGHolder &g_orig) {
     cloneHolder(g, g_orig, &vmap);
 
     vector<NFAVertex> vstarts;
-    for (auto v : vertices_range(g)) {
-        if (is_virtual_start(v, g)) {
-            vstarts.emplace_back(v);
-        }
-    }
+    auto vstart = [&g=g](const NFAVertex &v) {
+        return (is_virtual_start(v, g));
+    };
+    const auto &vr = vertices_range(g);
+    std::copy_if(begin(vr), end(vr),  std::back_inserter(vstarts), vstart);
+
     vstarts.emplace_back(g.startDs);
 
     // wire the successors of every virtual start or startDs to g.start.
@@ -151,6 +152,7 @@ bool firstMatchIsFirst(const NGHolder &p) {
     /* run the prefix the main graph */
     states = execute_graph(p, p, states);
 
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : states) {
         /* need to check if this vertex may represent an infix match - ie
          * it does not have an edge to accept. */
@@ -252,6 +254,7 @@ bool somMayGoBackwards(NFAVertex u, const NGHolder &g,
             continue;
         }
         for (auto v : adjacent_vertices_range(t, g)) {
+            // cppcheck-suppress useStlAlgorithm
             if (contains(u_succ, v)) {
                 /* due to virtual starts being aliased with normal starts in the
                  * copy of the graph, we may have already added the edges. */
@@ -266,18 +269,6 @@ bool somMayGoBackwards(NFAVertex u, const NGHolder &g,
     be.clear();
     boost::depth_first_search(c_g, visitor(backEdgeVisitor)
                                    .root_vertex(c_g.start));
-
-    for (const auto &e : be) {
-        NFAVertex s = source(e, c_g);
-        NFAVertex t = target(e, c_g);
-        DEBUG_PRINTF("back edge %zu %zu\n", c_g[s].index, c_g[t].index);
-        if (s != t) {
-            assert(0);
-            DEBUG_PRINTF("eek big cycle\n");
-            rv = true; /* big cycle -> eek */
-            goto exit;
-        }
-    }
 
     DEBUG_PRINTF("checking acyclic+selfloop graph\n");
 

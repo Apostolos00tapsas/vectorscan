@@ -125,6 +125,7 @@ char PROCESS_ACCEPTS_IMPL_FN(const IMPL_NFA_T *limex, const STATE_T *s,
     const STATE_T accept_mask = *acceptMask;
     STATE_T accepts = AND_STATE(*s, accept_mask);
 
+    DEBUG_PRINTF("sizeof(STATE_T): %ld, sizeof(CHUNK_T): %ld, NUM_STATE_CHUNKS: %ld\n", sizeof(STATE_T), sizeof(CHUNK_T), NUM_STATE_CHUNKS);
     // Caller must ensure that we have at least one accept state on.
     assert(ISNONZERO_STATE(accepts));
 
@@ -135,6 +136,7 @@ char PROCESS_ACCEPTS_IMPL_FN(const IMPL_NFA_T *limex, const STATE_T *s,
     memcpy(mask_chunks, &accept_mask, sizeof(accept_mask));
 
     u32 base_index = 0; // Cumulative sum of mask popcount up to current chunk.
+    // cppcheck-suppress unsignedLessThanZero
     for (u32 i = 0; i < NUM_STATE_CHUNKS; i++) {
         CHUNK_T chunk = chunks[i];
         while (chunk != 0) {
@@ -332,7 +334,7 @@ void EXPIRE_ESTATE_FN(const IMPL_NFA_T *limex, struct CONTEXT_T *ctx,
 // UE-1636) need to guard cyclic tug-accepts as well.
 static really_inline
 char LIMEX_INACCEPT_FN(const IMPL_NFA_T *limex, STATE_T state,
-                       union RepeatControl *repeat_ctrl, char *repeat_state,
+                       const union RepeatControl *repeat_ctrl, const char *repeat_state,
                        u64a offset, ReportID report) {
     assert(limex);
 
@@ -358,6 +360,7 @@ char LIMEX_INACCEPT_FN(const IMPL_NFA_T *limex, STATE_T state,
     memcpy(mask_chunks, &accept_mask, sizeof(accept_mask));
 
     u32 base_index = 0; // Cumulative sum of mask popcount up to current chunk.
+    // cppcheck-suppress unsignedLessThanZero
     for (u32 i = 0; i < NUM_STATE_CHUNKS; i++) {
         CHUNK_T chunk = chunks[i];
         while (chunk != 0) {
@@ -382,7 +385,7 @@ char LIMEX_INACCEPT_FN(const IMPL_NFA_T *limex, STATE_T state,
 
 static really_inline
 char LIMEX_INANYACCEPT_FN(const IMPL_NFA_T *limex, STATE_T state,
-                          union RepeatControl *repeat_ctrl, char *repeat_state,
+                          const union RepeatControl *repeat_ctrl, const char *repeat_state,
                           u64a offset) {
     assert(limex);
 

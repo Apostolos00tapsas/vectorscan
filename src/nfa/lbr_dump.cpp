@@ -56,7 +56,7 @@ namespace ue2 {
 static
 void lbrDumpCommon(const lbr_common *lc, FILE *f) {
     const RepeatInfo *info
-        = (const RepeatInfo *)((const char *)lc + lc->repeatInfoOffset);
+        = reinterpret_cast<const RepeatInfo *>(reinterpret_cast<const char *>(lc) + lc->repeatInfoOffset);
     fprintf(f, "Limited Bounded Repeat\n");
     fprintf(f, "\n");
     fprintf(f, "repeat model:  %s\n", repeatTypeName(info->type));
@@ -70,7 +70,7 @@ void lbrDumpCommon(const lbr_common *lc, FILE *f) {
 void nfaExecLbrDot_dump(const NFA *nfa, const string &base) {
     assert(nfa);
     assert(nfa->type == LBR_NFA_DOT);
-    const lbr_dot *ld = (const lbr_dot *)getImplNfa(nfa);
+    const lbr_dot *ld = reinterpret_cast<const lbr_dot *>(getImplNfa(nfa));
     StdioFile f(base + ".txt", "w");
     lbrDumpCommon(&ld->common, f);
     fprintf(f, "DOT model\n");
@@ -81,7 +81,7 @@ void nfaExecLbrDot_dump(const NFA *nfa, const string &base) {
 void nfaExecLbrVerm_dump(const NFA *nfa, const string &base) {
     assert(nfa);
     assert(nfa->type == LBR_NFA_VERM);
-    const lbr_verm *lv = (const lbr_verm *)getImplNfa(nfa);
+    const lbr_verm *lv = reinterpret_cast<const lbr_verm *>(getImplNfa(nfa));
     StdioFile f(base + ".txt", "w");
     lbrDumpCommon(&lv->common, f);
     fprintf(f, "VERM model, scanning for 0x%02x\n", lv->c);
@@ -92,7 +92,7 @@ void nfaExecLbrVerm_dump(const NFA *nfa, const string &base) {
 void nfaExecLbrNVerm_dump(const NFA *nfa, const string &base) {
     assert(nfa);
     assert(nfa->type == LBR_NFA_NVERM);
-    const lbr_verm *lv = (const lbr_verm *)getImplNfa(nfa);
+    const lbr_verm *lv = reinterpret_cast<const lbr_verm *>(getImplNfa(nfa));
     StdioFile f(base + ".txt", "w");
     lbrDumpCommon(&lv->common, f);
     fprintf(f, "NEGATED VERM model, scanning for 0x%02x\n", lv->c);
@@ -106,11 +106,11 @@ void nfaExecLbrShuf_dump(const NFA *nfa, const string &base) {
 
     StdioFile f(base + ".txt", "w");
 
-    const lbr_shuf *ls = (const lbr_shuf *)getImplNfa(nfa);
+    const lbr_shuf *ls = reinterpret_cast<const lbr_shuf *>(getImplNfa(nfa));
     lbrDumpCommon(&ls->common, f);
 
-    CharReach cr = shufti2cr((const u8 *)&ls->mask_lo,
-                             (const u8 *)&ls->mask_hi);
+    CharReach cr = shufti2cr(reinterpret_cast<const u8 *>(&ls->mask_lo),
+                             reinterpret_cast<const u8 *>(&ls->mask_hi));
     fprintf(f, "SHUF model, scanning for: %s (%zu chars)\n",
             describeClass(cr, 20, CC_OUT_TEXT).c_str(), cr.count());
     fprintf(f, "\n");
@@ -123,11 +123,11 @@ void nfaExecLbrTruf_dump(const NFA *nfa, const string &base) {
 
     StdioFile f(base + ".txt", "w");
 
-    const lbr_truf *lt = (const lbr_truf *)getImplNfa(nfa);
+    const lbr_truf *lt = reinterpret_cast<const lbr_truf *>(getImplNfa(nfa));
     lbrDumpCommon(&lt->common, f);
 
-    CharReach cr = truffle2cr((const u8 *)&lt->mask1,
-                              (const u8 *)&lt->mask2);
+    CharReach cr = truffle2cr(reinterpret_cast<const u8 *>(&lt->mask1),
+                              reinterpret_cast<const u8 *>(&lt->mask2));
     fprintf(f, "TRUFFLE model, scanning for: %s (%zu chars)\n",
             describeClass(cr, 20, CC_OUT_TEXT).c_str(), cr.count());
     fprintf(f, "\n");

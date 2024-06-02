@@ -56,7 +56,7 @@ struct hash_output_it {
     using reference = void;
     using iterator_category = std::output_iterator_tag;
 
-    hash_output_it(size_t *hash_out = nullptr) : out(hash_out) {}
+    explicit hash_output_it(size_t *hash_out = nullptr) : out(hash_out) {}
     hash_output_it &operator++() {
         return *this;
     }
@@ -65,7 +65,7 @@ struct hash_output_it {
     }
 
     struct deref_proxy {
-        deref_proxy(size_t *hash_out) : out(hash_out) {}
+        explicit deref_proxy(size_t *hash_out) : out(hash_out) {}
 
         template<typename T>
         void operator=(const T &val) const {
@@ -76,7 +76,7 @@ struct hash_output_it {
         size_t *out; /* output location of the owning iterator */
     };
 
-    deref_proxy operator*() { return {out}; }
+    deref_proxy operator*() { return deref_proxy(out); }
 
 private:
     size_t *out; /* location to output the hashes to */

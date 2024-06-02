@@ -137,13 +137,13 @@ void dumpTextReverse(const struct NFA *nfa, FILE *f) {
     char c2 = nfa->rAccelData.array[1];
 
     if (!twofer) {
-        fprintf(f, " \\x%02hhx (%c) ", c1, isprint(c1) ? c1 : '?');
+        fprintf(f, " \\x%02hhx (%c) ", static_cast<u8>(c1), isprint(c1) ? c1 : '?');
     } else {
-        fprintf(f, " \\x%02hhx\\x%02hhx (%c%c) ", c1, c2,
+        fprintf(f, " \\x%02hhx\\x%02hhx (%c%c) ", static_cast<u8>(c1), static_cast<u8>(c2),
                 isprint(c1) ? c1 : '?', isprint(c2) ? c2 : '?');
     }
 
-    fprintf(f, "offset %hhd\n", nfa->rAccelOffset);
+    fprintf(f, "offset %hhu\n", nfa->rAccelOffset);
 }
 
 } // namespace ue2

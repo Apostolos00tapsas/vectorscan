@@ -188,11 +188,13 @@ struct mpv_pq_item {
 static really_inline
 const struct mpv_puffette *get_puff_array(const struct mpv *m,
                                           const struct mpv_kilopuff *kp) {
+    // cppcheck-suppress cstyleCast
     return (const struct mpv_puffette *)((const char *)m + kp->puffette_offset);
 }
 
 static really_inline
 const struct mpv_counter_info *get_counter_info(const struct mpv *m) {
+    // cppcheck-suppress cstyleCast
     return (const struct mpv_counter_info *)((const char *)(m + 1)
                                  + m->kilo_count * sizeof(struct mpv_kilopuff));
 }

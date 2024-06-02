@@ -167,7 +167,7 @@ char mmbit_decompress(u8 *bits, u32 total_bits, const u8 *comp,
     comp += sizeof(MMB_TYPE);
     while (1) {
         if (key_rem < MMB_KEY_BITS) {
-            u8 *block_ptr = mmbit_get_level_root(bits, level) +
+            const u8 *block_ptr = mmbit_get_level_root(bits, level) +
                             key * sizeof(MMB_TYPE);
             MMB_TYPE block = mmb_load(block_ptr);
             MMB_TYPE block_1 = block & ~mmb_mask_zero_to_nocheck(key_rem);

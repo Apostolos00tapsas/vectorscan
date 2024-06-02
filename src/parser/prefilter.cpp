@@ -347,6 +347,7 @@ void prefilterTree(unique_ptr<Component> &root, const ParseMode &mode) {
     assert(root);
     PrefilterVisitor vis(root.get(), mode);
 
+    // cppcheck-suppress constVariablePointer
     Component *c = root->accept(vis);
     if (c != root.get()) {
         root.reset(c);

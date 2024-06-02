@@ -1221,11 +1221,17 @@ if (NOT BUILD_STATIC_LIBS)
 endif ()
 
 add_subdirectory(util)
-add_subdirectory(unit)
 
-if (EXISTS ${CMAKE_SOURCE_DIR}/tools/CMakeLists.txt)
+option(BUILD_UNIT "Build Hyperscan unit tests (default TRUE)" TRUE)
+if(BUILD_UNIT)
+    add_subdirectory(unit)
+endif()
+
+option(BUILD_TOOLS "Build Hyperscan tools (default TRUE)" TRUE)
+if(EXISTS ${CMAKE_SOURCE_DIR}/tools/CMakeLists.txt AND BUILD_TOOLS)
     add_subdirectory(tools)
 endif()
+
 if (EXISTS ${CMAKE_SOURCE_DIR}/chimera/CMakeLists.txt AND BUILD_CHIMERA)
     add_subdirectory(chimera)
 endif()
@@ -1240,4 +1246,7 @@ if(BUILD_BENCHMARKS)
     add_subdirectory(benchmarks)
 endif()
 
-add_subdirectory(doc/dev-reference)
+option(BUILD_DOC "Build the Hyperscan documentation (default TRUE)" TRUE)
+if(BUILD_DOC)
+    add_subdirectory(doc/dev-reference)
+endif()

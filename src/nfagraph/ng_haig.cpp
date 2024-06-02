@@ -453,6 +453,7 @@ void haig_do_preds(const NGHolder &g, const stateset &nfa_states,
         DEBUG_PRINTF("d vertex %zu\n", g[v].index);
         vector<u32> &out_map = preds[slot_id];
         for (auto u : inv_adjacent_vertices_range(v, g)) {
+            // cppcheck-suppress useStlAlgorithm
             out_map.emplace_back(g[u].index);
         }
 
@@ -513,12 +514,12 @@ static
 bool doHaig(const NGHolder &g, som_type som,
             const vector<vector<CharReach>> &triggers, bool unordered_som,
             raw_som_dfa *rdfa) {
-    u32 state_limit = HAIG_FINAL_DFA_STATE_LIMIT; /* haig never backs down from
-                                                     a fight */
     using StateSet = typename Auto::StateSet;
     vector<StateSet> nfa_state_map;
     Auto n(g, som, triggers, unordered_som);
     try {
+        u32 state_limit = HAIG_FINAL_DFA_STATE_LIMIT; /* haig never backs down from
+                                                     a fight */
         if (!determinise(n, rdfa->states, state_limit, &nfa_state_map)) {
             DEBUG_PRINTF("state limit exceeded\n");
             return false;

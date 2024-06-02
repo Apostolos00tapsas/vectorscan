@@ -227,7 +227,7 @@ int roseBlockFloating(const struct RoseEngine *t, struct hs_scratch *scratch) {
 
     const size_t length = scratch->core_info.len;
     char *state = scratch->core_info.state;
-    struct RoseContext *tctxt = &scratch->tctxt;
+    const struct RoseContext *tctxt = &scratch->tctxt;
 
     DEBUG_PRINTF("ftable fd=%u fmd %u\n", t->floatingDistance,
                  t->floatingMinDistance);
@@ -377,7 +377,7 @@ void roseBlockExec(const struct RoseEngine *t, struct hs_scratch *scratch) {
 
     init_for_block(t, scratch, state, is_small_block);
 
-    struct RoseContext *tctxt = &scratch->tctxt;
+    const struct RoseContext *tctxt = &scratch->tctxt;
 
     if (is_small_block) {
         const void *sbtable = getSBLiteralMatcher(t);

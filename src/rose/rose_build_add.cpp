@@ -131,7 +131,7 @@ RoseVertex createVertex(RoseBuildImpl *build, const RoseVertex parent,
     /* fill in report information */
     g[v].reports.insert(reports.begin(), reports.end());
 
-    RoseEdge e = add_edge(parent, v, g);
+    RoseEdge e = add_edge(parent, v, g).first;
     DEBUG_PRINTF("adding edge (%u, %u) to parent\n", minBound, maxBound);
 
     g[e].minBound = minBound;
@@ -161,7 +161,7 @@ RoseVertex createAnchoredVertex(RoseBuildImpl *build, u32 literalId,
     DEBUG_PRINTF("created anchored vertex %zu with lit id %u\n", g[v].index,
                  literalId);
 
-    RoseEdge e = add_edge(build->anchored_root, v, g);
+    RoseEdge e = add_edge(build->anchored_root, v, g).first;
     g[e].minBound = min_offset;
     g[e].maxBound = max_offset;
 
@@ -241,6 +241,7 @@ RoseRoleHistory selectHistory(const RoseBuildImpl &tbi, const RoseBuildData &bd,
 
 static
 bool hasSuccessorLiterals(RoseInVertex iv, const RoseInGraph &ig) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : adjacent_vertices_range(iv, ig)) {
         if (ig[v].type != RIV_ACCEPT) {
             return true;
@@ -307,7 +308,7 @@ void createVertices(RoseBuildImpl *tbi,
 
         RoseVertex p = pv.first;
 
-        RoseEdge e = add_edge(p, w, g);
+        RoseEdge e = add_edge(p, w, g).first;
         DEBUG_PRINTF("adding edge (%u,%u) to parent\n", edge_props.minBound,
                      edge_props.maxBound);
         g[e].minBound = edge_props.minBound;
@@ -345,7 +346,7 @@ void createVertices(RoseBuildImpl *tbi,
 
         for (const auto &pv : parents) {
             const RoseInEdgeProps &edge_props = bd.ig[pv.second];
-            RoseEdge e = add_edge(pv.first, g_v, tbi->g);
+            RoseEdge e = add_edge(pv.first, g_v, tbi->g).first;
             g[e].minBound = edge_props.minBound;
             g[e].maxBound = edge_props.maxBound;
             g[e].history = selectHistory(*tbi, bd, pv.second, e);
@@ -353,7 +354,7 @@ void createVertices(RoseBuildImpl *tbi,
                          edge_props.minBound, edge_props.maxBound);
         }
 
-        for (auto &m : created) {
+        for (const auto &m : created) {
             tbi->ghost[m.second] = g_v;
         }
     }
@@ -518,9 +519,9 @@ u32 findRoseAnchorFloatingOverlap(const RoseInEdgeProps &ep,
 
 static
 void findRoseLiteralMask(const NGHolder &h, const u32 lag, vector<u8> &msk,
-                         vector<u8> &cmp) {
+                         vector<u8> &lcmp) {
     if (lag >= HWLM_MASKLEN) {
-        msk.clear(); cmp.clear();
+        msk.clear(); lcmp.clear();
         return;
     }
 
@@ -532,7 +533,7 @@ void findRoseLiteralMask(const NGHolder &h, const u32 lag, vector<u8> &msk,
     assert(!curr.empty());
 
     msk.assign(HWLM_MASKLEN, 0);
-    cmp.assign(HWLM_MASKLEN, 0);
+    lcmp.assign(HWLM_MASKLEN, 0);
     size_t i = HWLM_MASKLEN - lag - 1;
     do {
         if (curr.empty() || contains(curr, h.start) ||
@@ -549,9 +550,9 @@ void findRoseLiteralMask(const NGHolder &h, const u32 lag, vector<u8> &msk,
             cr |= h[v].char_reach;
             insert(&next, inv_adjacent_vertices(v, h));
         }
-        make_and_cmp_mask(cr, &msk[i], &cmp[i]);
-        DEBUG_PRINTF("%zu: reach=%s, msk=%u, cmp=%u\n", i,
-                     describeClass(cr).c_str(), msk.at(i), cmp.at(i));
+        make_and_cmp_mask(cr, &msk[i], &lcmp[i]);
+        DEBUG_PRINTF("%zu: reach=%s, msk=%u, lcmp=%u\n", i,
+                     describeClass(cr).c_str(), msk.at(i), lcmp.at(i));
         curr.swap(next);
     } while (i-- > 0);
 }
@@ -617,18 +618,18 @@ void doRoseLiteralVertex(RoseBuildImpl *tbi, bool use_eod_table,
     }
 
 floating:
-    vector<u8> msk, cmp;
+    vector<u8> msk, lcmp;
     if (tbi->cc.grey.roseHamsterMasks && in_degree(iv, ig) == 1) {
         RoseInEdge e = *in_edges(iv, ig).first;
         if (ig[e].graph) {
-            findRoseLiteralMask(*ig[e].graph, ig[e].graph_lag, msk, cmp);
+            findRoseLiteralMask(*ig[e].graph, ig[e].graph_lag, msk, lcmp);
         }
     }
 
     u32 delay = iv_info.delay;
     rose_literal_table table = use_eod_table ? ROSE_EOD_ANCHORED : ROSE_FLOATING;
 
-    u32 literalId = tbi->getLiteralId(iv_info.s, msk, cmp, delay, table);
+    u32 literalId = tbi->getLiteralId(iv_info.s, msk, lcmp, delay, table);
 
     DEBUG_PRINTF("literal=%u (len=%zu, delay=%u, offsets=[%u,%u] '%s')\n",
                  literalId, iv_info.s.length(), delay, iv_info.min_offset,
@@ -698,7 +699,7 @@ void makeEodEventLeftfix(RoseBuildImpl &build, RoseVertex u,
         g[v].left.graph = eod_leftfix;
         g[v].left.leftfix_report = report_mapping.second;
         g[v].left.lag = 0;
-        RoseEdge e1 = add_edge(u, v, g);
+        RoseEdge e1 = add_edge(u, v, g).first;
         g[e1].minBound = 0;
         g[e1].maxBound = ROSE_BOUND_INF;
         g[v].min_offset = add_rose_depth(g[u].min_offset,
@@ -718,7 +719,7 @@ void makeEodEventLeftfix(RoseBuildImpl &build, RoseVertex u,
         g[w].reports = report_mapping.first;
         g[w].min_offset = g[v].min_offset;
         g[w].max_offset = g[v].max_offset;
-        RoseEdge e = add_edge(v, w, g);
+        RoseEdge e = add_edge(v, w, g).first;
         g[e].minBound = 0;
         g[e].maxBound = 0;
         /* No need to set history as the event is only delivered at the last
@@ -794,7 +795,7 @@ void doRoseAcceptVertex(RoseBuildImpl *tbi,
                 g[w].reports = ig[iv].reports;
                 g[w].min_offset = g[u].min_offset;
                 g[w].max_offset = g[u].max_offset;
-                RoseEdge e = add_edge(u, w, g);
+                RoseEdge e = add_edge(u, w, g).first;
                 g[e].minBound = 0;
                 g[e].maxBound = 0;
                 g[e].history = ROSE_ROLE_HISTORY_LAST_BYTE;
@@ -833,6 +834,7 @@ bool suitableForEod(const RoseInGraph &ig, vector<RoseInVertex> topo,
 
         if (ig[v].type == RIV_ACCEPT) {
             DEBUG_PRINTF("[ACCEPT]\n");
+            // cppcheck-suppress useStlAlgorithm
             for (const auto &e : in_edges_range(v, ig)) {
                 if (!ig[e].graph || !can_only_match_at_eod(*ig[e].graph)) {
                     DEBUG_PRINTF("floating accept\n");
@@ -938,7 +940,7 @@ void shift_accepts_to_end(const RoseInGraph &ig,
 }
 
 static
-void populateRoseGraph(RoseBuildImpl *tbi, RoseBuildData &bd) {
+void populateRoseGraph(RoseBuildImpl *tbi, const RoseBuildData &bd) {
     const RoseInGraph &ig = bd.ig;
 
     /* add the pattern in to the main rose graph */
@@ -1039,9 +1041,9 @@ bool canImplementGraph(NGHolder &h, bool prefilter, const ReportManager &rm,
 
     if (prefilter && cc.grey.prefilterReductions) {
         // If we're prefiltering, we can have another go with a reduced graph.
-        UNUSED size_t numBefore = num_vertices(h);
+        UNUSED size_t numBefore = num_vertices(h); // cppcheck-suppress unreadVariable
         prefilterReductions(h, cc);
-        UNUSED size_t numAfter = num_vertices(h);
+        UNUSED size_t numAfter = num_vertices(h);  // cppcheck-suppress unreadVariable
         DEBUG_PRINTF("reduced from %zu to %zu vertices\n", numBefore, numAfter);
 
         if (isImplementableNFA(h, &rm, cc)) {
@@ -1057,6 +1059,7 @@ static
 bool predsAreDelaySensitive(const RoseInGraph &ig, RoseInVertex v) {
     assert(in_degree(v, ig));
 
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &e : in_edges_range(v, ig)) {
         if (ig[e].graph || ig[e].haig) {
             DEBUG_PRINTF("edge graph\n");
@@ -1087,20 +1090,20 @@ bool predsAreDelaySensitive(const RoseInGraph &ig, RoseInVertex v) {
 static
 u32 maxAvailableDelay(const ue2_literal &pred_key, const ue2_literal &lit_key) {
     /* overly conservative if only part of the string is nocase */
-    string pred = pred_key.get_string();
+    string predk = pred_key.get_string();
     string lit = lit_key.get_string();
 
     if (pred_key.any_nocase() || lit_key.any_nocase()) {
-        upperString(pred);
+        upperString(predk);
         upperString(lit);
     }
 
-    string::size_type last = pred.rfind(lit);
+    string::size_type last = predk.rfind(lit);
     if (last == string::npos) {
         return MAX_DELAY;
     }
 
-    u32 raw = pred.size() - last - 1;
+    u32 raw = predk.size() - last - 1;
     return MIN(raw, MAX_DELAY);
 }
 
@@ -1493,6 +1496,7 @@ void transformSuffixDelay(RoseInGraph &ig, const CompileContext &cc) {
 #ifndef NDEBUG
 static
 bool validateKinds(const RoseInGraph &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &e : edges_range(g)) {
         if (g[e].graph && g[e].graph->kind != whatRoseIsThis(g, e)) {
             return false;
@@ -1626,6 +1630,7 @@ bool roseCheckRose(const RoseInGraph &ig, bool prefilter,
         graphs.emplace_back(ig[e].graph.get());
     }
 
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &g : graphs) {
         if (!canImplementGraph(*g, prefilter, rm, cc)) {
             return false;
@@ -1719,7 +1724,7 @@ bool addEodOutfix(RoseBuildImpl &build, const NGHolder &h) {
         g[v].left.graph = eod_leftfix;
         g[v].left.leftfix_report = report_mapping.second;
         g[v].left.lag = 0;
-        RoseEdge e1 = add_edge(build.anchored_root, v, g);
+        RoseEdge e1 = add_edge(build.anchored_root, v, g).first;
         g[e1].minBound = 0;
         g[e1].maxBound = ROSE_BOUND_INF;
         g[v].min_offset = findMinWidth(*eod_leftfix);
@@ -1737,7 +1742,7 @@ bool addEodOutfix(RoseBuildImpl &build, const NGHolder &h) {
         g[w].reports = report_mapping.first;
         g[w].min_offset = g[v].min_offset;
         g[w].max_offset = g[v].max_offset;
-        RoseEdge e = add_edge(v, w, g);
+        RoseEdge e = add_edge(v, w, g).first;
         g[e].minBound = 0;
         g[e].maxBound = 0;
         g[e].history = ROSE_ROLE_HISTORY_NONE;
@@ -1932,7 +1937,7 @@ bool RoseBuildImpl::addAnchoredAcyclic(const NGHolder &h) {
     for (auto v : inv_adjacent_vertices_range(h.accept, h)) {
         if (!prepAcceptForAddAnchoredNFA(*this, h, v, vertexDepths, depthMap,
                                          reportMap, allocated_reports,
-                                         added_lit_ids)) {
+                                         added_lit_ids)) { // cppcheck-suppress useStlAlgorithm
             removeAddedLiterals(*this, added_lit_ids);
             return false;
         }

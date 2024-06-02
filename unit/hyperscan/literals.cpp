@@ -87,7 +87,7 @@ protected:
 static
 int count_cb(unsigned, unsigned long long, unsigned long long, unsigned,
              void *ctxt) {
-    size_t *count = (size_t *)ctxt;
+    size_t *count = static_cast<size_t *>(ctxt);
     (*count)++;
     return 0;
 }

@@ -132,7 +132,7 @@ void GoughSSAVarMin::replace_input(GoughSSAVar *old_v, GoughSSAVar *new_v) {
 }
 
 static
-void translateRawReports(UNUSED GoughGraph &cfg, UNUSED const raw_som_dfa &raw,
+void translateRawReports(UNUSED const GoughGraph &cfg, UNUSED const raw_som_dfa &raw,
                          const flat_map<u32, GoughSSAVarJoin *> &joins_at_s,
                          UNUSED GoughVertex s,
                          const set<som_report> &reports_in,
@@ -206,10 +206,6 @@ void makeCFG_top_edge(GoughGraph &cfg, const vector<GoughVertex> &vertices,
             assert(contains(src_slots, slot_id));
 
             shared_ptr<GoughSSAVarMin> vmin = make_shared<GoughSSAVarMin>();
-            if (!vmin) {
-                assert(0);
-                throw std::bad_alloc();
-            }
             cfg[e].vars.emplace_back(vmin);
             final_var = vmin.get();
 
@@ -321,10 +317,6 @@ void makeCFG_edge(GoughGraph &cfg, const map<u32, u32> &som_creators,
             DEBUG_PRINTF("bypassing min on join %u\n", slot_id);
         } else {
             shared_ptr<GoughSSAVarMin> vmin = make_shared<GoughSSAVarMin>();
-            if (!vmin) {
-                assert(0);
-                throw std::bad_alloc();
-            }
             cfg[e].vars.emplace_back(vmin);
             final_var = vmin.get();
 
@@ -441,10 +433,11 @@ unique_ptr<GoughGraph> makeCFG(const raw_som_dfa &raw) {
 }
 
 static
+// cppcheck-suppress constParameterReference
 void copy_propagate_report_set(vector<pair<ReportID, GoughSSAVar *> > &rep) {
     vector<pair<ReportID, GoughSSAVar *> >::iterator it = rep.begin();
     while (it != rep.end()) {
-        GoughSSAVar *var = it->second;
+        const GoughSSAVar *var = it->second;
         if (!var) {
             ++it;
             continue;
@@ -546,7 +539,7 @@ void remove_dead(GoughGraph &g) {
     }
 
     while (!queue.empty()) {
-        GoughSSAVar *v = queue.back();
+        const GoughSSAVar *v = queue.back();
         queue.pop_back();
         for (GoughSSAVar *var : v->get_inputs()) {
             if (var->seen) {
@@ -602,6 +595,7 @@ void GoughSSAVarNew::generate(vector<gough_ins> *out) const {
 #ifndef NDEBUG
 template<typename C, typename K>
 bool contains_loose(const C &container, const K &key) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &elem : container) {
         if (elem == key) {
             return true;
@@ -650,6 +644,7 @@ void GoughSSAVarJoin::generate(UNUSED vector<gough_ins> *out) const {
 
 GoughSSAVar *GoughSSAVarJoin::get_input(const GoughEdge &prev) const {
     for (const auto &var_edge : input_map) {
+        // cppcheck-suppress useStlAlgorithm
         if (contains(var_edge.second, prev)) {
             return var_edge.first;
         }
@@ -658,8 +653,8 @@ GoughSSAVar *GoughSSAVarJoin::get_input(const GoughEdge &prev) const {
     return nullptr;
 }
 
-const flat_set<GoughEdge> &GoughSSAVarJoin::get_edges_for_input(
-                                                 GoughSSAVar *input) const {
+// cppcheck-suppress constParameterPointer
+const flat_set<GoughEdge> &GoughSSAVarJoin::get_edges_for_input(GoughSSAVar *input) const {
     return input_map.at(input);
 }
 
@@ -810,7 +805,7 @@ private:
 
 static
 void prep_joins_for_generation(const GoughGraph &g, GoughVertex v,
-                               map<GoughEdge, edge_join_info> *edge_info) {
+                               map<GoughEdge, edge_join_info> &edge_info) {
     DEBUG_PRINTF("writing out joins for %u\n", g[v].state_id);
     for (const auto &var : g[v].vars) {
         u32 dest_slot = var->slot;
@@ -821,7 +816,7 @@ void prep_joins_for_generation(const GoughGraph &g, GoughVertex v,
             }
 
             for (const GoughEdge &incoming_edge : var_edges.second) {
-                (*edge_info)[incoming_edge].insert(input, dest_slot);
+                edge_info[incoming_edge].insert(input, dest_slot);
                 DEBUG_PRINTF("need %u<-%u\n", dest_slot, input);
             }
         }
@@ -919,7 +914,7 @@ void build_blocks(const GoughGraph &g,
         }
 
         map<GoughEdge, edge_join_info> eji;
-        prep_joins_for_generation(g, t, &eji);
+        prep_joins_for_generation(g, t, eji);
 
         for (auto &m : eji) {
             vector<gough_ins> &block = (*blocks)[gough_edge_id(g, m.first)];
@@ -1017,7 +1012,7 @@ void update_accel_prog_offset(const gough_build_strat &gbs,
         verts[gbs.gg[v].state_id] = v;
     }
 
-    for (auto &m : gbs.built_accel) {
+    for (const auto &m : gbs.built_accel) {
         gough_accel *ga = m.first;
         assert(!ga->prog_offset);
         GoughVertex v = verts[m.second];
@@ -1050,7 +1045,7 @@ bytecode_ptr<NFA> goughCompile(raw_som_dfa &raw, u8 somPrecision,
            || !cc.streaming);
 
     if (!cc.grey.allowGough) {
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     DEBUG_PRINTF("hello world\n");
@@ -1081,11 +1076,11 @@ bytecode_ptr<NFA> goughCompile(raw_som_dfa &raw, u8 somPrecision,
     auto basic_dfa = mcclellanCompile_i(raw, gbs, cc);
     assert(basic_dfa);
     if (!basic_dfa) {
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
-    u8 alphaShift
-        = ((const mcclellan *)getImplNfa(basic_dfa.get()))->alphaShift;
+    const auto nfa = static_cast<const mcclellan *>(getImplNfa(basic_dfa.get()));
+    u8 alphaShift = nfa->alphaShift;
     u32 edge_count = (1U << alphaShift) * raw.states.size();
 
     u32 curr_offset = ROUNDUP_N(basic_dfa->length, 4);
@@ -1126,8 +1121,8 @@ bytecode_ptr<NFA> goughCompile(raw_som_dfa &raw, u8 somPrecision,
     u32 gough_size = ROUNDUP_N(curr_offset, 16);
     auto gough_dfa = make_zeroed_bytecode_ptr<NFA>(gough_size);
 
-    memcpy(gough_dfa.get(), basic_dfa.get(), basic_dfa->length);
-    memcpy((char *)gough_dfa.get() + haig_offset, &gi, sizeof(gi));
+    memcpy(reinterpret_cast<char *>(gough_dfa.get()), basic_dfa.get(), basic_dfa->length);
+    memcpy(reinterpret_cast<char *>(gough_dfa.get()) + haig_offset, &gi, sizeof(gi));
     if (gough_dfa->type == MCCLELLAN_NFA_16) {
         gough_dfa->type = GOUGH_NFA_16;
     } else {
@@ -1140,18 +1135,18 @@ bytecode_ptr<NFA> goughCompile(raw_som_dfa &raw, u8 somPrecision,
     gough_dfa->streamStateSize = base_state_size + slot_count * somPrecision;
     gough_dfa->scratchStateSize = (u32)(16 + scratch_slot_count * sizeof(u64a));
 
-    mcclellan *m = (mcclellan *)getMutableImplNfa(gough_dfa.get());
+    auto *m = reinterpret_cast<mcclellan *>(getMutableImplNfa(gough_dfa.get()));
     m->haig_offset = haig_offset;
 
     /* update nfa length, haig_info offset (leave mcclellan length alone) */
     gough_dfa->length = gough_size;
 
     /* copy in blocks */
-    copy_bytes((u8 *)gough_dfa.get() + edge_prog_offset, edge_blocks);
+    copy_bytes(reinterpret_cast<u8 *>(gough_dfa.get()) + edge_prog_offset, edge_blocks);
     if (top_prog_offset) {
-        copy_bytes((u8 *)gough_dfa.get() + top_prog_offset, top_blocks);
+        copy_bytes(reinterpret_cast<u8 *>(gough_dfa.get()) + top_prog_offset, top_blocks);
     }
-    copy_bytes((u8 *)gough_dfa.get() + prog_base_offset, temp_blocks);
+    copy_bytes(reinterpret_cast<u8 *>(gough_dfa.get()) + prog_base_offset, temp_blocks);
 
     return gough_dfa;
 }
@@ -1184,7 +1179,7 @@ AccelScheme gough_build_strat::find_escape_strings(dstate_id_t this_idx) const {
 void gough_build_strat::buildAccel(dstate_id_t this_idx, const AccelScheme &info,
                                    void *accel_out) {
     assert(mcclellan_build_strat::accelSize() == sizeof(AccelAux));
-    gough_accel *accel = (gough_accel *)accel_out;
+    gough_accel *accel = reinterpret_cast<gough_accel *>(accel_out);
     /* build a plain accelaux so we can work out where we can get to */
     mcclellan_build_strat::buildAccel(this_idx, info, &accel->accel);
     DEBUG_PRINTF("state %hu is accel with type %hhu\n", this_idx,
@@ -1322,7 +1317,8 @@ void raw_gough_report_info_impl::fillReportLists(NFA *n, size_t base_offset,
     for (const raw_gough_report_list &r : rl) {
         ro.emplace_back(base_offset);
 
-        gough_report_list *p = (gough_report_list *)((char *)n + base_offset);
+        u8 * n_ptr = reinterpret_cast<u8 *>(n);
+        gough_report_list *p = reinterpret_cast<gough_report_list *>(n_ptr + base_offset);
         u32 i = 0;
 
         for (const som_report &sr : r.reports) {

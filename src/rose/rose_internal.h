@@ -560,9 +560,10 @@ const struct anchored_matcher_info *getALiteralMatcher(
     if (!t->amatcherOffset) {
         return NULL;
     }
-
+    // cppcheck-suppress cstyleCast
     const char *lt = (const char *)t + t->amatcherOffset;
     assert(ISALIGNED_CL(lt));
+    // cppcheck-suppress cstyleCast
     return (const struct anchored_matcher_info *)lt;
 }
 
@@ -573,9 +574,10 @@ const struct HWLM *getFLiteralMatcher(const struct RoseEngine *t) {
     if (!t->fmatcherOffset) {
         return NULL;
     }
-
+    // cppcheck-suppress cstyleCast
     const char *lt = (const char *)t + t->fmatcherOffset;
     assert(ISALIGNED_CL(lt));
+    // cppcheck-suppress cstyleCast
     return (const struct HWLM *)lt;
 }
 
@@ -584,7 +586,7 @@ const void *getSBLiteralMatcher(const struct RoseEngine *t) {
     if (!t->sbmatcherOffset) {
         return NULL;
     }
-
+    // cppcheck-suppress cstyleCast
     const char *matcher = (const char *)t + t->sbmatcherOffset;
     assert(ISALIGNED_N(matcher, 8));
     return matcher;
@@ -592,8 +594,8 @@ const void *getSBLiteralMatcher(const struct RoseEngine *t) {
 
 static really_inline
 const struct LeftNfaInfo *getLeftTable(const struct RoseEngine *t) {
-    const struct LeftNfaInfo *r
-        = (const struct LeftNfaInfo *)((const char *)t + t->leftOffset);
+    // cppcheck-suppress cstyleCast
+    const struct LeftNfaInfo *r = (const struct LeftNfaInfo *)((const char *)t + t->leftOffset);
     assert(ISALIGNED_N(r, 4));
     return r;
 }
@@ -603,16 +605,16 @@ struct mmbit_sparse_iter; // forward decl
 static really_inline
 const struct mmbit_sparse_iter *getActiveLeftIter(const struct RoseEngine *t) {
     assert(t->activeLeftIterOffset);
-    const struct mmbit_sparse_iter *it = (const struct mmbit_sparse_iter *)
-            ((const char *)t + t->activeLeftIterOffset);
+    // cppcheck-suppress cstyleCast
+    const struct mmbit_sparse_iter *it = (const struct mmbit_sparse_iter *)((const char *)t + t->activeLeftIterOffset);
     assert(ISALIGNED_N(it, 4));
     return it;
 }
 
 static really_inline
 const struct NfaInfo *getNfaInfoByQueue(const struct RoseEngine *t, u32 qi) {
-    const struct NfaInfo *infos
-        = (const struct NfaInfo *)((const char *)t + t->nfaInfoOffset);
+    // cppcheck-suppress cstyleCast
+    const struct NfaInfo *infos= (const struct NfaInfo *)((const char *)t + t->nfaInfoOffset);
     assert(ISALIGNED_N(infos, sizeof(u32)));
 
     return &infos[qi];
@@ -621,6 +623,7 @@ const struct NfaInfo *getNfaInfoByQueue(const struct RoseEngine *t, u32 qi) {
 static really_inline
 const struct NFA *getNfaByInfo(const struct RoseEngine *t,
                                const struct NfaInfo *info) {
+    // cppcheck-suppress cstyleCast
     return (const struct NFA *)((const char *)t + info->nfaOffset);
 }
 
@@ -650,9 +653,8 @@ const struct SmallWriteEngine *getSmallWrite(const struct RoseEngine *t) {
     if (!t->smallWriteOffset) {
         return NULL;
     }
-
-    const struct SmallWriteEngine *smwr =
-        (const struct SmallWriteEngine *)((const char *)t + t->smallWriteOffset);
+    // cppcheck-suppress cstyleCast
+    const struct SmallWriteEngine *smwr =(const struct SmallWriteEngine *)((const char *)t + t->smallWriteOffset);
     return smwr;
 }
 

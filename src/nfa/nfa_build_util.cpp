@@ -86,14 +86,14 @@ typedef bool (*nfa_dispatch_fn)(const NFA *nfa);
 template<typename T>
 static
 bool has_accel_limex(const NFA *nfa) {
-    const T *limex = (const T *)getImplNfa(nfa);
+    const T *limex = reinterpret_cast<const T *>(getImplNfa(nfa));
     return limex->accelCount;
 }
 
 template<typename T>
 static
 bool has_repeats_limex(const NFA *nfa) {
-    const T *limex = (const T *)getImplNfa(nfa);
+    const T *limex = reinterpret_cast<const T *>(getImplNfa(nfa));
     return limex->repeatCount;
 }
 
@@ -101,16 +101,16 @@ bool has_repeats_limex(const NFA *nfa) {
 template<typename T>
 static
 bool has_repeats_other_than_firsts_limex(const NFA *nfa) {
-    const T *limex = (const T *)getImplNfa(nfa);
-    const char *ptr = (const char *)limex;
+    const T *limex = reinterpret_cast<const T *>(getImplNfa(nfa));
+    const char *ptr = reinterpret_cast<const char *>(limex);
 
-    const u32 *repeatOffset = (const u32 *)(ptr + limex->repeatOffset);
+    const u32 *repeatOffset = reinterpret_cast<const u32 *>(ptr + limex->repeatOffset);
 
     for (u32 i = 0; i < limex->repeatCount; i++) {
         u32 offset = repeatOffset[i];
-        const NFARepeatInfo *info = (const NFARepeatInfo *)(ptr + offset);
+        const NFARepeatInfo *info = reinterpret_cast<const NFARepeatInfo *>(ptr + offset);
         const RepeatInfo *repeat =
-            (const RepeatInfo *)((const char *)info + sizeof(*info));
+            reinterpret_cast<const RepeatInfo *>(reinterpret_cast<const char *>(info) + sizeof(*info));
         if (repeat->type != REPEAT_FIRST) {
             return true;
         }
@@ -138,7 +138,7 @@ template<NFAEngineType t>
 static
 string getDescriptionLimEx(const NFA *nfa) {
     const typename NFATraits<t>::implNFA_t *limex =
-        (const typename NFATraits<t>::implNFA_t *)getImplNfa(nfa);
+        reinterpret_cast<const typename NFATraits<t>::implNFA_t *>(getImplNfa(nfa));
     ostringstream oss;
     oss << NFATraits<t>::name << "/" << limex->exceptionCount;
     if (limex->repeatCount) {
@@ -195,7 +195,7 @@ enum NFACategory {NFA_LIMEX, NFA_OTHER};
         = "LimEx "#mlt_size;                                            \
     template<> struct getDescription<LIMEX_NFA_##mlt_size> {            \
         static string call(const void *p) {                             \
-            return getDescriptionLimEx<LIMEX_NFA_##mlt_size>((const NFA *)p); \
+            return getDescriptionLimEx<LIMEX_NFA_##mlt_size>(reinterpret_cast<const NFA *>(p)); \
         }                                                               \
     };)
 

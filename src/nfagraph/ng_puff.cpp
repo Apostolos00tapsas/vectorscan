@@ -154,6 +154,7 @@ static
 bool triggerResetsPuff(const NGHolder &g, NFAVertex head) {
     const CharReach puff_escapes = ~g[head].char_reach;
 
+    // cppcheck-suppress useStlAlgorithm
     for (auto u : inv_adjacent_vertices_range(head, g)) {
         if (!g[u].char_reach.isSubsetOf(puff_escapes)) {
             DEBUG_PRINTF("no reset on trigger %zu %zu\n", g[u].index,
@@ -187,6 +188,7 @@ bool triggerFloodsPuff(const NGHolder &g, NFAVertex head) {
         DEBUG_PRINTF("temp new head = %zu\n", g[head].index);
     }
 
+    // cppcheck-suppress useStlAlgorithm
     for (auto s : inv_adjacent_vertices_range(head, g)) {
         DEBUG_PRINTF("s = %zu\n", g[s].index);
         if (!puff_cr.isSubsetOf(g[s].char_reach)) {
@@ -224,6 +226,7 @@ u32 allowedSquashDistance(const CharReach &cr, u32 min_width, const NGHolder &g,
 
     /* TODO: inspect further back in the pattern */
     for (auto u : inv_adjacent_vertices_range(pv, g)) {
+        // cppcheck-suppress useStlAlgorithm
         accept_cr |= g[u].char_reach;
     }
 
@@ -241,7 +244,7 @@ u32 allowedSquashDistance(const CharReach &cr, u32 min_width, const NGHolder &g,
 /** Gives a stronger puff trigger when the trigger is connected to a wide
  * cyclic state (aside from sds) */
 static
-void improveHead(NGHolder &g, NFAVertex *a, vector<NFAVertex> *nodes) {
+void improveHead(const NGHolder &g, NFAVertex *a, vector<NFAVertex> *nodes) {
     DEBUG_PRINTF("attempting to improve puff trigger\n");
     assert(!nodes->empty());
     const CharReach &puff_cr = g[nodes->back()].char_reach;
@@ -260,7 +263,7 @@ void improveHead(NGHolder &g, NFAVertex *a, vector<NFAVertex> *nodes) {
 }
 
 static
-void constructPuff(NGHolder &g, const NFAVertex a, const NFAVertex puffv,
+void constructPuff(const NGHolder &g, const NFAVertex a, const NFAVertex puffv,
                    const CharReach &cr, const ReportID report, u32 width,
                    bool fixed_depth, bool unbounded, bool auto_restart,
                    RoseBuild &rose, ReportManager &rm,
@@ -358,15 +361,14 @@ bool doComponent(RoseBuild &rose, ReportManager &rm, NGHolder &g, NFAVertex a,
         // single report ID on a vertex
         if (is_match_vertex(a, g)) {
             DEBUG_PRINTF("stop puffing due to vertex that leads to accept\n");
-            if (!nodes.empty()) {
-                nodes.pop_back();
-            }
+            nodes.pop_back();
             break;
         }
     }
 
     if (!nodes.empty() && proper_in_degree(nodes.back(), g) != 1) {
         for (auto u : inv_adjacent_vertices_range(nodes.back(), g)) {
+            // cppcheck-suppress useStlAlgorithm
             if (is_special(u, g)) {
                 DEBUG_PRINTF("pop\n");
                 a = nodes.back();
@@ -453,6 +455,7 @@ bool doComponent(RoseBuild &rose, ReportManager &rm, NGHolder &g, NFAVertex a,
     const auto &reports = g[nodes[0]].reports;
     assert(!reports.empty());
 
+    // cppcheck-suppress useStlAlgorithm
     for (auto report : reports) {
         const Report &ir = rm.getReport(report);
         const bool highlander = ir.ekey != INVALID_EKEY;
@@ -499,6 +502,7 @@ bool splitOffPuffs(RoseBuild &rose, ReportManager &rm, NGHolder &g,
 
     for (auto v : inv_adjacent_vertices_range(g.accept, g)) {
         if (doComponent(rose, rm, g, v, dead, cc, prefilter)) {
+            // cppcheck-suppress useStlAlgorithm
             count++;
         }
     }

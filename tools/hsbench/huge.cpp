@@ -98,10 +98,10 @@ hs_database_t *get_huge(hs_database_t *db) {
     // Mark this segment to be destroyed after this process detaches.
     shmctl(hsdb_shmid, IPC_RMID, nullptr);
 
-    err = hs_deserialize_database_at(bytes, len, (hs_database_t *)shmaddr);
+    err = hs_deserialize_database_at(bytes, len, reinterpret_cast<hs_database_t *>(shmaddr));
     if (err != HS_SUCCESS) {
         printf("Failed to deserialize database into shm: %d\n", err);
-        shmdt((const void *)shmaddr);
+        shmdt(reinterpret_cast<const void *>(shmaddr));
         goto fini;
     }
 
@@ -121,7 +121,7 @@ fini:
 void release_huge(hs_database_t *db) {
 #if defined(HAVE_SHMGET) && defined(SHM_HUGETLB)
     if (hsdb_shmid != -1) {
-        if (shmdt((const void *)db) != 0) {
+        if (shmdt(reinterpret_cast<const void *>(db)) != 0) {
             perror("Detach failure");
         }
     } else {
@@ -183,7 +183,7 @@ long gethugepagesize(void) {
         hpage_size = -1;
     } else {
         /* convert from kb to bytes */
-        hpage_size = 1024 * hpage_kb;
+        hpage_size = 1024L * hpage_kb;
     }
 
     return hpage_size;

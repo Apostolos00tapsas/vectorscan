@@ -196,10 +196,11 @@ u32 commonPrefixLength(const NGHolder &ga, const ranking_info &a_ranking,
                 }
 
                 a_count++;
+                NFAEdge b_edge;
+                bool b_edge_bool;
+                std::tie(b_edge, b_edge_bool) = edge(b_ranking.at(i), b_ranking.at(sid), gb);
 
-                NFAEdge b_edge = edge(b_ranking.at(i), b_ranking.at(sid), gb);
-
-                if (!b_edge) {
+                if (!b_edge_bool) {
                     max = i;
                     DEBUG_PRINTF("lowering max to %u due to edge %zu->%u\n",
                                  max, i, sid);
@@ -319,7 +320,7 @@ void mergeNfaComponent(NGHolder &dest, const NGHolder &vic, size_t common_len) {
                 DEBUG_PRINTF("skipping common edge\n");
                 assert(edge(u, v, dest).second);
                 // Should never merge edges with different top values.
-                assert(vic[e].tops == dest[edge(u, v, dest)].tops);
+                assert(vic[e].tops == dest[edge(u, v, dest).first].tops);
                 continue;
             } else {
                 assert(is_any_accept(v, dest));
@@ -454,8 +455,8 @@ void buildNfaMergeQueue(const vector<NGHolder *> &cluster,
                 }
             }
 
-            NGHolder &g_i = *(cluster[ci]);
-            NGHolder &g_j = *(cluster[cj]);
+            const NGHolder &g_i = *(cluster[ci]);
+            const NGHolder &g_j = *(cluster[cj]);
 
             if (!compatibleStarts(g_i, g_j)) {
                 continue;
@@ -505,16 +506,26 @@ bool mergeableStarts(const NGHolder &h1, const NGHolder &h2) {
     /* TODO: relax top checks if reports match */
 
     // If both graphs have edge (start, accept), the tops must match.
-    NFAEdge e1_accept = edge(h1.start, h1.accept, h1);
-    NFAEdge e2_accept = edge(h2.start, h2.accept, h2);
-    if (e1_accept && e2_accept && h1[e1_accept].tops != h2[e2_accept].tops) {
+    bool bool_e1_accept;
+    NFAEdge e1_accept;
+    NFAEdge e2_accept;
+    std::tie(e1_accept, bool_e1_accept) = edge(h1.start, h1.accept, h1);
+    bool bool_e2_accept;
+    std::tie(e2_accept, bool_e2_accept) = edge(h2.start, h2.accept, h2);
+
+    if (bool_e1_accept && bool_e2_accept && h1[e1_accept].tops != h2[e2_accept].tops) {
         return false;
     }
 
     // If both graphs have edge (start, acceptEod), the tops must match.
-    NFAEdge e1_eod = edge(h1.start, h1.acceptEod, h1);
-    NFAEdge e2_eod = edge(h2.start, h2.acceptEod, h2);
-    if (e1_eod && e2_eod && h1[e1_eod].tops != h2[e2_eod].tops) {
+    bool bool_e1_eod;
+    NFAEdge e1_eod;
+    NFAEdge e2_eod;
+    std::tie(e1_eod, bool_e1_eod) = edge(h1.start, h1.acceptEod, h1);
+    bool bool_e2_eod;
+    std::tie(e2_eod, bool_e2_eod) = edge(h2.start, h2.acceptEod, h2);
+
+    if (bool_e1_eod && bool_e2_eod && h1[e1_eod].tops != h2[e2_eod].tops) {
         return false;
     }
 

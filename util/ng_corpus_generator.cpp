@@ -80,11 +80,13 @@ string pathToString(const NGHolder &g, const VertexPath &p) {
 /** True if this graph has no non-special successors of start or startDs. */
 static
 bool graph_is_empty(const NGHolder &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &v : adjacent_vertices_range(g.start, g)) {
         if (!is_special(v, g)) {
             return false;
         }
     }
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &v : adjacent_vertices_range(g.start, g)) {
         if (!is_special(v, g)) {
             return false;
@@ -184,7 +186,7 @@ void findPaths(const NGHolder &g, CorpusProperties &cProps,
             }
 
             if (!contains(one_way_in, v) &&
-                has_greater_than(p->begin(), p->end(), v, cycleLimit)) {
+                has_greater_than(p->begin(), p->end(), v, cycleLimit)) {    //NOLINT (clang-analyzer-cplusplus.Move)
                 // Note that vertices that only have one predecessor don't need
                 // their cycle limit checked, as their predecessors will have
                 // the same count.
@@ -221,9 +223,9 @@ class CorpusGeneratorImpl : public CorpusGenerator {
 public:
     CorpusGeneratorImpl(const NGHolder &graph_in, const ExpressionInfo &expr_in,
                         CorpusProperties &props);
-    ~CorpusGeneratorImpl() = default;
+    virtual ~CorpusGeneratorImpl() override = default;
 
-    void generateCorpus(vector<string> &data);
+    void generateCorpus(vector<string> &data) override;
 
 private:
     unsigned char getRandomChar();
@@ -417,9 +419,9 @@ class CorpusGeneratorUtf8 : public CorpusGenerator {
 public:
     CorpusGeneratorUtf8(const NGHolder &graph_in, const ExpressionInfo &expr_in,
                         CorpusProperties &props);
-    ~CorpusGeneratorUtf8() = default;
+    virtual ~CorpusGeneratorUtf8() override = default;
 
-    void generateCorpus(vector<string> &data);
+    void generateCorpus(vector<string> &data) override;
 
 private:
     unichar getRandomChar();
@@ -468,6 +470,7 @@ void CorpusGeneratorUtf8::generateCorpus(vector<string> &data) {
     }
 
     for (const auto &e : raw) {
+        // cppcheck-suppress useStlAlgorithm
         data.push_back(encodeUtf8(e));
     }
 }
@@ -545,6 +548,7 @@ CorpusGeneratorUtf8::pathToCorpus(const vector<CodePointSet> &path) {
 
     // Generate a corpus from our path
     for (const auto &e : path) {
+        // cppcheck-suppress useStlAlgorithm
         s.push_back(getChar(e));
     }
 

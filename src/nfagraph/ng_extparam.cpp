@@ -75,6 +75,7 @@ bool hasSameBounds(const Container &reports, const ReportManager &rm) {
     assert(!reports.empty());
 
     const auto &first = rm.getReport(*reports.begin());
+    // cppcheck-suppress useStlAlgorithm
     for (auto id : reports) {
         const auto &report = rm.getReport(id);
         if (report.minOffset != first.minOffset ||
@@ -225,6 +226,7 @@ void updateReportBounds(ReportManager &rm, NGHolder &g,
 
 static
 bool hasVirtualStarts(const NGHolder &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : adjacent_vertices_range(g.start, g)) {
         if (g[v].assert_flags & POS_FLAG_VIRTUAL_START) {
             return true;
@@ -430,7 +432,7 @@ NFAVertex findSingleCyclic(const NGHolder &g) {
 }
 
 static
-bool hasOffsetAdjust(const ReportManager &rm, NGHolder &g,
+bool hasOffsetAdjust(const ReportManager &rm, const NGHolder &g,
                      int *adjust) {
     const auto &reports = all_reports(g);
     if (reports.empty()) {
@@ -439,6 +441,7 @@ bool hasOffsetAdjust(const ReportManager &rm, NGHolder &g,
     }
 
     int offsetAdjust = rm.getReport(*reports.begin()).offsetAdjust;
+    // cppcheck-suppress useStlAlgorithm
     for (auto report : reports) {
         const Report &ir = rm.getReport(report);
         if (ir.offsetAdjust != offsetAdjust) {
@@ -506,14 +509,14 @@ bool transformMinLengthToRepeat(NGHolder &g, ReportManager &rm) {
     while (v != cyclic) {
         DEBUG_PRINTF("vertex %zu\n", g[v].index);
         width++;
-        auto succ = succs(v, g);
-        if (contains(succ, cyclic)) {
-            if (succ.size() == 1) {
+        auto s = succs(v, g);
+        if (contains(s, cyclic)) {
+            if (s.size() == 1) {
                 v = cyclic;
-            } else if (succ.size() == 2) {
+            } else if (s.size() == 2) {
                 // Cyclic and jump edge.
-                succ.erase(cyclic);
-                NFAVertex v2 = *succ.begin();
+                s.erase(cyclic);
+                NFAVertex v2 = *s.begin();
                 if (!edge(cyclic, v2, g).second) {
                     DEBUG_PRINTF("bad form\n");
                     return false;
@@ -524,11 +527,11 @@ bool transformMinLengthToRepeat(NGHolder &g, ReportManager &rm) {
                 return false;
             }
         } else {
-            if (succ.size() != 1) {
+            if (s.size() != 1) {
                 DEBUG_PRINTF("bad form\n");
                 return false;
             }
-            v = *succ.begin();
+            v = *s.begin();
         }
     }
 
@@ -544,12 +547,12 @@ bool transformMinLengthToRepeat(NGHolder &g, ReportManager &rm) {
     while (!is_any_accept(v, g)) {
         DEBUG_PRINTF("vertex %zu\n", g[v].index);
         width++;
-        auto succ = succs(v, g);
-        if (succ.size() != 1) {
+        auto s = succs(v, g);
+        if (s.size() != 1) {
             DEBUG_PRINTF("bad form\n");
             return false;
         }
-        v = *succ.begin();
+        v = *s.begin();
     }
 
     int offsetAdjust = 0;
@@ -569,27 +572,28 @@ bool transformMinLengthToRepeat(NGHolder &g, ReportManager &rm) {
         return true;
     }
 
-    vector<NFAVertex> preds;
+    vector<NFAVertex> predcs;
     vector<NFAEdge> dead;
+    auto deads = [&g=g](const NFAEdge &e) {
+        return (target(e, g) != g.startDs);
+    };
     for (auto u : inv_adjacent_vertices_range(cyclic, g)) {
         DEBUG_PRINTF("pred %zu\n", g[u].index);
         if (u == cyclic) {
             continue;
         }
-        preds.emplace_back(u);
+        predcs.emplace_back(u);
 
         // We want to delete the out-edges of each predecessor, but need to
         // make sure we don't delete the startDs self loop.
-        for (const auto &e : out_edges_range(u, g)) {
-            if (target(e, g) != g.startDs) {
-                dead.emplace_back(e);
-            }
-        }
+
+        const auto &e = out_edges_range(u, g);
+        std::copy_if(begin(e), end(e),  std::back_inserter(dead), deads);
     }
 
     remove_edges(dead, g);
 
-    assert(!preds.empty());
+    assert(!predcs.empty());
 
     const CharReach &cr = g[cyclic].char_reach;
 
@@ -597,14 +601,14 @@ bool transformMinLengthToRepeat(NGHolder &g, ReportManager &rm) {
         v = add_vertex(g);
         g[v].char_reach = cr;
 
-        for (auto u : preds) {
+        for (auto u : predcs) {
             add_edge(u, v, g);
         }
-        preds.clear();
-        preds.emplace_back(v);
+        predcs.clear();
+        predcs.emplace_back(v);
     }
-    assert(!preds.empty());
-    for (auto u : preds) {
+    assert(!predcs.empty());
+    for (auto u : predcs) {
         add_edge(u, cyclic, g);
     }
 

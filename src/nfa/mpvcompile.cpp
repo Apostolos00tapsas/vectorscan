@@ -105,6 +105,7 @@ void writeSentinel(mpv_puffette *out) {
 static
 void writeDeadPoint(mpv_kilopuff *out, const vector<raw_puff> &puffs) {
     for (const auto &puff : puffs) {
+        // cppcheck-suppress useStlAlgorithm
         if (puff.unbounded) { /* mpv can never die */
             out->dead_point = MPV_DEAD_VALUE;
             return;
@@ -180,25 +181,27 @@ void writeKiloPuff(const map<ClusterKey, vector<raw_puff>>::const_iterator &it,
 #ifdef HAVE_SVE2
     } else if (reach.count() >= 240) {
         kp->type = MPV_VERM16;
-        vermicelli16Build(~reach, (u8 *)&kp->u.verm16.mask);
+        vermicelli16Build(~reach, reinterpret_cast<u8 *>(&kp->u.verm16.mask));
     } else if (reach.count() <= 16) {
         kp->type = MPV_NVERM16;
-        vermicelli16Build(reach, (u8 *)&kp->u.verm16.mask);
+        vermicelli16Build(reach, reinterpret_cast<u8 *>(&kp->u.verm16.mask));
 #endif // HAVE_SVE2
-    } else if (shuftiBuildMasks(~reach, (u8 *)&kp->u.shuf.mask_lo,
-                                (u8 *)&kp->u.shuf.mask_hi) != -1) {
+    } else if (shuftiBuildMasks(~reach,
+                                reinterpret_cast<u8 *>(&kp->u.shuf.mask_lo),
+                                reinterpret_cast<u8 *>(&kp->u.shuf.mask_hi)) != -1) {
         kp->type = MPV_SHUFTI;
     } else {
         kp->type = MPV_TRUFFLE;
-        truffleBuildMasks(~reach, (u8 *)&kp->u.truffle.mask1,
-                          (u8 *)&kp->u.truffle.mask2);
+        truffleBuildMasks(~reach,
+                          reinterpret_cast<u8 *>(&kp->u.truffle.mask1),
+                          reinterpret_cast<u8 *>(&kp->u.truffle.mask2));
     }
 
     kp->count = verify_u32(puffs.size());
     kp->counter_offset = counter_offset;
 
     /* start of real puffette array */
-    kp->puffette_offset = verify_u32((char *)*pa - (char *)m);
+    kp->puffette_offset = verify_u32(reinterpret_cast<char *>(*pa) - reinterpret_cast<char *>(m));
     for (size_t i = 0; i < puffs.size(); i++) {
         assert(!it->first.auto_restart || puffs[i].unbounded);
         writePuffette(*pa + i, puffs[i], rm);
@@ -311,6 +314,7 @@ static
 const mpv_counter_info &findCounter(const vector<mpv_counter_info> &counters,
                                     u32 i) {
     for (const auto &counter : counters) {
+        // cppcheck-suppress useStlAlgorithm
         if (i >= counter.kilo_begin && i < counter.kilo_end) {
             return counter;
         }
@@ -355,8 +359,8 @@ bytecode_ptr<NFA> mpvCompile(const vector<raw_puff> &puffs_in,
 
     auto nfa = make_zeroed_bytecode_ptr<NFA>(len);
 
-    mpv_puffette *pa_base = (mpv_puffette *)
-        ((char *)nfa.get() + sizeof(NFA) + sizeof(mpv)
+    char *nfa_base = reinterpret_cast<char *>(nfa.get());
+    mpv_puffette *pa_base = reinterpret_cast<mpv_puffette *>(nfa_base + sizeof(NFA) + sizeof(mpv)
          + sizeof(mpv_kilopuff) * puff_clusters.size()
          + sizeof(mpv_counter_info) * counters.size());
     mpv_puffette *pa = pa_base;
@@ -373,7 +377,7 @@ bytecode_ptr<NFA> mpvCompile(const vector<raw_puff> &puffs_in,
         min_repeat = min(min_repeat, puffs.front().repeats);
     }
 
-    mpv *m = (mpv *)getMutableImplNfa(nfa.get());
+    mpv *m = reinterpret_cast<mpv *>(getMutableImplNfa(nfa.get()));
     m->kilo_count = verify_u32(puff_clusters.size());
     m->counter_count = verify_u32(counters.size());
     m->puffette_count = puffette_count;
@@ -384,7 +388,7 @@ bytecode_ptr<NFA> mpvCompile(const vector<raw_puff> &puffs_in,
     m->top_kilo_begin = verify_u32(triggered_puffs.size());
     m->top_kilo_end = verify_u32(puff_clusters.size());
 
-    mpv_kilopuff *kp_begin = (mpv_kilopuff *)(m + 1);
+    mpv_kilopuff *kp_begin = reinterpret_cast<mpv_kilopuff *>(m + 1);
     mpv_kilopuff *kp = kp_begin;
     for (auto it = puff_clusters.begin(); it != puff_clusters.end(); ++it) {
         writeKiloPuff(it, rm,
@@ -392,14 +396,14 @@ bytecode_ptr<NFA> mpvCompile(const vector<raw_puff> &puffs_in,
                       kp, &pa);
         ++kp;
     }
-    assert((char *)pa == (char *)nfa.get() + len);
+    assert(reinterpret_cast<char *>(pa) == nfa_base + len);
 
-    mpv_counter_info *out_ci = (mpv_counter_info *)kp;
+    mpv_counter_info *out_ci = reinterpret_cast<mpv_counter_info *>(kp);
     for (const auto &counter : counters) {
         *out_ci = counter;
         ++out_ci;
     }
-    assert((char *)out_ci == (char *)pa_base);
+    assert(reinterpret_cast<char *>(out_ci) == reinterpret_cast<char *>(pa_base));
 
     writeCoreNfa(nfa.get(), len, min_repeat, max_counter, curr_comp_offset,
                  curr_decomp_offset);

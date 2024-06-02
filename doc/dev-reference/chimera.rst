@@ -11,10 +11,10 @@ Introduction
 ************
 
 Chimera is a software regular expression matching engine that is a hybrid of
-Hyperscan and PCRE. The design goals of Chimera are to fully support PCRE
-syntax as well as to take advantage of the high performance nature of Hyperscan.
+Vectorscan and PCRE. The design goals of Chimera are to fully support PCRE
+syntax as well as to take advantage of the high performance nature of Vectorscan.
 
-Chimera inherits the design guideline of Hyperscan with C APIs for compilation
+Chimera inherits the design guideline of Vectorscan with C APIs for compilation
 and scanning.
 
 The Chimera API itself is composed of two major components:
@@ -65,13 +65,13 @@ For a given database, Chimera provides several guarantees:
 .. note:: Chimera is designed to have the same matching behavior as PCRE,
    including greedy/ungreedy, capturing, etc. Chimera reports both
    **start offset** and **end offset** for each match like PCRE. Different
-   from the fashion of reporting all matches in Hyperscan, Chimera only reports
+   from the fashion of reporting all matches in Vectorscan, Chimera only reports
    non-overlapping matches. For example, the pattern :regexp:`/foofoo/` will
    match ``foofoofoofoo`` at offsets (0, 6) and (6, 12).
 
-.. note:: Since Chimera is a hybrid of Hyperscan and PCRE in order to support
+.. note:: Since Chimera is a hybrid of Vectorscan and PCRE in order to support
    full PCRE syntax, there will be extra performance overhead compared to
-   Hyperscan-only solution. Please always use Hyperscan for better performance
+   Vectorscan-only solution. Please always use Vectorscan for better performance
    unless you must need full PCRE syntax support.
 
 See :ref:`chruntime` for more details
@@ -83,12 +83,12 @@ Requirements
 The PCRE library (http://pcre.org/) version 8.41 is required for Chimera.
 
 .. note:: Since Chimera needs to reference PCRE internal function, please place PCRE source
-   directory under Hyperscan root directory in order to build Chimera.
+   directory under Vectorscan root directory in order to build Chimera.
 
-Beside this, both hardware and software requirements of Chimera are the same to Hyperscan.
+Beside this, both hardware and software requirements of Chimera are the same to Vectorscan.
 See :ref:`hardware` and :ref:`software` for more details.
 
-.. note:: Building Hyperscan will automatically generate Chimera library.
+.. note:: Building Vectorscan will automatically generate Chimera library.
    Currently only static library is supported for Chimera, so please
    use static build type when configure CMake build options.
 
@@ -119,7 +119,7 @@ databases:
 
 Compilation allows the Chimera library to analyze the given pattern(s) and
 pre-determine how to scan for these patterns in an optimized fashion using
-Hyperscan and PCRE.
+Vectorscan and PCRE.
 
 ===============
 Pattern Support
@@ -134,7 +134,7 @@ Semantics
 =========
 
 Chimera supports the exact same semantics of PCRE library. Moreover, it supports
-multiple simultaneous pattern matching like Hyperscan and the multiple matches
+multiple simultaneous pattern matching like Vectorscan and the multiple matches
 will be reported in order by end offset.
 
 .. _chruntime:

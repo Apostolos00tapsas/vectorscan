@@ -146,7 +146,7 @@ public:
               adj_edge_iterator<Reverse>, edge_descriptor,
               boost::forward_traversal_tag, edge_descriptor> {
         vertex_descriptor u;
-        const base_type *g;
+        const base_type *g = nullptr;
         typename Traits::in_edge_iterator in_it;
         typename Traits::out_edge_iterator out_it;
         bool done_in = false;
@@ -238,7 +238,7 @@ public:
         : public boost::iterator_facade<edge_iterator, edge_descriptor,
                                         boost::forward_traversal_tag,
                                         edge_descriptor> {
-        const base_type *g;
+        const base_type *g = nullptr;
         typename Traits::edge_iterator it;
     public:
         edge_iterator() = default;

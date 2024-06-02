@@ -86,6 +86,7 @@ const DepthMinMax &getDepth(NFAVertex v, const NGHolder &g,
 static
 bool hasFloatingPred(NFAVertex v, const NGHolder &g,
                      const vector<DepthMinMax> &depths) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto u : inv_adjacent_vertices_range(v, g)) {
         const DepthMinMax &d = getDepth(u, g, depths);
         if (d.min != d.max) {
@@ -112,9 +113,9 @@ bool forkVertex(NFAVertex v, NGHolder &g, vector<DepthMinMax> &depths,
     }
     *numNewVertices += predGroups.size();
 
-    for (auto &group : predGroups) {
+    for (const auto &group : predGroups) {
         const depth &predDepth = group.first;
-        const vector<NFAEdge> &preds = group.second;
+        const vector<NFAEdge> &gspreds = group.second;
 
         // Clone v for this depth with all its associated out-edges.
         u32 clone_idx = depths.size(); // next index to be used
@@ -130,8 +131,8 @@ bool forkVertex(NFAVertex v, NGHolder &g, vector<DepthMinMax> &depths,
             add_edge(clone, target(e, g), g[e], g);
         }
 
-        // Add in-edges from preds in this group.
-        for (const auto &e : preds) {
+        // Add in-edges from gspreds in this group.
+        for (const auto &e : gspreds) {
             add_edge(source(e, g), clone, g[e], g);
         }
     }

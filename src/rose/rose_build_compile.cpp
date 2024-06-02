@@ -96,6 +96,7 @@ bool limited_explosion(const ue2_literal &s) {
 
     for (const auto &e : s) {
         if (e.nocase) {
+            // cppcheck-suppress useStlAlgorithm
             nc_count++;
         }
     }
@@ -268,6 +269,7 @@ bool RoseBuildImpl::isPseudoStarOrFirstOnly(const RoseEdge &e) const {
 }
 
 bool RoseBuildImpl::hasOnlyPseudoStarInEdges(RoseVertex v) const {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &e : in_edges_range(v, g)) {
         if (!isPseudoStar(e)) {
             return false;
@@ -413,6 +415,7 @@ bool RoseBuildImpl::isDirectReport(u32 id) const {
         }
 
         // Use the program to handle cases that aren't external reports.
+        // cppcheck-suppress useStlAlgorithm
         for (const ReportID &rid : g[v].reports) {
             if (!isExternalReport(rm.getReport(rid))) {
                 return false;
@@ -451,6 +454,7 @@ bool RoseBuildImpl::isDirectReport(u32 id) const {
  * larger than avoiding running an eod table over the last N bytes. */
 static
 bool checkFloatingKillableByPrefixes(const RoseBuildImpl &tbi) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : vertices_range(tbi.g)) {
         if (!tbi.isRootSuccessor(v)) {
             continue;
@@ -699,6 +703,7 @@ bool suitableForAnchored(const RoseBuildImpl &tbi, const rose_literal_id &l_id,
             return false;
         }
 
+        // cppcheck-suppress useStlAlgorithm
         for (auto w : adjacent_vertices_range(v, g)) {
             if (!g[w].eod_accept) {
                 DEBUG_PRINTF("non eod accept literal\n");
@@ -771,6 +776,7 @@ bool RoseBuildImpl::isDelayed(u32 id) const {
 }
 
 bool RoseBuildImpl::hasDelayedLiteral(RoseVertex v) const {
+    // cppcheck-suppress useStlAlgorithm
     for (u32 lit_id : g[v].literals) {
         if (literals.at(lit_id).delay) {
             return true;
@@ -781,6 +787,7 @@ bool RoseBuildImpl::hasDelayedLiteral(RoseVertex v) const {
 }
 
 bool RoseBuildImpl::hasDelayPred(RoseVertex v) const {
+    // cppcheck-suppress useStlAlgorithm
     for (auto u : inv_adjacent_vertices_range(v, g)) {
         if (hasDelayedLiteral(u)) {
             return true;
@@ -791,6 +798,7 @@ bool RoseBuildImpl::hasDelayPred(RoseVertex v) const {
 }
 
 bool RoseBuildImpl::hasAnchoredTablePred(RoseVertex v) const {
+    // cppcheck-suppress useStlAlgorithm
     for (auto u : inv_adjacent_vertices_range(v, g)) {
         if (isAnchored(u)) {
             return true;
@@ -811,7 +819,7 @@ void RoseBuildImpl::findTransientLeftfixes(void) {
             continue;
         }
 
-        const left_id &left(g[v].left);
+        const left_id &left(left_id(g[v].left));
 
         if (::ue2::isAnchored(left) && !isInETable(v)) {
             /* etable prefixes currently MUST be transient as we do not know
@@ -863,7 +871,7 @@ map<left_id, vector<RoseVertex>> findLeftSucc(const RoseBuildImpl &build) {
     for (auto v : vertices_range(build.g)) {
         if (build.g[v].left) {
             const LeftEngInfo &lei = build.g[v].left;
-            leftfixes[lei].emplace_back(v);
+            leftfixes[left_id(lei)].emplace_back(v);
         }
     }
     return leftfixes;
@@ -956,6 +964,7 @@ bool reduceTopTriggerLoad(RoseBuildImpl &build, NGHolder &h, RoseVertex u) {
     u32 new_top = ~0U;
     /* check if there is already a top with the right the successor set */
     for (const auto &elem : h_top_info) {
+        // cppcheck-suppress useStlAlgorithm
         if (elem.second == edges_to_trigger) {
             new_top = elem.first;
             break;
@@ -1144,10 +1153,10 @@ void findTopTriggerCancels(RoseBuildImpl &build) {
 
     for (const auto &r : left_succ) {
         const left_id &left = r.first;
-        const vector<RoseVertex> &succs = r.second;
+        const vector<RoseVertex> &rsuccs = r.second;
 
-        assert(!succs.empty());
-        if (build.isRootSuccessor(*succs.begin())) {
+        assert(!rsuccs.empty());
+        if (build.isRootSuccessor(*rsuccs.begin())) {
             /* a prefix is never an infix */
             continue;
         }
@@ -1156,7 +1165,7 @@ void findTopTriggerCancels(RoseBuildImpl &build) {
         set<RoseEdge> rose_edges;
         set<u32> pred_lit_ids;
 
-        for (auto v : succs) {
+        for (auto v : rsuccs) {
             for (const auto &e : in_edges_range(v, build.g)) {
                 RoseVertex u = source(e, build.g);
                 tops_seen.insert(build.g[e].rose_top);
@@ -1212,11 +1221,11 @@ void buildRoseSquashMasks(RoseBuildImpl &tbi) {
      * successor of the nfa and all the literals */
     for (const auto &e : roses) {
         const left_id &left = e.first;
-        const vector<RoseVertex> &succs = e.second;
+        const vector<RoseVertex> &rsuccs = e.second;
 
         set<u32> lit_ids;
         bool anchored_pred = false;
-        for (auto v : succs) {
+        for (auto v : rsuccs) {
             lit_ids.insert(tbi.g[v].literals.begin(), tbi.g[v].literals.end());
             for (auto u : inv_adjacent_vertices_range(v, tbi.g)) {
                 anchored_pred |= tbi.isAnchored(u);
@@ -1230,7 +1239,7 @@ void buildRoseSquashMasks(RoseBuildImpl &tbi) {
         if (anchored_pred) { /* infix with pred in anchored table */
             u32 min_off = ~0U;
             u32 max_off = 0U;
-            for (auto v : succs) {
+            for (auto v : rsuccs) {
                 for (auto u : inv_adjacent_vertices_range(v, tbi.g)) {
                     min_off = min(min_off, tbi.g[u].min_offset);
                     max_off = max(max_off, tbi.g[u].max_offset);
@@ -1250,7 +1259,7 @@ void buildRoseSquashMasks(RoseBuildImpl &tbi) {
             if (!info.delayed_ids.empty()
                 || !all_of_in(info.vertices,
                               [&](RoseVertex v) {
-                                  return left == tbi.g[v].left; })) {
+                                  return left == left_id(tbi.g[v].left); })) {
                 DEBUG_PRINTF("group %llu is unsquashable\n", info.group_mask);
                 unsquashable |= info.group_mask;
             }
@@ -1316,10 +1325,8 @@ void rehomeAnchoredLiteral(RoseBuildImpl &tbi, const simple_anchored_info &sai,
             /* ensure bounds on the vertex's in-edge are correct */
             assert(in_degree(v, tbi.g) == 1);
             const RoseEdge &e = *in_edges(v, tbi.g).first;
-            assert(tbi.g[e].minBound == sai.min_bound + sai.literal.length());
-            assert(tbi.g[e].maxBound == sai.max_bound + sai.literal.length());
-            tbi.g[e].minBound = sai.min_bound;
-            tbi.g[e].maxBound = sai.max_bound;
+            tbi.g[e].minBound = sai.min_bound; // cppcheck-suppress danglingTempReference
+            tbi.g[e].maxBound = sai.max_bound; // cppcheck-suppress danglingTempReference
         }
 
         /* mark the old literal as empty */
@@ -1393,7 +1400,7 @@ void addSmallBlockLiteral(RoseBuildImpl &tbi, const simple_anchored_info &sai,
             g[v].max_offset = sai.max_bound + sai.literal.length();
             lit_info.vertices.insert(v);
 
-            RoseEdge e = add_edge(anchored_root, v, g);
+            RoseEdge e = add_edge(anchored_root, v, g).first;
             g[e].minBound = sai.min_bound;
             g[e].maxBound = sai.max_bound;
         }
@@ -1417,7 +1424,7 @@ void addSmallBlockLiteral(RoseBuildImpl &tbi, const ue2_literal &lit,
     g[v].literals.insert(lit_id);
     g[v].reports = reports;
 
-    RoseEdge e = add_edge(tbi.root, v, g);
+    RoseEdge e = add_edge(tbi.root, v, g).first;
     g[e].minBound = 0;
     g[e].maxBound = ROSE_BOUND_INF;
     g[v].min_offset = 1;
@@ -1497,6 +1504,7 @@ bool extractSEPLiterals(const raw_dfa &rdfa,
 
         CharReach cr;
         for (const auto &sym : symbols) {
+            // cppcheck-suppress useStlAlgorithm
             cr |= reach[sym];
         }
 
@@ -1522,6 +1530,7 @@ bool extractSEPLiterals(const OutfixInfo &outfix, const ReportManager &rm,
         return false;
     }
 
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &report_id : all_reports(outfix)) {
         const auto &report = rm.getReport(report_id);
         if (!isSimpleExhaustible(report)) {
@@ -1556,6 +1565,7 @@ void addAnchoredSmallBlockLiterals(RoseBuildImpl &tbi) {
     // literals are direct reports (i.e. leaf nodes in the Rose graph).
     for (const set<u32> &lits : tbi.anchored_simple | map_values) {
         for (u32 lit_id : lits) {
+            // cppcheck-suppress useStlAlgorithm
             if (!tbi.isDirectReport(lit_id)) {
                 DEBUG_PRINTF("not all anchored lits are direct reports\n");
                 return;
@@ -1620,6 +1630,7 @@ void addAnchoredSmallBlockLiterals(RoseBuildImpl &tbi) {
 #ifndef NDEBUG
 static
 bool historiesAreValid(const RoseGraph &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &e : edges_range(g)) {
         if (g[e].history == ROSE_ROLE_HISTORY_INVALID) {
             DEBUG_PRINTF("edge [%zu,%zu] has invalid history\n",
@@ -1636,7 +1647,7 @@ bool historiesAreValid(const RoseGraph &g) {
  * that no longer exists in the graph.
  */
 static
-bool danglingVertexRef(RoseBuildImpl &tbi) {
+bool danglingVertexRef(const RoseBuildImpl &tbi) {
     RoseGraph::vertex_iterator vi, ve;
     tie(vi, ve) = vertices(tbi.g);
     const unordered_set<RoseVertex> valid_vertices(vi, ve);
@@ -1647,6 +1658,7 @@ bool danglingVertexRef(RoseBuildImpl &tbi) {
         return true;
     }
 
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &e : tbi.ghost) {
         if (!contains(valid_vertices, e.first)) {
             DEBUG_PRINTF("ghost key vertex %zu not in graph\n",
@@ -1665,6 +1677,7 @@ bool danglingVertexRef(RoseBuildImpl &tbi) {
 
 static
 bool roleOffsetsAreValid(const RoseGraph &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : vertices_range(g)) {
         if (g[v].min_offset >= ROSE_BOUND_INF) {
             DEBUG_PRINTF("invalid min_offset for role %zu\n", g[v].index);

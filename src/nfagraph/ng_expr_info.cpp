@@ -131,6 +131,7 @@ void checkVertex(const ReportManager &rm, const NGHolder &g, NFAVertex v,
 
 static
 bool hasOffsetAdjust(const ReportManager &rm, const NGHolder &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &report_id : all_reports(g)) {
         if (rm.getReport(report_id).offsetAdjust) {
             return true;

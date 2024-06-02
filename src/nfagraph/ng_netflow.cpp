@@ -93,7 +93,8 @@ void addReverseEdges(NGHolder &g, vector<NFAEdge> &reverseEdge,
         if (it == allEdges.end()) {
             // No reverse edge, add one.
             NFAVertex u = source(fwd, g), v = target(fwd, g);
-            NFAEdge rev = add_edge(v, u, g);
+            NFAEdge rev;
+            std::tie(rev, std::ignore) = add_edge(v, u, g);
             it = allEdges.insert(make_pair(make_pair(vidx, uidx), rev)).first;
             // Add to capacity map.
             u32 revIndex = g[rev].index;

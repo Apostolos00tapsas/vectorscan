@@ -1,5 +1,5 @@
 ###############################################
-Hyperscan |version| Developer's Reference Guide
+Vectorscan |version| Developer's Reference Guide
 ###############################################
 
 -------

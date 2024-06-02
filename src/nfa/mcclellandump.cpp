@@ -61,32 +61,32 @@ namespace ue2 {
 const mstate_aux *getAux(const NFA *n, dstate_id_t i) {
     assert(n && isDfaType(n->type));
 
-    const mcclellan *m = (const mcclellan *)getImplNfa(n);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(n));
     const mstate_aux *aux_base
-        = (const mstate_aux *)((const char *)n + m->aux_offset);
+        = reinterpret_cast<const mstate_aux *>(reinterpret_cast<const char *>(n) + m->aux_offset);
 
     const mstate_aux *aux = aux_base + i;
 
-    assert((const char *)aux < (const char *)n + m->length);
+    assert(reinterpret_cast<const char *>(aux) < reinterpret_cast<const char *>(n) + m->length);
     return aux;
 }
 
 static
 void mcclellanGetTransitions(const NFA *n, u16 s, u16 *t) {
     assert(isMcClellanType(n->type));
-    const mcclellan *m = (const mcclellan *)getImplNfa(n);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(n));
     const mstate_aux *aux = getAux(n, s);
     const u32 as = m->alphaShift;
 
     if (n->type == MCCLELLAN_NFA_8) {
-        const u8 *succ_table = (const u8 *)((const char *)m
+        const u8 *succ_table = reinterpret_cast<const u8 *>(reinterpret_cast<const char *>(m)
                                             + sizeof(mcclellan));
         for (u16 c = 0; c < N_CHARS; c++) {
             t[c] = succ_table[((u32)s << as) + m->remap[c]];
         }
     } else {
         u16 base_s = s;
-        const char *winfo_base = (const char *)n + m->sherman_offset;
+        const char *winfo_base = reinterpret_cast<const char *>(n) + m->sherman_offset;
         const char *state_base
                 = winfo_base + SHERMAN_FIXED_SIZE * (s - m->sherman_limit);
 
@@ -94,10 +94,10 @@ void mcclellanGetTransitions(const NFA *n, u16 s, u16 *t) {
             base_s = unaligned_load_u16(state_base + SHERMAN_DADDY_OFFSET);
         }
 
-        const u16 *succ_table = (const u16 *)((const char *)m
+        const u16 *succ_table = reinterpret_cast<const u16 *>(reinterpret_cast<const char *>(m)
                                               + sizeof(mcclellan));
         for (u16 c = 0; c < N_CHARS; c++) {
-            const u8 *addr = (const u8*)(succ_table + (((u32)base_s << as)
+            const u8 *addr = reinterpret_cast<const u8*>(succ_table + (((u32)base_s << as)
                                                        + m->remap[c]));
             t[c] = unaligned_load_u16(addr);
             t[c] &= STATE_MASK;
@@ -106,15 +106,15 @@ void mcclellanGetTransitions(const NFA *n, u16 s, u16 *t) {
         if (s >= m->sherman_limit) {
             UNUSED char type = *(state_base + SHERMAN_TYPE_OFFSET);
             assert(type == SHERMAN_STATE);
-            u8 len = *(const u8 *)(SHERMAN_LEN_OFFSET + state_base);
+            u8 len = *(reinterpret_cast<const u8 *>(SHERMAN_LEN_OFFSET + state_base));
             const char *chars = state_base + SHERMAN_CHARS_OFFSET;
-            const u16 *states = (const u16 *)(state_base
+            const u16 *states = reinterpret_cast<const u16 *>(state_base
                                               + SHERMAN_STATES_OFFSET(len));
 
             for (u8 i = 0; i < len; i++) {
                 for (u16 c = 0; c < N_CHARS; c++) {
                     if (m->remap[c] == chars[i]) {
-                        t[c] = unaligned_load_u16((const u8*)&states[i]) & STATE_MASK;
+                        t[c] = unaligned_load_u16(reinterpret_cast<const u8*>(&states[i])) & STATE_MASK;
                     }
                 }
             }
@@ -181,6 +181,9 @@ void dumpAccelText(FILE *f, const union AccelAux *accel) {
     case ACCEL_TRUFFLE:
         fprintf(f, ":M");
         break;
+    case ACCEL_TRUFFLE_WIDE:
+        fprintf(f, ":MM");
+        break;
     default:
         fprintf(f, ":??");
         break;
@@ -200,6 +203,7 @@ void dumpAccelDot(FILE *f, u16 i, const union AccelAux *accel) {
     case ACCEL_SHUFTI:
     case ACCEL_DSHUFTI:
     case ACCEL_TRUFFLE:
+    case ACCEL_TRUFFLE_WIDE:
         fprintf(f, "%u [ color = darkgreen style=diagonals ];\n", i);
         break;
     default:
@@ -218,8 +222,8 @@ void describeNode(const NFA *n, const mcclellan *m, u16 i, FILE *f) {
             "label = \"%u%s\" ]; \n", i, i, isSherman ? "w":"");
 
     if (aux->accel_offset) {
-        dumpAccelDot(f, i, (const union AccelAux *)
-                     ((const char *)m + aux->accel_offset));
+        dumpAccelDot(f, i, reinterpret_cast<const union AccelAux *>
+                     (reinterpret_cast<const char *>(m) + aux->accel_offset));
     }
 
     if (aux->accept_eod) {
@@ -244,14 +248,14 @@ void describeNode(const NFA *n, const mcclellan *m, u16 i, FILE *f) {
     }
 
     if (isSherman) {
-        const char *winfo_base = (const char *)n + m->sherman_offset;
+        const char *winfo_base = reinterpret_cast<const char *>(n) + m->sherman_offset;
         const char *state_base
                 = winfo_base + SHERMAN_FIXED_SIZE * (i - m->sherman_limit);
-        assert(state_base < (const char *)m + m->length - sizeof(NFA));
-        UNUSED u8 type = *(const u8 *)(state_base + SHERMAN_TYPE_OFFSET);
+        assert(state_base < reinterpret_cast<const char *>(m) + m->length - sizeof(NFA));
+        UNUSED u8 type = *(reinterpret_cast<const u8 *>(state_base + SHERMAN_TYPE_OFFSET));
         assert(type == SHERMAN_STATE);
         fprintf(f, "%u [ fillcolor = lightblue style=filled ];\n", i);
-        u16 daddy = *(const u16 *)(state_base + SHERMAN_DADDY_OFFSET);
+        u16 daddy = *(reinterpret_cast<const u16 *>(state_base + SHERMAN_DADDY_OFFSET));
         if (daddy) {
             fprintf(f, "%u -> %u [ color=royalblue style=dashed weight=0.1]\n",
                     i, daddy);
@@ -271,7 +275,7 @@ void dumpDotPreambleDfa(FILE *f) {
 static
 void nfaExecMcClellan16_dumpDot(const NFA *nfa, FILE *f) {
     assert(nfa->type == MCCLELLAN_NFA_16);
-    const mcclellan *m = (const mcclellan *)getImplNfa(nfa);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(nfa));
 
     dumpDotPreambleDfa(f);
 
@@ -292,7 +296,7 @@ void nfaExecMcClellan16_dumpDot(const NFA *nfa, FILE *f) {
 static
 void nfaExecMcClellan8_dumpDot(const NFA *nfa, FILE *f) {
     assert(nfa->type == MCCLELLAN_NFA_8);
-    const mcclellan *m = (const mcclellan *)getImplNfa(nfa);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(nfa));
 
     dumpDotPreambleDfa(f);
 
@@ -321,7 +325,7 @@ void dumpAccelMasks(FILE *f, const mcclellan *m, const mstate_aux *aux) {
             continue;
         }
 
-        const AccelAux *accel = (const AccelAux *)((const char *)m
+        const AccelAux *accel = reinterpret_cast<const AccelAux *>(reinterpret_cast<const char *>(m)
                                                    + aux[i].accel_offset);
         fprintf(f, "%05hu ", i);
         dumpAccelInfo(f, *accel);
@@ -356,7 +360,7 @@ void dumpCommonHeader(FILE *f, const mcclellan *m) {
     fprintf(f, "astart: %hu, fstart: %hu\n", m->start_anchored,
             m->start_floating);
     fprintf(f, "single accept: %d, has_accel: %d\n",
-            !!(int)m->flags & MCCLELLAN_FLAG_SINGLE, m->has_accel);
+            !!(m->flags & MCCLELLAN_FLAG_SINGLE), m->has_accel);
 }
 
 static
@@ -366,7 +370,7 @@ void dumpTransitions(FILE *f, const NFA *nfa, const mcclellan *m,
     for (u16 i = 0; i < sherman_ceil; i++) {
         fprintf(f, "%05hu", i);
         if (aux[i].accel_offset) {
-            dumpAccelText(f, (const union AccelAux *)((const char *)m +
+            dumpAccelText(f, reinterpret_cast<const union AccelAux *>(reinterpret_cast<const char *>(m) +
                                                       aux[i].accel_offset));
         }
 
@@ -404,9 +408,9 @@ void dumpTransitions(FILE *f, const NFA *nfa, const mcclellan *m,
 static
 void nfaExecMcClellan16_dumpText(const NFA *nfa, FILE *f) {
     assert(nfa->type == MCCLELLAN_NFA_16);
-    const mcclellan *m = (const mcclellan *)getImplNfa(nfa);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(nfa));
     const mstate_aux *aux =
-        (const mstate_aux *)((const char *)nfa + m->aux_offset);
+        reinterpret_cast<const mstate_aux *>(reinterpret_cast<const char *>(nfa) + m->aux_offset);
 
     fprintf(f, "mcclellan 16\n");
     dumpCommonHeader(f, m);
@@ -425,9 +429,9 @@ void nfaExecMcClellan16_dumpText(const NFA *nfa, FILE *f) {
 static
 void nfaExecMcClellan8_dumpText(const NFA *nfa, FILE *f) {
     assert(nfa->type == MCCLELLAN_NFA_8);
-    const mcclellan *m = (const mcclellan *)getImplNfa(nfa);
+    const mcclellan *m = reinterpret_cast<const mcclellan *>(getImplNfa(nfa));
     const mstate_aux *aux =
-        (const mstate_aux *)((const char *)nfa + m->aux_offset);
+        reinterpret_cast<const mstate_aux *>(reinterpret_cast<const char *>(nfa) + m->aux_offset);
 
     fprintf(f, "mcclellan 8\n");
     dumpCommonHeader(f, m);

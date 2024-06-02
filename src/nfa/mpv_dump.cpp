@@ -80,9 +80,9 @@ void dumpKilo(FILE *f, const mpv *m, const mpv_kilopuff *k) {
     case MPV_SHUFTI:
         fprintf(f, "shufti\n");
         fprintf(f, "lo %s\n",
-                dumpMask((const u8 *)&k->u.shuf.mask_lo, 128).c_str());
+                dumpMask(reinterpret_cast<const u8 *>(&k->u.shuf.mask_lo), 128).c_str());
         fprintf(f, "hi %s\n",
-                dumpMask((const u8 *)&k->u.shuf.mask_hi, 128).c_str());
+                dumpMask(reinterpret_cast<const u8 *>(&k->u.shuf.mask_hi), 128).c_str());
         break;
     case MPV_TRUFFLE:
         fprintf(f, "truffle\n");
@@ -130,7 +130,7 @@ void dumpCounter(FILE *f, const mpv_counter_info *c) {
 }
 
 void nfaExecMpv_dump(const NFA *nfa, const string &base) {
-    const mpv *m = (const mpv *)getImplNfa(nfa);
+    const mpv *m = reinterpret_cast<const mpv *>(getImplNfa(nfa));
 
     StdioFile f(base + ".txt", "w");
 
@@ -141,7 +141,7 @@ void nfaExecMpv_dump(const NFA *nfa, const string &base) {
     fprintf(f, "initial kilopuffs %u - %u\n", m->top_kilo_begin,
             m->top_kilo_end - 1);
 
-    const mpv_kilopuff *k = (const mpv_kilopuff *)(m + 1);
+    const mpv_kilopuff *k = reinterpret_cast<const mpv_kilopuff *>(m + 1);
     for (u32 i = 0; i < m->kilo_count; i++) {
         fprintf(f,  "\nKILOPUFF %u\n", i);
         dumpKilo(f, m, k++);

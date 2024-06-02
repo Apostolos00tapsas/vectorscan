@@ -241,6 +241,7 @@ bool mergeDfas(vector<unique_ptr<raw_dfa>> &dfas, const ReportManager &rm,
     vector<const raw_dfa *> dfa_ptrs;
     dfa_ptrs.reserve(dfas.size());
     for (auto &d : dfas) {
+        // cppcheck-suppress useStlAlgorithm
         dfa_ptrs.emplace_back(d.get());
     }
 
@@ -331,6 +332,7 @@ bool add_to_trie(const ue2_literal &literal, ReportID report, LitTrie &trie) {
     for (const auto &c : literal) {
         auto next = LitTrie::null_vertex();
         for (auto v : adjacent_vertices_range(u, trie)) {
+            // cppcheck-suppress useStlAlgorithm
             if (trie[v].c == (u8)c.c) {
                 next = v;
                 break;
@@ -409,6 +411,7 @@ struct ACVisitor : public boost::default_bfs_visitor {
         while (u != trie.root) {
             auto f = failure_map.at(u);
             for (auto w : adjacent_vertices_range(f, trie)) {
+                // cppcheck-suppress useStlAlgorithm
                 if (trie[w].c == c) {
                     return w;
                 }
@@ -789,7 +792,7 @@ bytecode_ptr<NFA> getDfa(raw_dfa &rdfa, const CompileContext &cc,
     bool only_accel_init = !has_non_literals;
     bool trust_daddy_states = !has_non_literals;
 
-    bytecode_ptr<NFA> dfa = nullptr;
+    bytecode_ptr<NFA> dfa = bytecode_ptr<NFA>(nullptr);
     if (cc.grey.allowSmallWriteSheng) {
         dfa = shengCompile(rdfa, cc, rm, only_accel_init, &accel_states);
         if (!dfa) {
@@ -819,27 +822,27 @@ bytecode_ptr<NFA> prepEngine(raw_dfa &rdfa, u32 roseQuality,
     auto nfa = getDfa(rdfa, cc, rm, has_non_literals, accel_states);
     if (!nfa) {
         DEBUG_PRINTF("DFA compile failed for smallwrite NFA\n");
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     if (is_slow(rdfa, accel_states, roseQuality)) {
         DEBUG_PRINTF("is slow\n");
         *small_region = cc.grey.smallWriteLargestBufferBad;
         if (*small_region <= *start_offset) {
-            return nullptr;
+            return bytecode_ptr<NFA>(nullptr);
         }
         if (clear_deeper_reports(rdfa, *small_region - *start_offset)) {
             minimize_hopcroft(rdfa, cc.grey);
             if (rdfa.start_anchored == DEAD_STATE) {
                 DEBUG_PRINTF("all patterns pruned out\n");
-                return nullptr;
+                return bytecode_ptr<NFA>(nullptr);
             }
 
             nfa = getDfa(rdfa, cc, rm, has_non_literals, accel_states);
             if (!nfa) {
                 DEBUG_PRINTF("DFA compile failed for smallwrite NFA\n");
                 assert(0); /* able to build orig dfa but not the trimmed? */
-                return nullptr;
+                return bytecode_ptr<NFA>(nullptr);
             }
         }
     } else {
@@ -850,7 +853,7 @@ bytecode_ptr<NFA> prepEngine(raw_dfa &rdfa, u32 roseQuality,
     if (nfa->length > cc.grey.limitSmallWriteOutfixSize
         || nfa->length > cc.grey.limitDFASize) {
         DEBUG_PRINTF("smallwrite outfix size too large\n");
-        return nullptr; /* this is just a soft failure - don't build smwr */
+        return bytecode_ptr<NFA>(nullptr); /* this is just a soft failure - don't build smwr */
     }
 
     nfa->queueIndex = 0; /* dummy, small write API does not use queue */
@@ -870,12 +873,12 @@ bytecode_ptr<SmallWriteEngine> SmallWriteBuildImpl::build(u32 roseQuality) {
     if (dfas.empty() && !has_literals) {
         DEBUG_PRINTF("no smallwrite engine\n");
         poisoned = true;
-        return nullptr;
+        return bytecode_ptr<SmallWriteEngine>(nullptr);
     }
 
     if (poisoned) {
         DEBUG_PRINTF("some pattern could not be made into a smallwrite dfa\n");
-        return nullptr;
+        return bytecode_ptr<SmallWriteEngine>(nullptr);
     }
 
     // We happen to know that if the rose is high quality, we're going to limit
@@ -903,12 +906,12 @@ bytecode_ptr<SmallWriteEngine> SmallWriteBuildImpl::build(u32 roseQuality) {
 
     if (dfas.empty()) {
         DEBUG_PRINTF("no dfa, pruned everything away\n");
-        return nullptr;
+        return bytecode_ptr<SmallWriteEngine>(nullptr);
     }
 
     if (!mergeDfas(dfas, rm, cc)) {
         dfas.clear();
-        return nullptr;
+        return bytecode_ptr<SmallWriteEngine>(nullptr);
     }
 
     assert(dfas.size() == 1);
@@ -925,7 +928,7 @@ bytecode_ptr<SmallWriteEngine> SmallWriteBuildImpl::build(u32 roseQuality) {
         DEBUG_PRINTF("some smallwrite outfix could not be prepped\n");
         /* just skip the smallwrite optimization */
         poisoned = true;
-        return nullptr;
+        return bytecode_ptr<SmallWriteEngine>(nullptr);
     }
 
     u32 size = sizeof(SmallWriteEngine) + nfa->length;

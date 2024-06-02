@@ -53,10 +53,12 @@ void hwlmGenerateDumpFiles(const HWLM *h, const string &base) {
 
     switch (h->type) {
     case HWLM_ENGINE_NOOD:
-        noodPrintStats((const noodTable *)HWLM_C_DATA(h), f);
+        // cppcheck-suppress cstyleCast
+        noodPrintStats(reinterpret_cast<const noodTable *>(HWLM_C_DATA(h)), f);
         break;
     case HWLM_ENGINE_FDR:
-        fdrPrintStats((const FDR *)HWLM_C_DATA(h), f);
+        // cppcheck-suppress cstyleCast
+        fdrPrintStats(reinterpret_cast<const FDR *>(HWLM_C_DATA(h)), f);
         break;
     default:
         fprintf(f, "<unknown hwlm subengine>\n");

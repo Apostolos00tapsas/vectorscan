@@ -210,6 +210,7 @@ set<ReportID> all_reports(const raw_dfa &rdfa) {
 }
 
 bool has_eod_accepts(const raw_dfa &rdfa) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &ds : rdfa.states) {
         if (!ds.reports_eod.empty()) {
             return true;
@@ -219,6 +220,7 @@ bool has_eod_accepts(const raw_dfa &rdfa) {
 }
 
 bool has_non_eod_accepts(const raw_dfa &rdfa) {
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &ds : rdfa.states) {
         if (!ds.reports.empty()) {
             return true;
@@ -265,6 +267,7 @@ bool can_die_early(const raw_dfa &raw, dstate_id_t s,
     }
 
     for (const auto &next : raw.states[s].next) {
+        // cppcheck-suppress useStlAlgorithm
         if (can_die_early(raw, next, visited, age_limit - 1)) {
             return true;
         }

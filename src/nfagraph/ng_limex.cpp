@@ -106,6 +106,7 @@ bool sanityCheckGraph(const NGHolder &g,
             return false;
         }
         u32 s = state_ids.at(v);
+        // cppcheck-suppress knownConditionTrueFalse
         if (s != NO_STATE && !seen_states.insert(s).second) {
             DEBUG_PRINTF("vertex %zu has dupe state %u\n", g[v].index, s);
             return false;
@@ -342,7 +343,7 @@ void attemptToUseAsStart(const NGHolder &g,  NFAVertex u,
                          map<NFAVertex, flat_set<u32>> &unhandled_succ_tops,
                          map<u32, set<NFAVertex>> &tops_out) {
     flat_set<u32> top_inter = unhandled_succ_tops.at(u);
-    flat_set<NFAVertex> succs;
+    flat_set<NFAVertex> f_succs;
     for (NFAVertex v : adjacent_vertices_range(u, g)) {
         if (!contains(unhandled_succ_tops, v)) {
             return;
@@ -360,7 +361,7 @@ void attemptToUseAsStart(const NGHolder &g,  NFAVertex u,
         set_intersection(top_inter.begin(), top_inter.end(),
                          v_tops.begin(), v_tops.end(), ni_inserter);
         top_inter = std::move(new_inter);
-        succs.insert(v);
+        f_succs.insert(v);
     }
 
     if (top_inter.empty()) {
@@ -373,7 +374,7 @@ void attemptToUseAsStart(const NGHolder &g,  NFAVertex u,
     }
 
     DEBUG_PRINTF("reusing %zu is a start vertex\n", g[u].index);
-    markTopSuccAsHandled(u, top_inter, succs, tops_out, unhandled_top_succs,
+    markTopSuccAsHandled(u, top_inter, f_succs, tops_out, unhandled_top_succs,
                          unhandled_succ_tops);
 }
 
@@ -389,11 +390,11 @@ void reusePredsAsStarts(const NGHolder &g, const map<u32, CharReach> &top_reach,
     /* create list of candidates first, to avoid issues of iter invalidation */
     DEBUG_PRINTF("attempting to reuse vertices for top starts\n");
     vector<NFAVertex> cand_starts;
-    for (NFAVertex u : unhandled_succ_tops | map_keys) {
-        if (hasSelfLoop(u, g)) {
-            cand_starts.emplace_back(u);
-        }
-    }
+    auto cands = [&g=g](const NFAVertex &u) {
+        return (hasSelfLoop(u, g));
+    };
+    const auto &ust = unhandled_succ_tops | map_keys;
+    std::copy_if(begin(ust), end(ust),  std::back_inserter(cand_starts), cands);
 
     for (NFAVertex u : cand_starts) {
         if (!contains(unhandled_succ_tops, u)) {
@@ -652,7 +653,7 @@ constructNFA(const NGHolder &h_in, const ReportManager *rm,
     u32 numStates = countStates(state_ids);
     if (numStates > NFA_MAX_STATES) {
         DEBUG_PRINTF("Can't build an NFA with %u states\n", numStates);
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     map<NFAVertex, BoundedRepeatSummary> br_cyclic;
@@ -722,14 +723,14 @@ bytecode_ptr<NFA> constructReversedNFA_i(const NGHolder &h_in, u32 hint,
     assert(h.kind == NFA_REV_PREFIX); /* triggered, raises internal callbacks */
 
     // Do state numbering.
-    auto state_ids = numberStates(h, {});
+    auto state_ids = numberStates(h, flat_set<graph_detail::vertex_descriptor<ue2_graph<NGHolder, NFAGraphVertexProps, NFAGraphEdgeProps>>>());
 
     // Quick exit: if we've got an embarrassment of riches, i.e. more states
     // than we can implement in our largest NFA model, bail here.
     u32 numStates = countStates(state_ids);
     if (numStates > NFA_MAX_STATES) {
         DEBUG_PRINTF("Can't build an NFA with %u states\n", numStates);
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     assert(sanityCheckGraph(h, state_ids));

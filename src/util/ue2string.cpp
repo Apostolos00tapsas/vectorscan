@@ -134,6 +134,7 @@ string dumpString(const ue2_literal &lit) {
 
 void upperString(string &s) {
     for (auto &c : s) {
+        // cppcheck-suppress useStlAlgorithm
         c = mytoupper(c);
     }
 }
@@ -341,6 +342,7 @@ void make_nocase(ue2_literal *lit) {
     ue2_literal rv;
 
     for (const auto &elem: *lit) {
+        // cppcheck-suppress useStlAlgorithm
         rv.push_back(elem.c, ourisalpha(elem.c));
     }
 

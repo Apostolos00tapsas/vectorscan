@@ -228,6 +228,7 @@ public:
             assert(sub != INVALID_SUBSET);
             ENSURE_AT_LEAST(&subset_count, sub + 1);
         }
+        // cppcheck-suppress unsignedPositive
         assert(subset_count <= state_to_subset.size());
 
         subsets.resize(subset_count);

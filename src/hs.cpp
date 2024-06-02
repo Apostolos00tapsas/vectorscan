@@ -589,7 +589,7 @@ hs_error_t hs_expression_info_int(const char *expression, unsigned int flags,
         return HS_COMPILER_ERROR;
     }
 
-    hs_expr_info *rv = (hs_expr_info *)hs_misc_alloc(sizeof(*rv));
+    hs_expr_info *rv = static_cast<hs_expr_info *>(hs_misc_alloc(sizeof(*rv)));
     if (!rv) {
         *error = const_cast<hs_compile_error_t *>(&hs_enomem);
         return HS_COMPILER_ERROR;

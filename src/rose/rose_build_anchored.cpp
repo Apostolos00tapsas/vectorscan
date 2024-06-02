@@ -158,9 +158,11 @@ void mergeAnchoredDfas(vector<unique_ptr<raw_dfa>> &dfas,
 
     // Rehome our groups into one vector.
     for (auto &rdfa : small_starts) {
+        // cppcheck-suppress useStlAlgorithm
         dfas.emplace_back(std::move(rdfa));
     }
     for (auto &rdfa : big_starts) {
+        // cppcheck-suppress useStlAlgorithm
         dfas.emplace_back(std::move(rdfa));
     }
 
@@ -264,11 +266,11 @@ u32 anchoredStateSize(const anchored_matcher_info &atable) {
     // Walk the list until we find the last element; total state size will be
     // that engine's state offset plus its state requirement.
     while (curr->next_offset) {
-        curr = (const anchored_matcher_info *)
-            ((const char *)curr + curr->next_offset);
+        curr = reinterpret_cast<const anchored_matcher_info *>
+            (reinterpret_cast<const char *>(curr) + curr->next_offset);
     }
 
-    const NFA *nfa = (const NFA *)((const char *)curr + sizeof(*curr));
+    const NFA *nfa = reinterpret_cast<const  NFA *>(reinterpret_cast<const char *>(curr) + sizeof(*curr));
     return curr->state_offset + nfa->streamStateSize;
 }
 
@@ -348,11 +350,11 @@ public:
             next[s].wdelay = wdelay;
         }
 
-        nfa_state_set succ;
+        nfa_state_set gsucc;
 
         if (wdelay != in.wdelay) {
             DEBUG_PRINTF("enabling start\n");
-            succ.set(vertexToIndex[g.startDs]);
+            gsucc.set(vertexToIndex[g.startDs]);
         }
 
         for (size_t i = in.wrap_state.find_first(); i != nfa_state_set::npos;
@@ -368,12 +370,12 @@ public:
                     continue;
                 }
 
-                succ.set(vertexToIndex[w]);
+                gsucc.set(vertexToIndex[w]);
             }
         }
 
-        for (size_t j = succ.find_first(); j != nfa_state_set::npos;
-             j = succ.find_next(j)) {
+        for (size_t j = gsucc.find_first(); j != nfa_state_set::npos;
+             j = gsucc.find_next(j)) {
             const CharReach &cr = cr_by_index[j];
             for (size_t s = cr.find_first(); s != CharReach::npos;
                  s = cr.find_next(s)) {
@@ -784,6 +786,7 @@ vector<unique_ptr<raw_dfa>> getAnchoredDfas(RoseBuildImpl &build,
     // DFAs that already exist as raw_dfas.
     for (auto &anch_dfas : build.anchored_nfas) {
         for (auto &rdfa : anch_dfas.second) {
+            // cppcheck-suppress useStlAlgorithm
             dfas.emplace_back(std::move(rdfa));
         }
     }
@@ -867,13 +870,13 @@ vector<raw_dfa> buildAnchoredDfas(RoseBuildImpl &build,
 }
 
 bytecode_ptr<anchored_matcher_info>
-buildAnchoredMatcher(RoseBuildImpl &build, const vector<LitFragment> &fragments,
+buildAnchoredMatcher(const RoseBuildImpl &build, const vector<LitFragment> &fragments,
                      vector<raw_dfa> &dfas) {
     const CompileContext &cc = build.cc;
 
     if (dfas.empty()) {
         DEBUG_PRINTF("empty\n");
-        return nullptr;
+        return bytecode_ptr<anchored_matcher_info>(nullptr);
     }
 
     for (auto &rdfa : dfas) {
@@ -890,13 +893,13 @@ buildAnchoredMatcher(RoseBuildImpl &build, const vector<LitFragment> &fragments,
 
     auto atable =
         make_zeroed_bytecode_ptr<anchored_matcher_info>(total_size, 64);
-    char *curr = (char *)atable.get();
+    char *curr = reinterpret_cast<char *>(atable.get());
 
     u32 state_offset = 0;
     for (size_t i = 0; i < nfas.size(); i++) {
         const NFA *nfa = nfas[i].get();
-        anchored_matcher_info *ami = (anchored_matcher_info *)curr;
-        char *prev_curr = curr;
+        anchored_matcher_info *ami = reinterpret_cast<anchored_matcher_info *>(curr);
+        const char *prev_curr = curr;
 
         curr += sizeof(anchored_matcher_info);
 

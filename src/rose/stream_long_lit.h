@@ -332,7 +332,7 @@ void storeLongLiteralState(const struct RoseEngine *t, char *state,
         return;
     }
 
-    struct core_info *ci = &scratch->core_info;
+    const struct core_info *ci = &scratch->core_info;
     const struct RoseLongLitTable *ll_table =
         getByOffset(t, t->longLitTableOffset);
     assert(ll_table->maxLen);

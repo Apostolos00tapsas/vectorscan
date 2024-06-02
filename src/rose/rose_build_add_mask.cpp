@@ -131,7 +131,6 @@ void findMaskLiteral(const vector<CharReach> &mask, bool streaming,
     if (better) {
         best_begin = begin;
         best_end = end;
-        best_len = len;
     }
 
     for (size_t i = best_begin; i < best_end; i++) {
@@ -189,7 +188,7 @@ bool expandFmlCandidates(const CharReach &cr, vector<ue2_literal> &curr,
         }
     }
 
-    if (curr.back().length() > MAX_MASK2_WIDTH &&
+    if (!curr.empty() && curr.back().length() > MAX_MASK2_WIDTH &&
         any_of(begin(curr), end(curr), mixed_sensitivity)) {
         DEBUG_PRINTF("mixed-sensitivity lit is too long, stopping\n");
         return false;
@@ -262,6 +261,7 @@ bool findMaskLiterals(const vector<CharReach> &mask, vector<ue2_literal> *lit,
 
         // Candidates have been expanded in reverse order.
         for (auto &cand : candidates) {
+            // cppcheck-suppress useStlAlgorithm
             cand = reverse_literal(cand);
         }
 
@@ -303,31 +303,31 @@ unique_ptr<NGHolder> buildMaskLhs(bool anchored, u32 prefix_len,
 
     assert(prefix_len);
     assert(mask.size() >= prefix_len);
-    NFAVertex pred = anchored ? lhs->start : lhs->startDs;
+    NFAVertex lpreds = anchored ? lhs->start : lhs->startDs;
 
     u32 m_idx = 0;
     while (prefix_len--) {
         NFAVertex v = add_vertex(*lhs);
         (*lhs)[v].char_reach = mask[m_idx++];
-        add_edge(pred, v, *lhs);
-        pred = v;
+        add_edge(lpreds, v, *lhs);
+        lpreds = v;
     }
-    add_edge(pred, lhs->accept, *lhs);
-    (*lhs)[pred].reports.insert(0);
+    add_edge(lpreds, lhs->accept, *lhs);
+    (*lhs)[lpreds].reports.insert(0);
 
     return lhs;
 }
 
 static
 void buildLiteralMask(const vector<CharReach> &mask, vector<u8> &msk,
-                      vector<u8> &cmp, u32 delay) {
+                      vector<u8> &lcmp, u32 delay) {
     msk.clear();
-    cmp.clear();
+    lcmp.clear();
     if (mask.size() <= delay) {
         return;
     }
 
-    // Construct an and/cmp mask from our mask ending at delay positions before
+    // Construct an and/lcmp mask from our mask ending at delay positions before
     // the end of the literal, with max length HWLM_MASKLEN.
 
     auto ite = mask.end() - delay;
@@ -335,11 +335,11 @@ void buildLiteralMask(const vector<CharReach> &mask, vector<u8> &msk,
 
     for (; it != ite; ++it) {
         msk.emplace_back(0);
-        cmp.emplace_back(0);
-        make_and_cmp_mask(*it, &msk.back(), &cmp.back());
+        lcmp.emplace_back(0);
+        make_and_cmp_mask(*it, &msk.back(), &lcmp.back());
     }
 
-    assert(msk.size() == cmp.size());
+    assert(msk.size() == lcmp.size());
     assert(msk.size() <= HWLM_MASKLEN);
 }
 
@@ -393,9 +393,10 @@ bool validateTransientMask(const vector<CharReach> &mask, bool anchored,
            none_of(begin(lits), end(lits), mixed_sensitivity));
 
     // Build the HWLM literal mask.
-    vector<u8> msk, cmp;
+    vector<u8> msk;
     if (grey.roseHamsterMasks) {
-        buildLiteralMask(mask, msk, cmp, delay);
+        vector<u8> lcmp;
+        buildLiteralMask(mask, msk, lcmp, delay);
     }
 
     // We consider the HWLM mask length to run from the first non-zero byte to
@@ -443,7 +444,9 @@ bool maskIsNeeded(const ue2_literal &lit, const NGHolder &g) {
         curr.swap(next);
     }
 
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : curr) {
+        // cppcheck-suppress useStlAlgorithm
         for (auto u : inv_adjacent_vertices_range(v, g)) {
             if (u == g.start || u == g.startDs) {
                 DEBUG_PRINTF("literal spans graph from start to accept\n");
@@ -491,9 +494,9 @@ void addTransientMask(RoseBuildImpl &build, const vector<CharReach> &mask,
     set_report(*mask_graph, mask_report);
 
     // Build the HWLM literal mask.
-    vector<u8> msk, cmp;
+    vector<u8> msk, lcmp;
     if (build.cc.grey.roseHamsterMasks) {
-        buildLiteralMask(mask, msk, cmp, delay);
+        buildLiteralMask(mask, msk, lcmp, delay);
     }
 
     /* adjust bounds to be relative to trigger rather than mask */
@@ -527,7 +530,7 @@ void addTransientMask(RoseBuildImpl &build, const vector<CharReach> &mask,
     const flat_set<ReportID> no_reports;
 
     for (const auto &lit : lits) {
-        u32 lit_id = build.getLiteralId(lit, msk, cmp, delay, table);
+        u32 lit_id = build.getLiteralId(lit, msk, lcmp, delay, table);
         const RoseVertex parent = anchored ? build.anchored_root : build.root;
         bool use_mask = delay || maskIsNeeded(lit, *mask_graph);
 
@@ -540,7 +543,7 @@ void addTransientMask(RoseBuildImpl &build, const vector<CharReach> &mask,
             g[v].left.leftfix_report = mask_report;
         } else {
             // Make sure our edge bounds are correct.
-            RoseEdge e = edge(parent, v, g);
+            RoseEdge e = edge(parent, v, g).first;
             g[e].minBound = 0;
             g[e].maxBound = anchored ? 0 : ROSE_BOUND_INF;
             g[e].history = anchored ? ROSE_ROLE_HISTORY_ANCH
@@ -552,7 +555,7 @@ void addTransientMask(RoseBuildImpl &build, const vector<CharReach> &mask,
         g[v].max_offset = v_max_offset;
 
         if (eod) {
-            RoseEdge e = add_edge(v, eod_v, g);
+            RoseEdge e = add_edge(v, eod_v, g).first;
             g[e].minBound = 0;
             g[e].maxBound = 0;
             g[e].history = ROSE_ROLE_HISTORY_LAST_BYTE;
@@ -570,19 +573,19 @@ unique_ptr<NGHolder> buildMaskRhs(const flat_set<ReportID> &reports,
     unique_ptr<NGHolder> rhs = std::make_unique<NGHolder>(NFA_SUFFIX);
     NGHolder &h = *rhs;
 
-    NFAVertex succ = h.accept;
+    NFAVertex asucc = h.accept;
     u32 m_idx = mask.size() - 1;
     while (suffix_len--) {
         NFAVertex u = add_vertex(h);
-        if (succ == h.accept) {
+        if (asucc == h.accept) {
             h[u].reports.insert(reports.begin(), reports.end());
         }
         h[u].char_reach = mask[m_idx--];
-        add_edge(u, succ, h);
-        succ = u;
+        add_edge(u, asucc, h);
+        asucc = u;
     }
 
-    NFAEdge e = add_edge(h.start, succ, h);
+    NFAEdge e = add_edge(h.start, asucc, h).first;
     h[e].tops.insert(DEFAULT_TOP);
 
     return rhs;

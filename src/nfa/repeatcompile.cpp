@@ -94,9 +94,6 @@ u32 repeatRecurTable(struct RepeatStateInfo *info, const depth &repeatMax,
 static
 u32 findOptimalPatchSize(struct RepeatStateInfo *info, const depth &repeatMax,
                          const u32 minPeriod, u32 rv) {
-    u32 cnt = 0;
-    u32 patch_bits = 0;
-    u32 total_size = 0;
     u32 min = ~0U;
     u32 patch_len = 0;
 
@@ -105,11 +102,11 @@ u32 findOptimalPatchSize(struct RepeatStateInfo *info, const depth &repeatMax,
     }
 
     for (u32 i = minPeriod; i <= rv; i++) {
-        cnt = ((u32)repeatMax + (i - 1)) / i + 1;
+        u32 cnt = ((u32)repeatMax + (i - 1)) / i + 1;
 
         // no bit packing version
-        patch_bits = calcPackedBits(info->table[i]);
-        total_size = (patch_bits + 7U) / 8U * cnt;
+        u32 patch_bits = calcPackedBits(info->table[i]);
+        u32 total_size = (patch_bits + 7U) / 8U * cnt;
 
         if (total_size < min) {
             patch_len = i;

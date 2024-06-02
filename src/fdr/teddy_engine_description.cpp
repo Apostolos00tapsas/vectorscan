@@ -52,14 +52,14 @@ u32 TeddyEngineDescription::getDefaultFloodSuffixLength() const {
 
 void getTeddyDescriptions(vector<TeddyEngineDescription> *out) {
     static const TeddyEngineDef defns[] = {
-        { 3, 0 | HS_CPU_FEATURES_AVX2, 1, 16, false },
-        { 4, 0 | HS_CPU_FEATURES_AVX2, 1, 16, true },
-        { 5, 0 | HS_CPU_FEATURES_AVX2, 2, 16, false },
-        { 6, 0 | HS_CPU_FEATURES_AVX2, 2, 16, true },
-        { 7, 0 | HS_CPU_FEATURES_AVX2, 3, 16, false },
-        { 8, 0 | HS_CPU_FEATURES_AVX2, 3, 16, true },
-        { 9, 0 | HS_CPU_FEATURES_AVX2, 4, 16, false },
-        { 10, 0 | HS_CPU_FEATURES_AVX2, 4, 16, true },
+        { 3, HS_CPU_FEATURES_AVX2, 1, 16, false },
+        { 4, HS_CPU_FEATURES_AVX2, 1, 16, true },
+        { 5, HS_CPU_FEATURES_AVX2, 2, 16, false },
+        { 6, HS_CPU_FEATURES_AVX2, 2, 16, true },
+        { 7, HS_CPU_FEATURES_AVX2, 3, 16, false },
+        { 8, HS_CPU_FEATURES_AVX2, 3, 16, true },
+        { 9, HS_CPU_FEATURES_AVX2, 4, 16, false },
+        { 10, HS_CPU_FEATURES_AVX2, 4, 16, true },
         { 11, 0, 1, 8, false },
         { 12, 0, 1, 8, true },
         { 13, 0, 2, 8, false },
@@ -71,6 +71,7 @@ void getTeddyDescriptions(vector<TeddyEngineDescription> *out) {
     };
     out->clear();
     for (const auto &def : defns) {
+        // cppcheck-suppress useStlAlgorithm
         out->emplace_back(def);
     }
 }
@@ -123,6 +124,7 @@ bool isAllowed(const vector<hwlmLiteral> &vl, const TeddyEngineDescription &eng,
         u32 n_small_lits = 0;
         for (const auto &lit : vl) {
             if (lit.s.length() < eng.numMasks) {
+                // cppcheck-suppress useStlAlgorithm
                 n_small_lits++;
             }
         }
@@ -204,6 +206,7 @@ unique_ptr<TeddyEngineDescription> getTeddyDescription(u32 engineID) {
     getTeddyDescriptions(&descs);
 
     for (const auto &desc : descs) {
+        // cppcheck-suppress useStlAlgorithm
         if (desc.getID() == engineID) {
             return std::make_unique<TeddyEngineDescription>(desc);
         }

@@ -52,7 +52,7 @@ static
 int vectorCallback(unsigned id, unsigned long long from,
                    unsigned long long to, unsigned, void *ctx) {
     //printf("match id %u at (%llu,%llu)\n", id, from, to);
-    vector<Match> *matches = (vector<Match> *)ctx;
+    vector<Match> *matches = reinterpret_cast<vector<Match> *>(ctx);
     matches->push_back(Match(id, from, to));
     return 0;
 }

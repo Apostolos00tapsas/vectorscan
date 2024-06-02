@@ -19,6 +19,7 @@ else()
 set(SPHINX_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/_build")
 set(SPHINX_CACHE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_doctrees")
 set(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/html")
+set(SPHINX_MAN_DIR "${CMAKE_CURRENT_BINARY_DIR}/man")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in"
     "${CMAKE_CURRENT_BINARY_DIR}/conf.py" @ONLY)
@@ -32,4 +33,14 @@ add_custom_target(dev-reference
         "${SPHINX_HTML_DIR}"
     DEPENDS dev-reference-doxygen
     COMMENT "Building HTML dev reference with Sphinx")
+
+add_custom_target(dev-reference-man
+    ${SPHINX_BUILD}
+        -b man
+        -c "${CMAKE_CURRENT_BINARY_DIR}"
+        -d "${SPHINX_CACHE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${SPHINX_MAN_DIR}"
+    DEPENDS dev-reference-doxygen
+    COMMENT "Building man page reference with Sphinx")
 endif()

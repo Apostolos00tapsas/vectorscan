@@ -144,6 +144,7 @@ public:
     }
 
     void write_bytes(RoseEngine *engine) {
+        // cppcheck-suppress cstyleCast
         copy_bytes((char *)engine + base_offset, blob);
     }
 

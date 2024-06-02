@@ -56,6 +56,7 @@ set<ReportID> all_reports(const NGHolder &g) {
 
 /** True if *all* reports in the graph are exhaustible. */
 bool can_exhaust(const NGHolder &g, const ReportManager &rm) {
+    // cppcheck-suppress useStlAlgorithm
     for (ReportID report_id : all_reports(g)) {
         if (rm.getReport(report_id).ekey == INVALID_EKEY) {
             return false;

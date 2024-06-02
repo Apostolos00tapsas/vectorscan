@@ -65,7 +65,7 @@ bool isValidUtf8(const char *expression, const size_t len) {
         return true;
     }
 
-    const u8 *s = (const u8 *)expression;
+    const u8 *s = reinterpret_cast<const u8 *>(expression);
     u32 val;
 
     size_t i = 0;

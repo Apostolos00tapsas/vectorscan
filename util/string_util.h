@@ -141,7 +141,7 @@ void prettyPrintRange(std::ostream &out, it_t begin, it_t end) {
 static really_inline
 char *makeHex(const unsigned char *pat, unsigned patlen) {
     size_t hexlen = patlen * 4;
-    char *hexbuf = (char *)malloc(hexlen + 1);
+    char *hexbuf = reinterpret_cast<char *>(malloc(hexlen + 1));
     unsigned i;
     char *buf;
     for (i = 0, buf = hexbuf; i < patlen; i++, buf += 4) {

@@ -149,9 +149,7 @@ std::ostream &operator<<(std::ostream &os, const insertion_ordered_set<K> &s) {
     os << "{";
     for (auto it = begin(s); it != end(s); ++it) {
         os << *it;
-        if (it != end(s)) {
-            os << ", ";
-        }
+        os << ", ";
     }
     os << "}";
     return os;

@@ -44,6 +44,7 @@ void raw_dfa::stripExtraEodReports(void) {
 }
 
 bool raw_dfa::hasEodReports(void) const {
+    // cppcheck-suppress useStlAlgorithm
     for (const dstate &ds : states) {
         if (!ds.reports_eod.empty()) {
             return true;

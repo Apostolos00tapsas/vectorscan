@@ -566,7 +566,7 @@ const void *loadFromByteCodeOffset(const RoseEngine *t, u32 offset) {
         return nullptr;
     }
 
-    const char *lt = (const char *)t + offset;
+    const char *lt = reinterpret_cast<const char *>(t) + offset;
     return lt;
 }
 
@@ -623,9 +623,9 @@ void dumpLookaround(ofstream &os, const RoseEngine *t,
                     const ROSE_STRUCT_CHECK_LOOKAROUND *ri) {
     assert(ri);
 
-    const u8 *base = (const u8 *)t;
+    const u8 *base = reinterpret_cast<const u8 *>(t);
 
-    const s8 *look = (const s8 *)base + ri->look_index;
+    const s8 *look = reinterpret_cast<const s8 *>(base) + ri->look_index;
     const s8 *look_end = look + ri->count;
     const u8 *reach = base + ri->reach_index;
 
@@ -644,9 +644,9 @@ void dumpMultipathLookaround(ofstream &os, const RoseEngine *t,
                              const ROSE_STRUCT_MULTIPATH_LOOKAROUND *ri) {
     assert(ri);
 
-    const u8 *base = (const u8 *)t;
+    const u8 *base = reinterpret_cast<const u8 *>(t);
 
-    const s8 *look_begin = (const s8 *)base + ri->look_index;
+    const s8 *look_begin = reinterpret_cast<const s8 *>(base) + ri->look_index;
     const s8 *look_end = look_begin + ri->count;
     const u8 *reach_begin = base + ri->reach_index;
 
@@ -706,9 +706,9 @@ vector<u32> sparseIterValues(const mmbit_sparse_iter *it, u32 num_bits) {
 static
 void dumpJumpTable(ofstream &os, const RoseEngine *t,
                    const ROSE_STRUCT_SPARSE_ITER_BEGIN *ri) {
-    auto *it =
-        (const mmbit_sparse_iter *)loadFromByteCodeOffset(t, ri->iter_offset);
-    auto *jumps = (const u32 *)loadFromByteCodeOffset(t, ri->jump_table);
+    auto *it = 
+        reinterpret_cast<const mmbit_sparse_iter *>(loadFromByteCodeOffset(t, ri->iter_offset));
+    auto *jumps = reinterpret_cast<const u32 *>(loadFromByteCodeOffset(t, ri->jump_table));
 
     for (const auto &key : sparseIterValues(it, t->rolesWithStateCount)) {
         os << "      " << std::setw(4) << std::setfill(' ') << key << " : +"
@@ -865,7 +865,7 @@ void dumpMultipathShufti(ofstream &os, u32 len, const u8 *lo, const u8 *hi,
     case ROSE_INSTR_##name: {                                                  \
         os << "  " << std::setw(4) << std::setfill('0') << (pc - pc_base)      \
            << ": " #name "\n";                                                 \
-        const auto *ri = (const struct ROSE_STRUCT_##name *)pc;
+        const auto *ri = reinterpret_cast<const struct ROSE_STRUCT_##name *>(pc);
 
 #define PROGRAM_NEXT_INSTRUCTION                                               \
     pc += ROUNDUP_N(sizeof(*ri), ROSE_INSTR_MIN_ALIGN);                        \
@@ -877,7 +877,7 @@ static
 void dumpProgram(ofstream &os, const RoseEngine *t, const char *pc) {
     const char *pc_base = pc;
     for (;;) {
-        u8 code = *(const u8 *)pc;
+        u8 code = *(reinterpret_cast<const u8 *>(pc)); 
         assert(code <= LAST_ROSE_INSTRUCTION);
         const size_t offset = pc - pc_base;
         switch (code) {
@@ -926,7 +926,7 @@ void dumpProgram(ofstream &os, const RoseEngine *t, const char *pc) {
                 os << "    offset " << int{ri->offset} << endl;
                 os << "    reach_index " << ri->reach_index << endl;
                 os << "    fail_jump " << offset + ri->fail_jump << endl;
-                const u8 *reach = (const u8 *)t + ri->reach_index;
+                const u8 *reach = reinterpret_cast<const u8 *>(t) + ri->reach_index;
                 os << "    contents ";
                 describeClass(os, bitvectorToReach(reach), 1000, CC_OUT_TEXT);
                 os << endl;
@@ -1347,7 +1347,7 @@ void dumpProgram(ofstream &os, const RoseEngine *t, const char *pc) {
             PROGRAM_CASE(CHECK_LONG_LIT) {
                 os << "    lit_offset " << ri->lit_offset << endl;
                 os << "    lit_length " << ri->lit_length << endl;
-                const char *lit = (const char *)t + ri->lit_offset;
+                const char *lit = reinterpret_cast<const char *>(t) + ri->lit_offset;
                 os << "    literal: \""
                    << escapeString(string(lit, ri->lit_length)) << "\"" << endl;
                 os << "    fail_jump " << offset + ri->fail_jump << endl;
@@ -1357,7 +1357,7 @@ void dumpProgram(ofstream &os, const RoseEngine *t, const char *pc) {
             PROGRAM_CASE(CHECK_LONG_LIT_NOCASE) {
                 os << "    lit_offset " << ri->lit_offset << endl;
                 os << "    lit_length " << ri->lit_length << endl;
-                const char *lit = (const char *)t + ri->lit_offset;
+                const char *lit = reinterpret_cast<const char *>(t) + ri->lit_offset;
                 os << "    literal: \""
                    << escapeString(string(lit, ri->lit_length)) << "\"" << endl;
                 os << "    fail_jump " << offset + ri->fail_jump << endl;
@@ -1367,7 +1367,7 @@ void dumpProgram(ofstream &os, const RoseEngine *t, const char *pc) {
             PROGRAM_CASE(CHECK_MED_LIT) {
                 os << "    lit_offset " << ri->lit_offset << endl;
                 os << "    lit_length " << ri->lit_length << endl;
-                const char *lit = (const char *)t + ri->lit_offset;
+                const char *lit = reinterpret_cast<const char *>(t) + ri->lit_offset;
                 os << "    literal: \""
                    << escapeString(string(lit, ri->lit_length)) << "\"" << endl;
                 os << "    fail_jump " << offset + ri->fail_jump << endl;
@@ -1377,7 +1377,7 @@ void dumpProgram(ofstream &os, const RoseEngine *t, const char *pc) {
             PROGRAM_CASE(CHECK_MED_LIT_NOCASE) {
                 os << "    lit_offset " << ri->lit_offset << endl;
                 os << "    lit_length " << ri->lit_length << endl;
-                const char *lit = (const char *)t + ri->lit_offset;
+                const char *lit = reinterpret_cast<const char *>(t) + ri->lit_offset;
                 os << "    literal: \""
                    << escapeString(string(lit, ri->lit_length)) << "\"" << endl;
                 os << "    fail_jump " << offset + ri->fail_jump << endl;
@@ -1421,6 +1421,7 @@ void dumpProgram(ofstream &os, const RoseEngine *t, const char *pc) {
                 os << "    base_offset " << ri->base_offset << endl;
                 os << "    last_start " << ri->last_start << endl;
                 os << "    fail_jump " << offset + ri->fail_jump << endl;
+		// cppcheck-suppress pointerOutOfBounds
                 dumpMultipathShufti(os, 16, ri->nib_mask, ri->nib_mask + 16,
                                     ri->bucket_select_mask,
                                     ri->data_select_mask,
@@ -1585,7 +1586,7 @@ void dumpRoseLitPrograms(const vector<LitFragment> &fragments,
 
     for (u32 prog_offset : programs) {
         os << "Program @ " << prog_offset << ":" << endl;
-        const char *prog = (const char *)loadFromByteCodeOffset(t, prog_offset);
+        const char *prog = reinterpret_cast<const char *>(loadFromByteCodeOffset(t, prog_offset));
         dumpProgram(os, t, prog);
         os << endl;
     }
@@ -1596,7 +1597,7 @@ void dumpRoseLitPrograms(const vector<LitFragment> &fragments,
 static
 void dumpRoseEodPrograms(const RoseEngine *t, const string &filename) {
     ofstream os(filename);
-    const char *base = (const char *)t;
+    const char *base = reinterpret_cast<const char *>(t);
 
     if (t->eodProgramOffset) {
         os << "EOD Program @ " << t->eodProgramOffset << ":" << endl;
@@ -1612,7 +1613,7 @@ void dumpRoseEodPrograms(const RoseEngine *t, const string &filename) {
 static
 void dumpRoseFlushCombPrograms(const RoseEngine *t, const string &filename) {
     ofstream os(filename);
-    const char *base = (const char *)t;
+    const char *base = reinterpret_cast<const char *>(t);
 
     if (t->flushCombProgramOffset) {
         os << "Flush Combination Program @ " << t->flushCombProgramOffset
@@ -1630,7 +1631,7 @@ static
 void dumpRoseLastFlushCombPrograms(const RoseEngine *t,
                                    const string &filename) {
     ofstream os(filename);
-    const char *base = (const char *)t;
+    const char *base = reinterpret_cast<const char *>(t);
 
     if (t->lastFlushCombProgramOffset) {
         os << "Last Flush Combination Program @ "
@@ -1649,8 +1650,8 @@ static
 void dumpRoseReportPrograms(const RoseEngine *t, const string &filename) {
     ofstream os(filename);
 
-    const u32 *programs =
-        (const u32 *)loadFromByteCodeOffset(t, t->reportProgramOffset);
+    const u32 *programs = reinterpret_cast<const u32 *>
+        (loadFromByteCodeOffset(t, t->reportProgramOffset));
 
     for (u32 i = 0; i < t->reportProgramCount; i++) {
         os << "Report " << i << endl;
@@ -1658,8 +1659,8 @@ void dumpRoseReportPrograms(const RoseEngine *t, const string &filename) {
 
         if (programs[i]) {
             os << "Program @ " << programs[i] << ":" << endl;
-            const char *prog =
-                (const char *)loadFromByteCodeOffset(t, programs[i]);
+            const char *prog = 
+                reinterpret_cast<const char *>(loadFromByteCodeOffset(t, programs[i]));
             dumpProgram(os, t, prog);
         } else {
             os << "<No Program>" << endl;
@@ -1674,7 +1675,7 @@ void dumpRoseAnchoredPrograms(const RoseEngine *t, const string &filename) {
     ofstream os(filename);
 
     const u32 *programs =
-        (const u32 *)loadFromByteCodeOffset(t, t->anchoredProgramOffset);
+        reinterpret_cast<const u32 *>(loadFromByteCodeOffset(t, t->anchoredProgramOffset));
 
     for (u32 i = 0; i < t->anchored_count; i++) {
         os << "Anchored entry " << i << endl;
@@ -1683,7 +1684,7 @@ void dumpRoseAnchoredPrograms(const RoseEngine *t, const string &filename) {
         if (programs[i]) {
             os << "Program @ " << programs[i] << ":" << endl;
             const char *prog =
-                (const char *)loadFromByteCodeOffset(t, programs[i]);
+                reinterpret_cast<const char *>(loadFromByteCodeOffset(t, programs[i]));
             dumpProgram(os, t, prog);
         } else {
             os << "<No Program>" << endl;
@@ -1699,7 +1700,7 @@ void dumpRoseDelayPrograms(const RoseEngine *t, const string &filename) {
     ofstream os(filename);
 
     const u32 *programs =
-        (const u32 *)loadFromByteCodeOffset(t, t->delayProgramOffset);
+        reinterpret_cast<const u32 *>(loadFromByteCodeOffset(t, t->delayProgramOffset));
 
     for (u32 i = 0; i < t->delay_count; i++) {
         os << "Delay entry " << i << endl;
@@ -1708,7 +1709,7 @@ void dumpRoseDelayPrograms(const RoseEngine *t, const string &filename) {
         if (programs[i]) {
             os << "Program @ " << programs[i] << ":" << endl;
             const char *prog =
-                (const char *)loadFromByteCodeOffset(t, programs[i]);
+                reinterpret_cast<const char *>(loadFromByteCodeOffset(t, programs[i]));
             dumpProgram(os, t, prog);
         } else {
             os << "<No Program>" << endl;
@@ -1767,7 +1768,7 @@ void dumpNfaNotes(ofstream &fout, const RoseEngine *t, const NFA *n) {
     }
     if (left->countingMiracleOffset) {
         const RoseCountingMiracle *cm
-            = (const RoseCountingMiracle *)((const char *)t
+            = reinterpret_cast<const RoseCountingMiracle *>(reinterpret_cast<const char *>(t)
                                             + left->countingMiracleOffset);
         fout << " counting_miracle:" << (int)cm->count
              << (cm->shufti ? "s" : "v");
@@ -1794,7 +1795,7 @@ void dumpComponentInfo(const RoseEngine *t, const string &base) {
 
         fout << left << setw(6) << i << " ";
 
-        fout << left << ((const char *)n - (const char *)t) << "\t"; /* offset */
+        fout << left << (reinterpret_cast<const char *>(n) - reinterpret_cast<const char *>(t)) << "\t"; /* offset */
 
         fout << left << setw(16) << describe(*n) << "\t";
 
@@ -1855,8 +1856,8 @@ void dumpComponentInfoCsv(const RoseEngine *t, const string &base) {
                 notes << "miracles;";
             }
             if (left->countingMiracleOffset) {
-                auto cm = (const RoseCountingMiracle *)
-                    ((const char *)t + left->countingMiracleOffset);
+                auto cm = reinterpret_cast<const RoseCountingMiracle *>
+                    (reinterpret_cast<const char *>(t) + left->countingMiracleOffset);
                 notes << "counting_miracle:" << (int)cm->count
                       << (cm->shufti ? "s" : "v") << ";";
             }
@@ -1868,8 +1869,9 @@ void dumpComponentInfoCsv(const RoseEngine *t, const string &base) {
             }
         }
 
+	// cppcheck-suppress invalidPrintfArgType_sint
         fprintf(f, "%u,%zd,\"%s\",%u,%u,%u,%s,%s\n", i,
-                (const char *)n - (const char *)t, describe(*n).c_str(),
+                (reinterpret_cast<const char *>(n) - reinterpret_cast<const char *>(t)), describe(*n).c_str(),
                 n->nPositions, n->streamStateSize, n->length,
                 to_string(kind).c_str(), notes.str().c_str());
     }
@@ -1880,7 +1882,7 @@ void dumpExhaust(const RoseEngine *t, const string &base) {
     StdioFile f(base + "/rose_exhaust.csv", "w");
 
     const NfaInfo *infos
-        = (const NfaInfo *)((const char *)t + t->nfaInfoOffset);
+        = reinterpret_cast<const NfaInfo *>(reinterpret_cast<const char *>(t) + t->nfaInfoOffset);
 
     u32 queue_count = t->activeArrayCount;
 
@@ -1890,7 +1892,7 @@ void dumpExhaust(const RoseEngine *t, const string &base) {
         fprintf(f, "%u (%u):", i, ekey_offset);
 
         if (ekey_offset) {
-            const u32 *ekeys = (const u32 *)((const char *)t + ekey_offset);
+            const u32 *ekeys = reinterpret_cast<const u32 *>(reinterpret_cast<const char *>(t) + ekey_offset);
             while (1) {
                 u32 e = *ekeys;
                 ++ekeys;
@@ -1934,12 +1936,12 @@ void dumpRevComponentInfo(const RoseEngine *t, const string &base) {
 
     fout << "Index  Offset\tEngine               \tStates S.State Bytes\n";
 
-    const char *tp = (const char *)t;
-    const u32 *rev_offsets = (const u32 *)(tp + t->somRevOffsetOffset);
+    const char *tp = reinterpret_cast<const char *>(t);
+    const u32 *rev_offsets = reinterpret_cast<const u32 *>(tp + t->somRevOffsetOffset);
 
     for (u32 i = 0; i < t->somRevCount; i++) {
         u32 offset = rev_offsets[i];
-        const NFA *n = (const NFA *)(tp + offset);
+        const NFA *n = reinterpret_cast<const NFA *>(tp + offset);
 
         fout << left << setw(6) << i << " ";
 
@@ -1956,11 +1958,11 @@ void dumpRevComponentInfo(const RoseEngine *t, const string &base) {
 
 static
 void dumpRevNfas(const RoseEngine *t, bool dump_raw, const string &base) {
-    const char *tp = (const char *)t;
-    const u32 *rev_offsets = (const u32 *)(tp + t->somRevOffsetOffset);
+    const char *tp = reinterpret_cast<const char *>(t);
+    const u32 *rev_offsets = reinterpret_cast<const u32 *>(tp + t->somRevOffsetOffset);
 
     for (u32 i = 0; i < t->somRevCount; i++) {
-        const NFA *n = (const NFA *)(tp + rev_offsets[i]);
+        const NFA *n = reinterpret_cast<const NFA *>(tp + rev_offsets[i]);
 
         stringstream ssbase;
         ssbase << base << "som_rev_nfa_" << i;
@@ -1979,17 +1981,17 @@ static
 void dumpAnchored(const RoseEngine *t, const string &base) {
     u32 i = 0;
     const anchored_matcher_info *curr
-        = (const anchored_matcher_info *)getALiteralMatcher(t);
+        = reinterpret_cast<const anchored_matcher_info *>(getALiteralMatcher(t));
 
     while (curr) {
-        const NFA *n = (const NFA *)((const char *)curr + sizeof(*curr));
+        const NFA *n = reinterpret_cast<const NFA *>(reinterpret_cast<const char *>(curr) + sizeof(*curr));
 
         stringstream ssbase;
         ssbase << base << "anchored_" << i;
         nfaGenerateDumpFiles(n, ssbase.str());
 
-        curr = curr->next_offset ? (const anchored_matcher_info *)
-            ((const char *)curr + curr->next_offset) : nullptr;
+        curr = curr->next_offset ? reinterpret_cast<const anchored_matcher_info *>
+            (reinterpret_cast<const char *>(curr) + curr->next_offset) : nullptr;
         i++;
     };
 }
@@ -1999,16 +2001,16 @@ void dumpAnchoredStats(const void *atable, FILE *f) {
     assert(atable);
 
     u32 i = 0;
-    const anchored_matcher_info *curr = (const anchored_matcher_info *)atable;
+    const anchored_matcher_info *curr = reinterpret_cast<const anchored_matcher_info *>(atable);
 
     while (curr) {
-        const NFA *n = (const NFA *)((const char *)curr + sizeof(*curr));
+        const NFA *n = reinterpret_cast<const NFA *>(reinterpret_cast<const char *>(curr) + sizeof(*curr));
 
         fprintf(f, "  NFA %u: %s, %u states (%u bytes)\n", i,
                 describe(*n).c_str(), n->nPositions, n->length);
 
-        curr = curr->next_offset ? (const anchored_matcher_info *)
-            ((const char *)curr + curr->next_offset) : nullptr;
+        curr = curr->next_offset ? reinterpret_cast<const anchored_matcher_info *>
+            (reinterpret_cast<const char *>(curr) + curr->next_offset) : nullptr;
         i++;
     };
 
@@ -2022,11 +2024,11 @@ void dumpLongLiteralSubtable(const RoseLongLitTable *ll_table,
         return;
     }
 
-    const char *base = (const char *)ll_table;
+    const char *base = reinterpret_cast<const char *>(ll_table);
 
     u32 nbits = ll_sub->hashBits;
     u32 num_entries = 1U << nbits;
-    const auto *tab = (const RoseLongLitHashEntry *)(base + ll_sub->hashOffset);
+    const auto *tab = reinterpret_cast<const RoseLongLitHashEntry *>(base + ll_sub->hashOffset);
     u32 hash_occ =
         count_if(tab, tab + num_entries, [](const RoseLongLitHashEntry &ent) {
             return ent.str_offset != 0;
@@ -2038,7 +2040,7 @@ void dumpLongLiteralSubtable(const RoseLongLitTable *ll_table,
 
     u32 bloom_bits = ll_sub->bloomBits;
     u32 bloom_size = 1U << bloom_bits;
-    const u8 *bloom = (const u8 *)base + ll_sub->bloomOffset;
+    const u8 *bloom = reinterpret_cast<const u8 *>(base) + ll_sub->bloomOffset;
     u32 bloom_occ = accumulate(bloom, bloom + bloom_size / 8, 0,
         [](const u32 &sum, const u8 &elem) { return sum + popcount32(elem); });
     float bloom_occ_percent = ((float)bloom_occ / (float)(bloom_size)) * 100;
@@ -2057,8 +2059,8 @@ void dumpLongLiteralTable(const RoseEngine *t, FILE *f) {
     fprintf(f, "Long literal table (streaming):\n");
 
     const auto *ll_table =
-        (const struct RoseLongLitTable *)loadFromByteCodeOffset(
-            t, t->longLitTableOffset);
+        reinterpret_cast<const struct RoseLongLitTable *>(loadFromByteCodeOffset(
+            t, t->longLitTableOffset));
 
     fprintf(f, "    total size     : %u bytes\n", ll_table->size);
     fprintf(f, "    longest len    : %u\n", ll_table->maxLen);

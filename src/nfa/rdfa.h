@@ -76,7 +76,7 @@ struct raw_dfa {
     u16 alpha_size = 0; /* including special symbols */
 
     /* mapping from input symbol --> equiv class id */
-    std::array<u16, ALPHABET_SIZE> alpha_remap;
+    std::array<u16, ALPHABET_SIZE> alpha_remap{};
 
     explicit raw_dfa(nfa_kind k) : kind(k) {}
     virtual ~raw_dfa();

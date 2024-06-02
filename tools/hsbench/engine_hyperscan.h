@@ -56,7 +56,7 @@ struct CompileHSStats {
 class EngineHSContext : public EngineContext {
 public:
     explicit EngineHSContext(const hs_database_t *db);
-    ~EngineHSContext();
+    virtual ~EngineHSContext() override;
 
     hs_scratch_t *scratch = nullptr;
 };
@@ -64,7 +64,7 @@ public:
 /** Streaming mode scans have persistent stream state associated with them. */
 class EngineHSStream : public EngineStream {
 public:
-    ~EngineHSStream();
+    virtual ~EngineHSStream() override;
     hs_stream_t *id = nullptr;
     EngineHSContext *ctx = nullptr;
 };
@@ -73,34 +73,34 @@ public:
 class EngineHyperscan : public Engine {
 public:
     explicit EngineHyperscan(hs_database_t *db, CompileHSStats cs);
-    ~EngineHyperscan();
+    virtual ~EngineHyperscan() override;
 
-    std::unique_ptr<EngineContext> makeContext() const;
+    std::unique_ptr<EngineContext> makeContext() const override;
 
     void scan(const char *data, unsigned int len, unsigned int id,
-              ResultEntry &result, EngineContext &ectx) const;
+              ResultEntry &result, EngineContext &ectx) const override;
 
     void scan_vectored(const char *const *data, const unsigned int *len,
                        unsigned int count, unsigned int streamId,
-                       ResultEntry &result, EngineContext &ectx) const;
+                       ResultEntry &result, EngineContext &ectx) const override;
 
     std::unique_ptr<EngineStream> streamOpen(EngineContext &ectx,
-                                             unsigned id) const;
+                                             unsigned id) const override;
 
     void streamClose(std::unique_ptr<EngineStream> stream,
-                     ResultEntry &result) const;
+                     ResultEntry &result) const override;
 
     void streamCompressExpand(EngineStream &stream,
-                              std::vector<char> &temp) const;
+                              std::vector<char> &temp) const override;
 
     void streamScan(EngineStream &stream, const char *data, unsigned int len,
-                    unsigned int id, ResultEntry &result) const;
+                    unsigned int id, ResultEntry &result) const override;
 
-    void printStats() const;
+    void printStats() const override;
 
-    void printCsvStats() const;
+    void printCsvStats() const override;
 
-    void sqlStats(SqlDB &db) const;
+    void sqlStats(SqlDB &db) const override;
 
 private:
     hs_database_t *db;

@@ -134,7 +134,6 @@ u16 doWide16(const char *wide_entry, const u8 **c_inout, const u8 *end,
         len_c -= 16;
     }
 
-    pos = 0;
     // at least one in (0, 16).
     u32 loadLength_w = MIN(len_w, 16);
     u32 loadLength_c = MIN(len_c, 16);

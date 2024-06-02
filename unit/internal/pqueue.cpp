@@ -245,7 +245,7 @@ TEST(pqueue, queue1) {
     u32 in[] = {1, 2, 3, 4, 5, 6, 7, 8};
     u32 expected[] = {4, 5, 6, 7, 8, 3, 2, 1};
     u32 temp[ARRAY_LENGTH(in)];
-    u32 output[ARRAY_LENGTH(in)];
+    u32 output[ARRAY_LENGTH(in)] = {0};
 
     u32 queue_size = 0;
     u32 i = 0, o = 0;
@@ -275,7 +275,7 @@ TEST(pqueue, queue2) {
     u32 in[] = {8, 7, 6, 5, 4, 3, 2, 1};
     u32 expected[] = {8, 7, 6, 5, 4, 3, 2, 1};
     u32 temp[ARRAY_LENGTH(in)];
-    u32 output[ARRAY_LENGTH(in)];
+    u32 output[ARRAY_LENGTH(in)] = {0};
 
     u32 queue_size = 0;
     u32 i = 0, o = 0;
@@ -301,7 +301,7 @@ TEST(pqueue, queue3) {
     u32 in[] = {1, 8, 2, 7, 3, 6, 4, 5};
     u32 expected[] = {8, 7, 6, 4, 5, 3, 2, 1};
     u32 temp[ARRAY_LENGTH(in)];
-    u32 output[ARRAY_LENGTH(in)];
+    u32 output[ARRAY_LENGTH(in)] = {0};
 
     u32 queue_size = 0;
     u32 i = 0, o = 0;

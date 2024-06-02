@@ -66,13 +66,13 @@ void pack_bits<u64a>(char *out, const u64a *v, const u32 *bits,
 template <>
 void unpack_bits<u32>(u32 *v, const char *in, const u32 *bits,
                       unsigned elements) {
-    return unpack_bits_32(v, (const u8 *)in, bits, elements);
+    return unpack_bits_32(v, reinterpret_cast<const u8 *>(in), bits, elements);
 }
 
 template <>
 void unpack_bits<u64a>(u64a *v, const char *in, const u32 *bits,
                        unsigned elements) {
-    return unpack_bits_64(v, (const u8 *)in, bits, elements);
+    return unpack_bits_64(v, reinterpret_cast<const u8 *>(in), bits, elements);
 }
 
 template <typename T>

@@ -129,6 +129,7 @@ void calculateAlphabet(const NGHolder &g, array<u16, ALPHABET_SIZE> &alpha,
 static
 bool allExternalReports(const ReportManager &rm,
                         const flat_set<ReportID> &reports) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto report_id : reports) {
         if (!isExternalReport(rm.getReport(report_id))) {
             return false;
@@ -327,6 +328,7 @@ void markToppableStarts(const NGHolder &g, const flat_set<NFAVertex> &unused,
             continue;
         }
         for (const auto &trigger : triggers) {
+            // cppcheck-suppress useStlAlgorithm
             if (triggerAllowed(g, v, triggers, trigger)) {
                 DEBUG_PRINTF("idx %zu is valid location for top\n", g[v].index);
                 out->set(g[v].index);

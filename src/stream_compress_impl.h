@@ -142,6 +142,7 @@ size_t JOIN(sc_, FN_SUFFIX)(const struct RoseEngine *rose,
     COPY(stream_body + so->groups, so->groups_size);
 
     /* copy the real bits of history */
+    // cppcheck-suppress unreadVariable
     UNUSED u32 hend = so->history + rose->historyRequired;
     COPY(stream_body + hend - history, history);
 

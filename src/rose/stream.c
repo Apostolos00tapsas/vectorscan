@@ -104,7 +104,7 @@ void runAnchoredTableStream(const struct RoseEngine *t, const void *atable,
 
 
 static really_inline
-void saveStreamState(const struct NFA *nfa, struct mq *q, s64a loc) {
+void saveStreamState(const struct NFA *nfa, const struct mq *q, s64a loc) {
     DEBUG_PRINTF("offset=%llu, length=%zu, hlength=%zu, loc=%lld\n",
                  q->offset, q->length, q->hlength, loc);
     nfaQueueCompressState(nfa, q, loc);
@@ -133,7 +133,7 @@ enum MiracleAction roseScanForMiracles(const struct RoseEngine *t, char *state,
                                        struct hs_scratch *scratch, u32 qi,
                                        const struct LeftNfaInfo *left,
                                        const struct NFA *nfa) {
-    struct core_info *ci = &scratch->core_info;
+    const struct core_info *ci = &scratch->core_info;
     const u32 qCount = t->queueCount;
     struct mq *q = scratch->queues + qi;
 
@@ -211,7 +211,7 @@ char roseCatchUpLeftfix(const struct RoseEngine *t, char *state,
                         const struct LeftNfaInfo *left) {
     assert(!left->transient); // active roses only
 
-    struct core_info *ci = &scratch->core_info;
+    const struct core_info *ci = &scratch->core_info;
     const u32 qCount = t->queueCount;
     struct mq *q = scratch->queues + qi;
     const struct NFA *nfa = getNfaByQueue(t, qi);
@@ -382,7 +382,7 @@ void roseSaveNfaStreamState(const struct RoseEngine *t, char *state,
          qi = mmbit_iterate(aa, aaCount, qi)) {
         DEBUG_PRINTF("saving stream state for qi=%u\n", qi);
 
-        struct mq *q = queues + qi;
+        const struct mq *q = queues + qi;
 
         // If it's active, it should have an active queue (as we should have
         // done some work!)
@@ -517,7 +517,7 @@ void runEagerPrefixesStream(const struct RoseEngine *t,
 static really_inline
 int can_never_match(const struct RoseEngine *t, char *state,
                     struct hs_scratch *scratch, size_t length, u64a offset) {
-    struct RoseContext *tctxt = &scratch->tctxt;
+    const struct RoseContext *tctxt = &scratch->tctxt;
 
     if (tctxt->groups) {
         DEBUG_PRINTF("still has active groups\n");

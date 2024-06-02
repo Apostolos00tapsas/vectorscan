@@ -9,7 +9,7 @@ Compiling Patterns
 Building a Database
 *******************
 
-The Hyperscan compiler API accepts regular expressions and converts them into a
+The Vectorscan compiler API accepts regular expressions and converts them into a
 compiled pattern database that can then be used to scan data.
 
 The API provides three functions that compile regular expressions into
@@ -24,7 +24,7 @@ databases:
 #. :c:func:`hs_compile_ext_multi`: compiles an array of expressions as above,
    but allows :ref:`extparam` to be specified for each expression.
 
-Compilation allows the Hyperscan library to analyze the given pattern(s) and
+Compilation allows the Vectorscan library to analyze the given pattern(s) and
 pre-determine how to scan for these patterns in an optimized fashion that would
 be far too expensive to compute at run-time.
 
@@ -48,10 +48,10 @@ To compile patterns to be used in streaming mode, the ``mode`` parameter of
 block mode requires the use of :c:member:`HS_MODE_BLOCK` and vectored mode
 requires the use of :c:member:`HS_MODE_VECTORED`. A pattern database compiled
 for one mode (streaming, block or vectored) can only be used in that mode. The
-version of Hyperscan used to produce a compiled pattern database must match the
-version of Hyperscan used to scan with it.
+version of Vectorscan used to produce a compiled pattern database must match the
+version of Vectorscan used to scan with it.
 
-Hyperscan provides support for targeting a database at a particular CPU
+Vectorscan provides support for targeting a database at a particular CPU
 platform; see :ref:`instr_specialization` for details.
 
 =====================
@@ -75,14 +75,14 @@ characters exist in regular grammar like ``[``, ``]``, ``(``, ``)``, ``{``,
 While in pure literal case, all these meta characters lost extra meanings
 expect for that they are just common ASCII codes.
 
-Hyperscan is initially designed to process common regular expressions. It is
+Vectorscan is initially designed to process common regular expressions. It is
 hence embedded with a complex parser to do comprehensive regular grammar
 interpretation. Particularly, the identification of above meta characters is the
 basic step for the interpretation of far more complex regular grammars.
 
 However in real cases, patterns may not always be regular expressions. They
 could just be pure literals. Problem will come if the pure literals contain
-regular meta characters. Supposing fed directly into traditional Hyperscan
+regular meta characters. Supposing fed directly into traditional Vectorscan
 compile API, all these meta characters will be interpreted in predefined ways,
 which is unnecessary and the result is totally out of expectation. To avoid
 such misunderstanding by traditional API, users have to preprocess these
@@ -90,7 +90,7 @@ literal patterns by converting the meta characters into some other formats:
 either by adding a backslash ``\`` before certain meta characters, or by
 converting all the characters into a hexadecimal representation.
 
-In ``v5.2.0``, Hyperscan introduces 2 new compile APIs for pure literal patterns:
+In ``v5.2.0``, Vectorscan introduces 2 new compile APIs for pure literal patterns:
 
 #. :c:func:`hs_compile_lit`: compiles a single pure literal into a pattern
    database.
@@ -106,7 +106,7 @@ content directly into these APIs without worrying about writing regular meta
 characters in their patterns. No preprocessing work is needed any more.
 
 For new APIs, the ``length`` of each literal pattern is a newly added parameter.
-Hyperscan needs to locate the end position of the input expression via clearly
+Vectorscan needs to locate the end position of the input expression via clearly
 knowing each literal's length, not by simply identifying character ``\0`` of a
 string.
 
@@ -127,19 +127,19 @@ Supported flags: :c:member:`HS_FLAG_CASELESS`, :c:member:`HS_FLAG_SINGLEMATCH`,
 Pattern Support
 ***************
 
-Hyperscan supports the pattern syntax used by the PCRE library ("libpcre"),
+Vectorscan supports the pattern syntax used by the PCRE library ("libpcre"),
 described at <http://www.pcre.org/>. However, not all constructs available in
 libpcre are supported. The use of unsupported constructs will result in
 compilation errors.
 
-The version of PCRE used to validate Hyperscan's interpretation of this syntax
+The version of PCRE used to validate Vectorscan's interpretation of this syntax
 is 8.41 or above.
 
 ====================
 Supported Constructs
 ====================
 
-The following regex constructs are supported by Hyperscan:
+The following regex constructs are supported by Vectorscan:
 
 * Literal characters and strings, with all libpcre quoting and character
   escapes.
@@ -177,7 +177,7 @@ The following regex constructs are supported by Hyperscan:
       :c:member:`HS_FLAG_SINGLEMATCH` flag is on for that pattern.
 
   * Lazy modifiers (:regexp:`?` appended to another quantifier, e.g.
-    :regexp:`\\w+?`) are supported but ignored (as Hyperscan reports all
+    :regexp:`\\w+?`) are supported but ignored (as Vectorscan reports all
     matches).
 
 * Parenthesization, including the named and unnamed capturing and
@@ -219,15 +219,15 @@ The following regex constructs are supported by Hyperscan:
 .. note:: At this time, not all patterns can be successfully compiled with the
   :c:member:`HS_FLAG_SOM_LEFTMOST` flag, which enables per-pattern support for
   :ref:`som`. The patterns that support this flag are a subset of patterns that
-  can be successfully compiled with Hyperscan; notably, many bounded repeat
-  forms that can be compiled with Hyperscan without the Start of Match flag
+  can be successfully compiled with Vectorscan; notably, many bounded repeat
+  forms that can be compiled with Vectorscan without the Start of Match flag
   enabled cannot be compiled with the flag enabled.
 
 ======================
 Unsupported Constructs
 ======================
 
-The following regex constructs are not supported by Hyperscan:
+The following regex constructs are not supported by Vectorscan:
 
 * Backreferences and capturing sub-expressions.
 * Arbitrary zero-width assertions.
@@ -246,32 +246,32 @@ The following regex constructs are not supported by Hyperscan:
 Semantics
 *********
 
-While Hyperscan follows libpcre syntax, it provides different semantics. The
+While Vectorscan follows libpcre syntax, it provides different semantics. The
 major departures from libpcre semantics are motivated by the requirements of
 streaming and multiple simultaneous pattern matching.
 
 The major departures from libpcre semantics are:
 
-#. **Multiple pattern matching**: Hyperscan allows matches to be reported for
+#. **Multiple pattern matching**: Vectorscan allows matches to be reported for
    several patterns simultaneously. This is not equivalent to separating the
    patterns by :regexp:`|` in libpcre, which evaluates alternations
    left-to-right.
 
-#. **Lack of ordering**: the multiple matches that Hyperscan produces are not
+#. **Lack of ordering**: the multiple matches that Vectorscan produces are not
    guaranteed to be ordered, although they will always fall within the bounds of
    the current scan.
 
-#. **End offsets only**: Hyperscan's default behaviour is only to report the end
+#. **End offsets only**: Vectorscan's default behaviour is only to report the end
    offset of a match. Reporting of the start offset can be enabled with
    per-expression flags at pattern compile time. See :ref:`som` for details.
 
 #. **"All matches" reported**: scanning :regexp:`/foo.*bar/` against
-   ``fooxyzbarbar`` will return two matches from Hyperscan -- at the points
+   ``fooxyzbarbar`` will return two matches from Vectorscan -- at the points
    corresponding to the ends of ``fooxyzbar`` and ``fooxyzbarbar``. In contrast,
    libpcre semantics by default would report only one match at ``fooxyzbarbar``
    (greedy semantics) or, if non-greedy semantics were switched on, one match at
    ``fooxyzbar``. This means that switching between greedy and non-greedy
-   semantics is a no-op in Hyperscan.
+   semantics is a no-op in Vectorscan.
 
 To support libpcre quantifier semantics while accurately reporting streaming
 matches at the time they occur is impossible. For example, consider the pattern
@@ -299,7 +299,7 @@ as in block 3 -- which would constitute a better match for the pattern.
 Start of Match
 ==============
 
-In standard operation, Hyperscan will only provide the end offset of a match
+In standard operation, Vectorscan will only provide the end offset of a match
 when the match callback is called. If the :c:member:`HS_FLAG_SOM_LEFTMOST` flag
 is specified for a particular pattern, then the same set of matches is
 returned, but each match will also provide the leftmost possible start offset
@@ -308,7 +308,7 @@ corresponding to its end offset.
 Using the SOM flag entails a number of trade-offs and limitations:
 
 * Reduced pattern support: For many patterns, tracking SOM is complex and can
-  result in Hyperscan failing to compile a pattern with a "Pattern too
+  result in Vectorscan failing to compile a pattern with a "Pattern too
   large" error, even if the pattern is supported in normal operation.
 * Increased stream state: At scan time, state space is required to track
   potential SOM offsets, and this must be stored in persistent stream state in
@@ -316,20 +316,20 @@ Using the SOM flag entails a number of trade-offs and limitations:
   required to match a pattern.
 * Performance overhead: Similarly, there is generally a performance cost
   associated with tracking SOM.
-* Incompatible features: Some other Hyperscan pattern flags (such as
+* Incompatible features: Some other Vectorscan pattern flags (such as
   :c:member:`HS_FLAG_SINGLEMATCH` and :c:member:`HS_FLAG_PREFILTER`) can not be
   used in combination with SOM. Specifying them together with
   :c:member:`HS_FLAG_SOM_LEFTMOST` will result in a compilation error.
 
 In streaming mode, the amount of precision delivered by SOM can be controlled
-with the SOM horizon flags. These instruct Hyperscan to deliver accurate SOM
+with the SOM horizon flags. These instruct Vectorscan to deliver accurate SOM
 information within a certain distance of the end offset, and return a special
 start offset of :c:member:`HS_OFFSET_PAST_HORIZON` otherwise. Specifying a
 small or medium SOM horizon will usually reduce the stream state required for a
 given database.
 
 .. note:: In streaming mode, the start offset returned for a match may refer to
-   a point in the stream *before* the current block being scanned. Hyperscan
+   a point in the stream *before* the current block being scanned. Vectorscan
    provides no facility for accessing earlier blocks; if the calling application
    needs to inspect historical data, then it must store it itself.
 
@@ -341,7 +341,7 @@ Extended Parameters
 
 In some circumstances, more control over the matching behaviour of a pattern is
 required than can be specified easily using regular expression syntax. For
-these scenarios, Hyperscan provides the :c:func:`hs_compile_ext_multi` function
+these scenarios, Vectorscan provides the :c:func:`hs_compile_ext_multi` function
 that allows a set of "extended parameters" to be set on a per-pattern basis.
 
 Extended parameters are specified using an :c:type:`hs_expr_ext_t` structure,
@@ -383,18 +383,18 @@ section.
 Prefiltering Mode
 =================
 
-Hyperscan provides a per-pattern flag, :c:member:`HS_FLAG_PREFILTER`, which can
-be used to implement a prefilter for a pattern than Hyperscan would not
+Vectorscan provides a per-pattern flag, :c:member:`HS_FLAG_PREFILTER`, which can
+be used to implement a prefilter for a pattern than Vectorscan would not
 ordinarily support.
 
-This flag instructs Hyperscan to compile an "approximate" version of this
-pattern for use in a prefiltering application, even if Hyperscan does not
+This flag instructs Vectorscan to compile an "approximate" version of this
+pattern for use in a prefiltering application, even if Vectorscan does not
 support the pattern in normal operation.
 
 The set of matches returned when this flag is used is guaranteed to be a
 superset of the matches specified by the non-prefiltering expression.
 
-If the pattern contains pattern constructs not supported by Hyperscan (such as
+If the pattern contains pattern constructs not supported by Vectorscan (such as
 zero-width assertions, back-references or conditional references) these
 constructs will be replaced internally with broader constructs that may match
 more often.
@@ -404,7 +404,7 @@ back-reference :regexp:`\\1`. In prefiltering mode, this pattern might be
 approximated by having its back-reference replaced with its referent, forming
 :regexp:`/\\w+ again \\w+/`.
 
-Furthermore, in prefiltering mode Hyperscan may simplify a pattern that would
+Furthermore, in prefiltering mode Vectorscan may simplify a pattern that would
 otherwise return a "Pattern too large" error at compile time, or for performance
 reasons (subject to the matching guarantee above).
 
@@ -422,22 +422,22 @@ matches for the pattern.
 Instruction Set Specialization
 ******************************
 
-Hyperscan is able to make use of several modern instruction set features found
+Vectorscan is able to make use of several modern instruction set features found
 on x86 processors to provide improvements in scanning performance.
 
 Some of these features are selected when the library is built; for example,
-Hyperscan will use the native ``POPCNT`` instruction on processors where it is
+Vectorscan will use the native ``POPCNT`` instruction on processors where it is
 available and the library has been optimized for the host architecture.
 
-.. note:: By default, the Hyperscan runtime is built with the ``-march=native``
+.. note:: By default, the Vectorscan runtime is built with the ``-march=native``
    compiler flag and (where possible) will make use of all instructions known by
    the host's C compiler.
 
-To use some instruction set features, however, Hyperscan must build a
+To use some instruction set features, however, Vectorscan must build a
 specialized database to support them. This means that the target platform must
 be specified at pattern compile time.
 
-The Hyperscan compiler API functions all accept an optional
+The Vectorscan compiler API functions all accept an optional
 :c:type:`hs_platform_info_t` argument, which describes the target platform
 for the database to be built. If this argument is NULL, the database will be
 targeted at the current host platform.
@@ -467,7 +467,7 @@ See :ref:`api_constants` for the full list of CPU tuning and feature flags.
 Approximate matching
 ********************
 
-Hyperscan provides an experimental approximate matching mode, which will match
+Vectorscan provides an experimental approximate matching mode, which will match
 patterns within a given edit distance. The exact matching behavior is defined as
 follows:
 
@@ -492,7 +492,7 @@ follows:
 
 Here are a few examples of approximate matching:
 
-* Pattern :regexp:`/foo/` can match ``foo`` when using regular Hyperscan
+* Pattern :regexp:`/foo/` can match ``foo`` when using regular Vectorscan
   matching behavior. With approximate matching within edit distance 2, the
   pattern will produce matches when scanned against ``foo``, ``foooo``, ``f00``,
   ``f``, and anything else that lies within edit distance 2 of matching corpora
@@ -513,7 +513,7 @@ matching support. Here they are, in a nutshell:
 * Reduced pattern support:
 
   * For many patterns, approximate matching is complex and can result in
-    Hyperscan failing to compile a pattern with a "Pattern too large" error,
+    Vectorscan failing to compile a pattern with a "Pattern too large" error,
     even if the pattern is supported in normal operation.
   * Additionally, some patterns cannot be approximately matched because they
     reduce to so-called "vacuous" patterns (patterns that match everything). For
@@ -548,7 +548,7 @@ Logical Combinations
 ********************
 
 For situations when a user requires behaviour that depends on the presence or
-absence of matches from groups of patterns, Hyperscan provides support for the
+absence of matches from groups of patterns, Vectorscan provides support for the
 logical combination of patterns in a given pattern set, with three operators:
 ``NOT``, ``AND`` and ``OR``.
 
@@ -561,7 +561,7 @@ offset is *true* if the expression it refers to is *false* at this offset.
 For example, ``NOT 101`` means that expression 101 has not yet matched at this
 offset.
 
-A logical combination is passed to Hyperscan at compile time as an expression.
+A logical combination is passed to Vectorscan at compile time as an expression.
 This combination expression will raise matches at every offset where one of its
 sub-expressions matches and the logical value of the whole expression is *true*.
 
@@ -603,7 +603,7 @@ In a logical combination expression:
  * Whitespace is ignored.
 
 To use a logical combination expression, it must be passed to one of the
-Hyperscan compile functions (:c:func:`hs_compile_multi`,
+Vectorscan compile functions (:c:func:`hs_compile_multi`,
 :c:func:`hs_compile_ext_multi`) along with the :c:member:`HS_FLAG_COMBINATION` flag,
 which identifies the pattern as a logical combination expression. The patterns
 referred to in the logical combination expression must be compiled together in
@@ -613,7 +613,7 @@ When an expression has the :c:member:`HS_FLAG_COMBINATION` flag set, it ignores
 all other flags except the :c:member:`HS_FLAG_SINGLEMATCH` flag and the
 :c:member:`HS_FLAG_QUIET` flag.
 
-Hyperscan will accept logical combination expressions at compile time that
+Vectorscan will accept logical combination expressions at compile time that
 evaluate to *true* when no patterns have matched, and report the match for
 combination at end of data if no patterns have matched; for example: ::
 

@@ -4,7 +4,7 @@
 Scanning for Patterns
 #####################
 
-Hyperscan provides three different scanning modes, each with its own scan
+Vectorscan provides three different scanning modes, each with its own scan
 function beginning with ``hs_scan``. In addition, streaming mode has a number
 of other API functions for managing stream state.
 
@@ -33,8 +33,8 @@ See :c:type:`match_event_handler` for more information.
 Streaming Mode
 **************
 
-The core of the Hyperscan streaming runtime API consists of functions to open,
-scan, and close Hyperscan data streams:
+The core of the Vectorscan streaming runtime API consists of functions to open,
+scan, and close Vectorscan data streams:
 
 * :c:func:`hs_open_stream`: allocates and initializes a new stream for scanning.
 
@@ -57,14 +57,14 @@ will return immediately with :c:member:`HS_SCAN_TERMINATED`. The caller must
 still call :c:func:`hs_close_stream` to complete the clean-up process for that
 stream.
 
-Streams exist in the Hyperscan library so that pattern matching state can be
+Streams exist in the Vectorscan library so that pattern matching state can be
 maintained across multiple blocks of target data -- without maintaining this
 state, it would not be possible to detect patterns that span these blocks of
 data. This, however, does come at the cost of requiring an amount of storage
 per-stream (the size of this storage is fixed at compile time), and a slight
 performance penalty in some cases to manage the state.
 
-While Hyperscan does always support a strict ordering of multiple matches,
+While Vectorscan does always support a strict ordering of multiple matches,
 streaming matches will not be delivered at offsets before the current stream
 write, with the exception of zero-width asserts, where constructs such as
 :regexp:`\\b` and :regexp:`$` can cause a match on the final character of a
@@ -76,7 +76,7 @@ Stream Management
 =================
 
 In addition to :c:func:`hs_open_stream`, :c:func:`hs_scan_stream`, and
-:c:func:`hs_close_stream`, the Hyperscan API provides a number of other
+:c:func:`hs_close_stream`, the Vectorscan API provides a number of other
 functions for the management of streams:
 
 * :c:func:`hs_reset_stream`: resets a stream to its initial state; this is
@@ -98,10 +98,10 @@ A stream object is allocated as a fixed size region of memory which has been
 sized to ensure that no memory allocations are required during scan
 operations. When the system is under memory pressure, it may be useful to reduce
 the memory consumed by streams that are not expected to be used soon. The
-Hyperscan API provides calls for translating a stream to and from a compressed
+Vectorscan API provides calls for translating a stream to and from a compressed
 representation for this purpose. The compressed representation differs from the
 full stream object as it does not reserve space for components which are not
-required given the current stream state. The Hyperscan API functions for this
+required given the current stream state. The Vectorscan API functions for this
 functionality are:
 
 * :c:func:`hs_compress_stream`: fills the provided buffer with a compressed
@@ -157,7 +157,7 @@ scanned in block mode.
 Scratch Space
 *************
 
-While scanning data, Hyperscan needs a small amount of temporary memory to store
+While scanning data, Vectorscan needs a small amount of temporary memory to store
 on-the-fly internal data. This amount is unfortunately too large to fit on the
 stack, particularly for embedded applications, and allocating memory dynamically
 is too expensive, so a pre-allocated "scratch" space must be provided to the
@@ -170,7 +170,7 @@ databases, only a single scratch region is necessary: in this case, calling
 will ensure that the scratch space is large enough to support scanning against
 any of the given databases.
 
-While the Hyperscan library is re-entrant, the use of scratch spaces is not.
+While the Vectorscan library is re-entrant, the use of scratch spaces is not.
 For example, if by design it is deemed necessary to run recursive or nested
 scanning (say, from the match callback function), then an additional scratch
 space is required for that context.
@@ -219,11 +219,11 @@ For example:
 Custom Allocators
 *****************
 
-By default, structures used by Hyperscan at runtime (scratch space, stream
+By default, structures used by Vectorscan at runtime (scratch space, stream
 state, etc) are allocated with the default system allocators, usually
 ``malloc()`` and ``free()``.
 
-The Hyperscan API provides a facility for changing this behaviour to support
+The Vectorscan API provides a facility for changing this behaviour to support
 applications that use custom memory allocators.
 
 These functions are:

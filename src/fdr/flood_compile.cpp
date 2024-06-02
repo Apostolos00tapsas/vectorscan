@@ -208,8 +208,8 @@ bytecode_ptr<u8> setupFDRFloodControl(const vector<hwlmLiteral> &lits,
     auto buf = make_zeroed_bytecode_ptr<u8>(totalSize, 16);
     assert(buf); // otherwise would have thrown std::bad_alloc
 
-    u32 *floodHeader = (u32 *)buf.get();
-    FDRFlood *layoutFlood = (FDRFlood *)(buf.get() + floodHeaderSize);
+    u32 *floodHeader = reinterpret_cast<u32 *>(buf.get());
+    FDRFlood *layoutFlood = reinterpret_cast<FDRFlood *>(buf.get() + floodHeaderSize);
 
     u32 currentFloodIndex = 0;
     for (const auto &m : flood2chars) {

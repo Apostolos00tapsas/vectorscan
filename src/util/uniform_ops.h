@@ -41,37 +41,62 @@
 #include "unaligned.h"
 
 // Aligned loads
+#ifndef __cplusplus
 #define load_u8(a)          (*(const u8 *)(a))
 #define load_u16(a)         (*(const u16 *)(a))
 #define load_u32(a)         (*(const u32 *)(a))
 #define load_u64a(a)        (*(const u64a *)(a))
+#else
+#define load_u8(a)          (*(reinterpret_cast<const u8 *>(a)))
+#define load_u16(a)         (*(reinterpret_cast<const u16 *>(a)))
+#define load_u32(a)         (*(reinterpret_cast<const u32 *>(a)))
+#define load_u64a(a)        (*(reinterpret_cast<const u64a *>(a)))
+#endif // __cplusplus__
 #define load_m128(a)        load128(a)
 #define load_m256(a)        load256(a)
 #define load_m384(a)        load384(a)
 #define load_m512(a)        load512(a)
 
 // Unaligned loads
+#ifndef __cplusplus
 #define loadu_u8(a)          (*(const u8 *)(a))
 #define loadu_u16(a)         unaligned_load_u16((const u8 *)(a))
 #define loadu_u32(a)         unaligned_load_u32((const u8 *)(a))
 #define loadu_u64a(a)        unaligned_load_u64a((const u8 *)(a))
+#else
+#define loadu_u8(a)          (*(reinterpret_cast<const u8 *>(a))
+#define loadu_u16(a)         unaligned_load_u16(reinterpret_cast<const u8 *>(a))
+#define loadu_u32(a)         unaligned_load_u32(reinterpret_cast<const u8 *>(a))
+#define loadu_u64a(a)        unaligned_load_u64a(reinterpret_cast<const u8 *>(a))
+#endif // __cplusplus
 #define loadu_m128(a)        loadu128(a)
 #define loadu_m256(a)        loadu256(a)
 #define loadu_m384(a)        loadu384(a)
 #define loadu_m512(a)        loadu512(a)
 
 // Aligned stores
-#define store_u8(ptr, a)    do { *(u8 *)(ptr) = (a); } while(0)
-#define store_u16(ptr, a)   do { *(u16 *)(ptr) = (a); } while(0)
-#define store_u32(ptr, a)   do { *(u32 *)(ptr) = (a); } while(0)
-#define store_u64a(ptr, a)  do { *(u64a *)(ptr) = (a); } while(0)
+#ifndef __cplusplus
+#define store_u8(ptr, a)    do { *((u8 *)(ptr)) = (a); } while(0)
+#define store_u16(ptr, a)   do { *((u16 *)(ptr)) = (a); } while(0)
+#define store_u32(ptr, a)   do { *((u32 *)(ptr)) = (a); } while(0)
+#define store_u64a(ptr, a)  do { *((u64a *)(ptr)) = (a); } while(0)
+#else
+#define store_u8(ptr, a)    do { *(reinterpret_cast<u8 *>(ptr)) = (a); } while(0)
+#define store_u16(ptr, a)   do { *(reinterpret_cast<u16 *>(ptr)) = (a); } while(0)
+#define store_u32(ptr, a)   do { *(reinterpret_cast<u32 *>(ptr)) = (a); } while(0)
+#define store_u64a(ptr, a)  do { *(reinterpret_cast<u64a *>(ptr)) = (a); } while(0)
+#endif // __cplusplus
 #define store_m128(ptr, a)  store128(ptr, a)
 #define store_m256(ptr, a)  store256(ptr, a)
 #define store_m384(ptr, a)  store384(ptr, a)
 #define store_m512(ptr, a)  store512(ptr, a)
 
 // Unaligned stores
+#ifndef __cplusplus
 #define storeu_u8(ptr, a)    do { *(u8 *)(ptr) = (a); } while(0)
+#else
+#define storeu_u8(ptr, a)    do { *(reinterpret_cast<u8 *>(ptr)) = (a); } while(0)
+#endif // __cplusplus
 #define storeu_u16(ptr, a)   unaligned_store_u16(ptr, a)
 #define storeu_u32(ptr, a)   unaligned_store_u32(ptr, a)
 #define storeu_u64a(ptr, a)  unaligned_store_u64a(ptr, a)

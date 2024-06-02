@@ -108,6 +108,8 @@ const char *read_control_verbs(const char *ptr, const char *end, size_t start,
     try {
         %% write exec;
     } catch (LocatedParseError &error) {
+        // cppcheck-suppress pointerLessThanZero
+        // cppcheck-suppress pointerPositive
         if (ts >= ptr && ts <= pe) {
             error.locate(ts - ptr + start);
         } else {

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2024, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -134,7 +135,12 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <netinet/ip_icmp.h>
+#ifdef __NetBSD__
+#include <net/ethertypes.h>
+#include <net/if_ether.h>
+#else
 #include <net/ethernet.h>
+#endif /* __NetBSD__ */
 #include <arpa/inet.h>
 
 #include <pcap.h>
@@ -196,15 +202,15 @@ struct FiveTuple {
     unsigned int dstPort;
 
     // Construct a FiveTuple from a TCP or UDP packet.
-    FiveTuple(const struct ip *iphdr) {
+    explicit FiveTuple(const struct ip *iphdr) {
         // IP fields
         protocol = iphdr->ip_p;
         srcAddr = iphdr->ip_src.s_addr;
         dstAddr = iphdr->ip_dst.s_addr;
 
         // UDP/TCP ports
-        const struct udphdr *uh = (const struct udphdr *)
-                (((const char *)iphdr) + (iphdr->ip_hl * 4));
+        const struct udphdr *uh = reinterpret_cast<const struct udphdr *>
+                ((reinterpret_cast<const char *>(iphdr)) + (iphdr->ip_hl * 4));
         srcPort = uh->uh_sport;
         dstPort = uh->uh_dport;
     }
@@ -233,7 +239,7 @@ static
 int onMatch(unsigned int id, unsigned long long from, unsigned long long to,
             unsigned int flags, void *ctx) {
     // Our context points to a size_t storing the match count
-    size_t *matches = (size_t *)ctx;
+    size_t *matches = static_cast<size_t *>(ctx);
     (*matches)++;
     return 0; // continue matching
 }
@@ -334,9 +340,9 @@ public:
             }
 
             // Valid TCP or UDP packet
-            const struct ip *iphdr = (const struct ip *)(pktData
+            const struct ip *iphdr = reinterpret_cast<const struct ip *>(pktData
                     + sizeof(struct ether_header));
-            const char *payload = (const char *)pktData + offset;
+            const char *payload = reinterpret_cast<const char *>(pktData) + offset;
 
             size_t id = stream_map.insert(std::make_pair(FiveTuple(iphdr),
                                           stream_map.size())).first->second;
@@ -352,9 +358,8 @@ public:
     // Return the number of bytes scanned
     size_t bytes() const {
         size_t sum = 0;
-        for (const auto &packet : packets) {
-            sum += packet.size();
-        }
+        auto packs = [](size_t z, const string &packet) { return z + packet.size(); };
+        sum += std::accumulate(packets.begin(), packets.end(), 0, packs);
         return sum;
     }
 
@@ -383,7 +388,7 @@ public:
     // Close all open Hyperscan streams (potentially generating any
     // end-anchored matches)
     void closeStreams() {
-        for (auto &stream : streams) {
+        for (const auto &stream : streams) {
             hs_error_t err =
                 hs_close_stream(stream, scratch, onMatch, &matchCount);
             if (err != HS_SUCCESS) {
@@ -436,7 +441,7 @@ class Sigdata {
 
 public:
     Sigdata() {}
-    Sigdata(const char *filename) {
+    explicit Sigdata(const char *filename) {
         parseFile(filename, patterns, flags, ids, originals);
 
     }
@@ -454,9 +459,8 @@ public:
         // dynamic storage.)
         vector<const char *> cstrPatterns;
         cstrPatterns.reserve(patterns.size());
-        for (const auto &pattern : patterns) {
-            cstrPatterns.push_back(pattern.c_str());
-        }
+        auto pstr = [](const string &pattern) { return pattern.c_str(); };
+        std::transform(patterns.begin(), patterns.end(), std::back_inserter(cstrPatterns), pstr);
 
         Clock clock;
         clock.start();
@@ -559,7 +563,7 @@ double measure_block_time(Benchmark &bench, unsigned int repeatCount) {
 }
 
 static
-double eval_set(Benchmark &bench, Sigdata &sigs, unsigned int mode,
+double eval_set(Benchmark &bench, const Sigdata &sigs, unsigned int mode,
                 unsigned repeatCount, Criterion criterion,
                 bool diagnose = true) {
     double compileTime = 0;
@@ -599,8 +603,9 @@ double eval_set(Benchmark &bench, Sigdata &sigs, unsigned int mode,
         scan_time = measure_stream_time(bench, repeatCount);
     }
     size_t bytes = bench.bytes();
-    size_t matches = bench.matches();
+    
     if (diagnose) {
+        size_t matches = bench.matches();
         std::ios::fmtflags f(cout.flags());
         cout << "Scan time " << std::fixed << std::setprecision(3) << scan_time
              << " sec, Scanned " << bytes * repeatCount << " bytes, Throughput "
@@ -791,7 +796,7 @@ int main(int argc, char **argv) {
 static
 bool payloadOffset(const unsigned char *pkt_data, unsigned int *offset,
                    unsigned int *length) {
-    const ip *iph = (const ip *)(pkt_data + sizeof(ether_header));
+    const ip *iph = reinterpret_cast<const ip *>(pkt_data + sizeof(ether_header));
     const tcphdr *th = nullptr;
 
     // Ignore packets that aren't IPv4
@@ -810,7 +815,7 @@ bool payloadOffset(const unsigned char *pkt_data, unsigned int *offset,
 
     switch (iph->ip_p) {
     case IPPROTO_TCP:
-        th = (const tcphdr *)((const char *)iph + ihlen);
+        th = reinterpret_cast<const tcphdr *>(reinterpret_cast<const char *>(iph) + ihlen);
         thlen = th->th_off * 4;
         break;
     case IPPROTO_UDP:

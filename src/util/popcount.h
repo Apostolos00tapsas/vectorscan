@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
- * Copyright (c) 2020-2021, VectorCamp PC
+ * Copyright (c) 2020-2024, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,6 +37,7 @@
 #include "ue2common.h"
 #include "util/arch.h"
 
+#ifndef HAVE_BUILTIN_POPCOUNT
 static really_inline
 u32 popcount32(u32 x) {
     return __builtin_popcount(x);
@@ -51,6 +52,7 @@ u32 popcount32(u32 x) {
 //     return (((x + (x >> 4)) & 0xf0f0f0f) * 0x1010101) >> 24;
 // #endif
 }
+#endif /* HAVE_BUILTIN_POPCOUNT */
 
 static really_inline
 u32 popcount32x4(u32 const *x) {
@@ -61,6 +63,7 @@ u32 popcount32x4(u32 const *x) {
     return sum;
 }
 
+#ifndef HAVE_BUILTIN_POPCOUNT
 static really_inline
 u32 popcount64(u64a x) {
     return __builtin_popcountll(x);
@@ -81,6 +84,7 @@ u32 popcount64(u64a x) {
 //     return popcount32(x >> 32) + popcount32(x);
 // #endif
 }
+#endif /* HAVE_BUILTIN_POPCOUNT */
 
 static really_inline
 u32 popcount64x4(u64a const *x) {

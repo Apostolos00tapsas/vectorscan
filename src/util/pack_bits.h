@@ -190,7 +190,6 @@ static really_inline
 void unpack_bits_64(u64a *v, const u8 *in, const u32 *bits,
                     const unsigned int elements) {
     u32 used = 0; // bits used from *in
-
     for (unsigned int i = 0; i < elements; i++) {
         assert(bits[i] <= 64);
         u64a v_out = 0;  // accumulator for v[i]
@@ -198,7 +197,7 @@ void unpack_bits_64(u64a *v, const u8 *in, const u32 *bits,
         u32 vidx = 0;    // bits written to v[i]
 
         while (b) {
-            u64a read = *in >> used;
+            u64a read = *in >> used;  //NOLINT (clang-analyzer-cplusplus.NewDelete)
             u32 bits_read = 8 - used;
 
             if (b <= bits_read) {

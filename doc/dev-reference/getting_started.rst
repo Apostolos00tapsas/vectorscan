@@ -7,43 +7,41 @@ Getting Started
 Very Quick Start
 ****************
 
-#. Clone Hyperscan ::
+#. Clone Vectorscan ::
 
-     cd <where-you-want-hyperscan-source>
-     git clone git://github.com/intel/hyperscan
+     cd <where-you-want-vectorscan-source>
+     git clone https://github.com/VectorCamp/vectorscan
 
-#. Configure Hyperscan
+#. Configure Vectorscan
 
    Ensure that you have the correct :ref:`dependencies <software>` present,
    and then:
 
    ::
 
-     cd <where-you-want-to-build-hyperscan>
+     cd <where-you-want-to-build-vectorscan>
      mkdir <build-dir>
      cd <build-dir>
-     cmake [-G <generator>] [options] <hyperscan-source-path>
+     cmake [-G <generator>] [options] <vectorscan-source-path>
 
    Known working generators:
       * ``Unix Makefiles`` --- make-compatible makefiles (default on Linux/FreeBSD/Mac OS X)
       * ``Ninja`` --- `Ninja <http://martine.github.io/ninja/>`_ build files.
-      * ``Visual Studio 15 2017`` --- Visual Studio projects
 
-   Generators that might work include:
+   Unsupported generators that might work include:
       * ``Xcode`` --- OS X Xcode projects.
 
-#. Build Hyperscan
+#. Build Vectorscan
 
    Depending on the generator used:
      * ``cmake --build .`` --- will build everything
      * ``make -j<jobs>`` --- use makefiles in parallel
      * ``ninja`` --- use Ninja build
-     * ``MsBuild.exe`` --- use Visual Studio MsBuild
      * etc.
 
-#. Check Hyperscan
+#. Check Vectorscan
 
-   Run the Hyperscan unit tests: ::
+   Run the Vectorscan unit tests: ::
 
      bin/unit-hyperscan
 
@@ -55,20 +53,23 @@ Requirements
 Hardware
 ========
 
-Hyperscan will run on x86 processors in 64-bit (Intel\ |reg| 64 Architecture) and
-32-bit (IA-32 Architecture) modes.
+Vectorscan will run on x86 processors in 64-bit (Intel\ |reg| 64 Architecture) and
+32-bit (IA-32 Architecture) modes as well as Arm v8.0+ aarch64, and POWER 8+ ppc64le
+machines.
 
 Hyperscan is a high performance software library that takes advantage of recent
-Intel architecture advances. At a minimum, support for Supplemental Streaming
-SIMD Extensions 3 (SSSE3) is required, which should be available on any modern
-x86 processor.
+architecture advances.
 
-Additionally, Hyperscan can make use of:
+Additionally, Vectorscan can make use of:
 
     * Intel Streaming SIMD Extensions 4.2 (SSE4.2)
     * the POPCNT instruction
     * Bit Manipulation Instructions (BMI, BMI2)
     * Intel Advanced Vector Extensions 2 (Intel AVX2)
+    * Arm NEON
+    * Arm SVE and SVE2
+    * Arm SVE2 BITPERM
+    * IBM Power8/Power9 VSX
 
 if present.
 
@@ -79,40 +80,34 @@ These can be determined at library compile time, see :ref:`target_arch`.
 Software
 ========
 
-As a software library, Hyperscan doesn't impose any particular runtime
-software requirements, however to build the Hyperscan library we require a
-modern C and C++ compiler -- in particular, Hyperscan requires C99 and C++11
+As a software library, Vectorscan doesn't impose any particular runtime
+software requirements, however to build the Vectorscan library we require a
+modern C and C++ compiler -- in particular, Vectorscan requires C99 and C++17
 compiler support. The supported compilers are:
 
-    * GCC, v4.8.1 or higher
-    * Clang, v3.4 or higher (with libstdc++ or libc++)
-    * Intel C++ Compiler v15 or higher
-    * Visual C++ 2017 Build Tools
+    * GCC, v9 or higher
+    * Clang, v5 or higher (with libstdc++ or libc++)
 
-Examples of operating systems that Hyperscan is known to work on include:
+Examples of operating systems that Vectorscan is known to work on include:
 
 Linux:
 
-* Ubuntu 14.04 LTS or newer
+* Ubuntu 20.04 LTS or newer
 * RedHat/CentOS 7 or newer
+* Fedora 38 or newer
+* Debian 10
 
 FreeBSD:
 
 * 10.0 or newer
 
-Windows:
-
-* 8 or newer
-
 Mac OS X:
 
 * 10.8 or newer, using XCode/Clang
 
-Hyperscan *may* compile and run on other platforms, but there is no guarantee.
-We currently have experimental support for Windows using Intel C++ Compiler
-or Visual Studio 2017.
+Vectorscan *may* compile and run on other platforms, but there is no guarantee.
 
-In addition, the following software is required for compiling the Hyperscan library:
+In addition, the following software is required for compiling the Vectorscan library:
 
 ======================================================= =========== ======================================
 Dependency                                              Version     Notes
@@ -132,20 +127,20 @@ Ragel, you may use Cygwin to build it from source.
 Boost Headers
 -------------
 
-Compiling Hyperscan depends on a recent version of the Boost C++ header
+Compiling Vectorscan depends on a recent version of the Boost C++ header
 library. If the Boost libraries are installed on the build machine in the
 usual paths, CMake will find them. If the Boost libraries are not installed,
 the location of the Boost source tree can be specified during the CMake
 configuration step using the ``BOOST_ROOT`` variable (described below).
 
 Another alternative is to put a copy of (or a symlink to) the boost
-subdirectory in ``<hyperscan-source-path>/include/boost``.
+subdirectory in ``<vectorscanscan-source-path>/include/boost``.
 
 For example: for the Boost-1.59.0 release: ::
 
-    ln -s boost_1_59_0/boost <hyperscan-source-path>/include/boost
+    ln -s boost_1_59_0/boost <vectorscan-source-path>/include/boost
 
-As Hyperscan uses the header-only parts of Boost, it is not necessary to
+As Vectorscan uses the header-only parts of Boost, it is not necessary to
 compile the Boost libraries.
 
 CMake Configuration
@@ -168,11 +163,12 @@ Common options for CMake include:
 |                        | Valid options are Debug, Release, RelWithDebInfo,  |
 |                        | and MinSizeRel. Default is RelWithDebInfo.         |
 +------------------------+----------------------------------------------------+
-| BUILD_SHARED_LIBS      | Build Hyperscan as a shared library instead of     |
+| BUILD_SHARED_LIBS      | Build Vectorscan as a shared library instead of    |
 |                        | the default static library.                        |
+|                        | Default: Off                                       |
 +------------------------+----------------------------------------------------+
-| BUILD_STATIC_AND_SHARED| Build both static and shared Hyperscan libs.       |
-|                        | Default off.                                       |
+| BUILD_STATIC_LIBS      | Build Vectorscan as a static library.              |
+|                        | Default: On                                        |
 +------------------------+----------------------------------------------------+
 | BOOST_ROOT             | Location of Boost source tree.                     |
 +------------------------+----------------------------------------------------+
@@ -180,12 +176,64 @@ Common options for CMake include:
 +------------------------+----------------------------------------------------+
 | FAT_RUNTIME            | Build the :ref:`fat runtime<fat_runtime>`. Default |
 |                        | true on Linux, not available elsewhere.            |
+|                        | Default: Off                                       |
++------------------------+----------------------------------------------------+
+| USE_CPU_NATIVE         | Native CPU detection is off by default, however it |
+|                        | is possible to build a performance-oriented non-fat|
+|                        | library tuned to your CPU.                         |
+|                        | Default: Off                                       |
++------------------------+----------------------------------------------------+
+| SANITIZE               | Use libasan sanitizer to detect possible bugs.     |
+|                        | Valid options are address, memory and undefined.   |
++------------------------+----------------------------------------------------+
+| SIMDE_BACKEND          | Enable SIMDe backend. If this is chosen all native |
+|                        | (SSE/AVX/AVX512/Neon/SVE/VSX) backends will be     |
+|                        | disabled and a SIMDe SSE4.2 emulation backend will |
+|                        | be enabled. This will enable Vectorscan to build   |
+|                        | and run on architectures without SIMD.             |
+|                        | Default: Off                                       |
++------------------------+----------------------------------------------------+
+| SIMDE_NATIVE           | Enable SIMDe native emulation of x86 SSE4.2        |
+|                        | intrinsics on the building platform. That is,      |
+|                        | SSE4.2 intrinsics will be emulated using Neon on   |
+|                        | an Arm platform, or VSX on a Power platform, etc.  |
+|                        | Default: Off                                       |
++------------------------+----------------------------------------------------+
+
+X86 platform specific options include:
+
++------------------------+----------------------------------------------------+
+| Variable               | Description                                        |
++========================+====================================================+
+| BUILD_AVX2             | Enable code for AVX2.                              |
++------------------------+----------------------------------------------------+
+| BUILD_AVX512           | Enable code for AVX512. Implies BUILD_AVX2.        |
++------------------------+----------------------------------------------------+
+| BUILD_AVX512VBMI       | Enable code for AVX512 with VBMI extension. Implies|
+|                        | BUILD_AVX512.                                      |
++------------------------+----------------------------------------------------+
+
+Arm platform specific options include:
+
++------------------------+----------------------------------------------------+
+| Variable               | Description                                        |
++========================+====================================================+
+| BUILD_SVE              | Enable code for SVE, like on AWS Graviton3 CPUs.   |
+|                        | Not much code is ported just for SVE , but enabling|
+|                        | SVE code production, does improve code generation, |
+|                        | see Benchmarks.                                    |
++------------------------+----------------------------------------------------+
+| BUILD_SVE2             | Enable code for SVE2, implies BUILD_SVE. Most      |
+|                        | non-Neon code is written for SVE2.                 |
++------------------------+----------------------------------------------------+
+| BUILD_SVE2_BITPERM     | Enable code for SVE2_BITPERM harwdare feature,     |
+|                        | implies BUILD_SVE2.                                |
 +------------------------+----------------------------------------------------+
 
 For example, to generate a ``Debug`` build: ::
 
     cd <build-dir>
-    cmake -DCMAKE_BUILD_TYPE=Debug <hyperscan-source-path>
+    cmake -DCMAKE_BUILD_TYPE=Debug <vectorscan-source-path>
 
 
 
@@ -193,7 +241,7 @@ Build Type
 ----------
 
 CMake determines a number of features for a build based on the Build Type.
-Hyperscan defaults to ``RelWithDebInfo``, i.e. "release with debugging
+Vectorscan defaults to ``RelWithDebInfo``, i.e. "release with debugging
 information". This is a performance optimized build without runtime assertions
 but with debug symbols enabled.
 
@@ -201,7 +249,7 @@ The other types of builds are:
 
  * ``Release``: as above, but without debug symbols
  * ``MinSizeRel``: a stripped release build
- * ``Debug``: used when developing Hyperscan. Includes runtime assertions
+ * ``Debug``: used when developing Vectorscan. Includes runtime assertions
    (which has a large impact on runtime performance), and will also enable
    some other build features like building internal unit
    tests.
@@ -211,7 +259,7 @@ The other types of builds are:
 Target Architecture
 -------------------
 
-Unless using the :ref:`fat runtime<fat_runtime>`, by default Hyperscan will be
+Unless using the :ref:`fat runtime<fat_runtime>`, by default Vectorscan will be
 compiled to target the instruction set of the processor of the machine that
 being used for compilation. This is done via the use of ``-march=native``. The
 result of this means that a library built on one machine may not work on a
@@ -223,7 +271,7 @@ CMake, or ``CMAKE_C_FLAGS`` and ``CMAKE_CXX_FLAGS`` on the CMake command line. F
 example, to set the instruction subsets up to ``SSE4.2`` using GCC 4.8: ::
 
     cmake -DCMAKE_C_FLAGS="-march=corei7" \
-      -DCMAKE_CXX_FLAGS="-march=corei7" <hyperscan-source-path>
+      -DCMAKE_CXX_FLAGS="-march=corei7" <vectorscan-source-path>
 
 For more information, refer to :ref:`instr_specialization`.
 
@@ -232,17 +280,17 @@ For more information, refer to :ref:`instr_specialization`.
 Fat Runtime
 -----------
 
-A feature introduced in Hyperscan v4.4 is the ability for the Hyperscan
+A feature introduced in Hyperscan v4.4 is the ability for the Vectorscan
 library to dispatch the most appropriate runtime code for the host processor.
-This feature is called the "fat runtime", as a single Hyperscan library
+This feature is called the "fat runtime", as a single Vectorscan library
 contains multiple copies of the runtime code for different instruction sets.
 
 .. note::
 
     The fat runtime feature is only available on Linux. Release builds of
-    Hyperscan will default to having the fat runtime enabled where supported.
+    Vectorscan will default to having the fat runtime enabled where supported.
 
-When building the library with the fat runtime, the Hyperscan runtime code
+When building the library with the fat runtime, the Vectorscan runtime code
 will be compiled multiple times for these different instruction sets, and
 these compiled objects are combined into one library. There are no changes to
 how user applications are built against this library.
@@ -254,11 +302,11 @@ resolved so that the right version of each API function is used. There is no
 impact on function call performance, as this check and resolution is performed
 by the ELF loader once when the binary is loaded.
 
-If the Hyperscan library is used on x86 systems without ``SSSE3``, the runtime
+If the Vectorscan library is used on x86 systems without ``SSSE4.2``, the runtime
 API functions will resolve to functions that return :c:member:`HS_ARCH_ERROR`
 instead of potentially executing illegal instructions. The API function
 :c:func:`hs_valid_platform` can be used by application writers to determine if
-the current platform is supported by Hyperscan.
+the current platform is supported by Vectorscan.
 
 As of this release, the variants of the runtime that are built, and the CPU
 capability that is required, are the following:
@@ -298,6 +346,11 @@ capability that is required, are the following:
     example: ::
 
         cmake -DBUILD_AVX512VBMI=on <...>
+
+    Vectorscan add support for Arm processors and SVE, SV2 and SVE2_BITPERM.
+    example: ::
+
+        cmake -DBUILD_SVE=ON -DBUILD_SVE2=ON -DBUILD_SVE2_BITPERM=ON <...>
 
 As the fat runtime requires compiler, libc, and binutils support, at this time
 it will only be enabled for Linux builds where the compiler supports the

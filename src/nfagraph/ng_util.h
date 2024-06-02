@@ -314,7 +314,7 @@ void duplicateReport(NGHolder &g, ReportID r_old, ReportID r_new);
 
 /** Construct a reversed copy of an arbitrary NGHolder, mapping starts to
  * accepts. */
-void reverseHolder(const NGHolder &g, NGHolder &out);
+void reverseHolder(const NGHolder &g_in, NGHolder &g);
 
 /** \brief Returns the delay or ~0U if the graph cannot match with
  * the trailing literal. */

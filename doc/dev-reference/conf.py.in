@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Hyperscan documentation build configuration file, created by
+# Vectorscan documentation build configuration file, created by
 # sphinx-quickstart on Tue Sep 29 15:59:19 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -43,8 +43,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Hyperscan'
-copyright = u'2015-2018, Intel Corporation'
+project = u'Vectorscan'
+copyright = u'2015-2020, Intel Corporation; 2020-2024, VectorCamp; and other contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -202,7 +202,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'Hyperscan.tex', u'Hyperscan Documentation',
+  ('index', 'Hyperscan.tex', u'Vectorscan Documentation',
    u'Intel Corporation', 'manual'),
 ]
 
@@ -232,8 +232,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'hyperscan', u'Hyperscan Documentation',
-     [u'Intel Corporation'], 1)
+    ('index', 'vectorscan', u'Vectorscan Documentation',
+     [u'Intel Corporation'], 7)
 ]
 
 # If true, show URL addresses after external links.
@@ -246,8 +246,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Hyperscan', u'Hyperscan Documentation',
-   u'Intel Corporation', 'Hyperscan', 'High-performance regular expression matcher.',
+  ('index', 'Vectorscan', u'Vectorscan Documentation',
+   u'Intel Corporation; VectorCamp', 'Vectorscan', 'High-performance regular expression matcher.',
    'Miscellaneous'),
 ]
 

@@ -62,11 +62,13 @@ void pruneUnreachable(NGHolder &g) {
         && edge(g.accept, g.acceptEod, g).second) {
         // Trivial case: there are no in-edges to our accepts (other than
         // accept->acceptEod), so all non-specials are unreachable.
-        for (auto v : vertices_range(g)) {
-            if (!is_special(v, g)) {
-                dead.emplace_back(v);
-            }
-        }
+
+        auto deads = [&g=g](const NFAVertex &v) {
+            return (!is_special(v, g));
+        };
+        const auto &vr = vertices_range(g);
+        std::copy_if(begin(vr), end(vr),  std::back_inserter(dead), deads);
+
     } else {
         // Walk a reverse graph from acceptEod with Boost's depth_first_visit
         // call.
@@ -199,17 +201,17 @@ void pruneHighlanderAccepts(NGHolder &g, const ReportManager &rm) {
     }
 
     vector<NFAEdge> dead;
+    auto deads = [&g=g](const NFAEdge &e) {
+        return (!is_any_accept(target(e, g), g));
+    };
     for (auto u : inv_adjacent_vertices_range(g.accept, g)) {
         if (is_special(u, g)) {
             continue;
         }
 
         // We can prune any out-edges that aren't accepts
-        for (const auto &e : out_edges_range(u, g)) {
-            if (!is_any_accept(target(e, g), g)) {
-                dead.emplace_back(e);
-            }
-        }
+        const auto &er = out_edges_range(u, g);
+        std::copy_if(begin(er), end(er),  std::back_inserter(dead), deads);
     }
 
     if (dead.empty()) {
@@ -251,12 +253,14 @@ bool hasOnlySelfLoopAndExhaustibleAccepts(const NGHolder &g,
         return false;
     }
 
+    // cppcheck-suppress useStlAlgorithm
     for (auto w : adjacent_vertices_range(v, g)) {
         if (w != v && w != g.accept) {
             return false;
         }
     }
 
+    // cppcheck-suppress useStlAlgorithm
     for (const auto &report_id : g[v].reports) {
         if (!isSimpleExhaustible(rm.getReport(report_id))) {
             return false;

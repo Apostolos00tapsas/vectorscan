@@ -192,7 +192,7 @@ int roseCountingMiracleOccurs(const struct RoseEngine *t,
 
     u32 count = 0;
 
-    s64a m_loc = start;
+    s64a m_loc;
 
     if (!cm->shufti) {
         u8 c = cm->c;

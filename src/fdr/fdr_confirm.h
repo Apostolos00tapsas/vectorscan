@@ -84,9 +84,10 @@ struct FDRConfirm {
 
 static really_inline
 const u32 *getConfirmLitIndex(const struct FDRConfirm *fdrc) {
+    // cppcheck-suppress cstyleCast
     const u8 *base = (const u8 *)fdrc;
-    const u32 *litIndex =
-        (const u32 *)(base + ROUNDUP_N(sizeof(*fdrc), alignof(u32)));
+    // cppcheck-suppress cstyleCast
+    const u32 *litIndex =(const u32 *)(base + ROUNDUP_N(sizeof(*fdrc), alignof(u32)));
     assert(ISALIGNED(litIndex));
     return litIndex;
 }

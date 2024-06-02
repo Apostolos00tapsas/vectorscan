@@ -56,7 +56,7 @@ namespace ue2 {
 static
 void dumpTextSubCastle(const SubCastle &sub, FILE *f) {
     const RepeatInfo *info =
-        (const RepeatInfo *)((const char *)&sub + sub.repeatInfoOffset);
+        reinterpret_cast<const RepeatInfo *>(reinterpret_cast<const char *>(&sub) + sub.repeatInfoOffset);
     fprintf(f, "  repeat model:          %s\n", repeatTypeName(info->type));
     fprintf(f, "  repeat bounds:         {%u, %u}\n", info->repeatMin,
             info->repeatMax);
@@ -69,7 +69,7 @@ void dumpTextSubCastle(const SubCastle &sub, FILE *f) {
 }
 
 void nfaExecCastle_dump(const struct NFA *nfa, const string &base) {
-    const Castle *c = (const Castle *)getImplNfa(nfa);
+    const Castle *c = reinterpret_cast<const Castle *>(getImplNfa(nfa));
 
     StdioFile f(base + ".txt", "w");
 
@@ -88,15 +88,15 @@ void nfaExecCastle_dump(const struct NFA *nfa, const string &base) {
         fprintf(f, "negated verm, scanning for 0x%02x\n", c->u.verm.c);
         break;
     case CASTLE_SHUFTI: {
-        const CharReach cr = shufti2cr((const u8 *)&c->u.shuf.mask_lo,
-                                       (const u8 *)&c->u.shuf.mask_hi);
+        const CharReach cr = shufti2cr(reinterpret_cast<const u8 *>(&c->u.shuf.mask_lo),
+                                       reinterpret_cast<const u8 *>(&c->u.shuf.mask_hi));
         fprintf(f, "shufti, scanning for %s (%zu chars)\n",
                 describeClass(cr).c_str(), cr.count());
         break;
     }
     case CASTLE_TRUFFLE: {
-        const CharReach cr = truffle2cr((const u8 *)&c->u.truffle.mask1,
-                                        (const u8 *)&c->u.truffle.mask2);
+        const CharReach cr = truffle2cr(reinterpret_cast<const u8 *>(&c->u.truffle.mask1),
+                                        reinterpret_cast<const u8 *>(&c->u.truffle.mask2));
         fprintf(f, "truffle, scanning for %s (%zu chars)\n",
                 describeClass(cr).c_str(), cr.count());
         break;
@@ -112,7 +112,7 @@ void nfaExecCastle_dump(const struct NFA *nfa, const string &base) {
     fprintf(f, "\n");
 
     const SubCastle *sub =
-        (const SubCastle *)((const char *)c + sizeof(Castle));
+        reinterpret_cast<const SubCastle *>(reinterpret_cast<const char *>(c) + sizeof(Castle));
     for (u32 i = 0; i < c->numRepeats; i++) {
         fprintf(f, "Sub %u:\n", i);
         dumpTextSubCastle(sub[i], f);

@@ -68,7 +68,8 @@ namespace ue2 {
 #endif
 
 void *aligned_malloc_internal(size_t size, size_t align) {
-    void *mem;
+    void *mem= nullptr;;
+    // cppcheck-suppress cstyleCast
     int rv = posix_memalign(&mem, align, size);
     if (rv != 0) {
         DEBUG_PRINTF("posix_memalign returned %d when asked for %zu bytes\n",
@@ -104,17 +105,17 @@ void *aligned_zmalloc(size_t size) {
 
     const size_t alloc_size = size + HACK_OFFSET;
 
-    void *mem = aligned_malloc_internal(alloc_size, 64);
+    char *mem = static_cast<char *>(aligned_malloc_internal(alloc_size, 64));
     if (!mem) {
         DEBUG_PRINTF("unable to allocate %zu bytes\n", alloc_size);
         throw std::bad_alloc();
     }
 
-    DEBUG_PRINTF("alloced %p reporting %p\n", mem, (char *)mem + HACK_OFFSET);
+    DEBUG_PRINTF("alloced %p reporting %p\n", mem, mem + HACK_OFFSET);
     assert(ISALIGNED_N(mem, 64));
 
     memset(mem, 0, alloc_size);
-    return (void *)((char *)mem + HACK_OFFSET);
+    return reinterpret_cast<void *>(mem + HACK_OFFSET);
 }
 
 /** \brief Free a pointer allocated with \ref aligned_zmalloc. */
@@ -123,7 +124,8 @@ void aligned_free(void *ptr) {
         return;
     }
 
-    void *addr = (void *)((char *)ptr - HACK_OFFSET);
+    char *addr_c = static_cast<char *>(ptr);
+    void *addr = static_cast<void *>(addr_c - HACK_OFFSET);
     DEBUG_PRINTF("asked to free %p freeing %p\n", ptr, addr);
 
     assert(ISALIGNED_N(addr, 64));

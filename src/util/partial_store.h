@@ -43,12 +43,14 @@ void partial_store_u32(void *ptr, u32 value, u32 numBytes) {
         break;
     case 3:
         unaligned_store_u16(ptr, (u16)value);
+        // cppcheck-suppress cstyleCast
         *((u8 *)ptr + 2) = (u8)(value >> 16);
         break;
     case 2:
         unaligned_store_u16(ptr, (u16)value);
         break;
     case 1:
+        // cppcheck-suppress cstyleCast
         *(u8 *)ptr = (u8)value;
         break;
     case 0:
@@ -66,12 +68,14 @@ u32 partial_load_u32(const void *ptr, u32 numBytes) {
         return value;
     case 3:
         value = unaligned_load_u16(ptr);
+        // cppcheck-suppress cstyleCast
         value |= ((u32)(*((const u8 *)ptr + 2)) << 16);
         return value;
     case 2:
         value = unaligned_load_u16(ptr);
         return value;
     case 1:
+        // cppcheck-suppress cstyleCast
         value = *(const u8 *)ptr;
         return value;
     case 0:
@@ -90,15 +94,19 @@ void partial_store_u64a(void *ptr, u64a value, u32 numBytes) {
         break;
     case 7:
         unaligned_store_u32(ptr, (u32)value);
+        // cppcheck-suppress cstyleCast
         unaligned_store_u16((u8 *)ptr + 4, (u16)(value >> 32));
+        // cppcheck-suppress cstyleCast
         *((u8 *)ptr + 6) = (u8)(value >> 48);
         break;
     case 6:
         unaligned_store_u32(ptr, (u32)value);
+        // cppcheck-suppress cstyleCast
         unaligned_store_u16((u8 *)ptr + 4, (u16)(value >> 32));
         break;
     case 5:
         unaligned_store_u32(ptr, (u32)value);
+        // cppcheck-suppress cstyleCast
         *((u8 *)ptr + 4) = (u8)(value >> 32);
         break;
     case 4:
@@ -106,13 +114,15 @@ void partial_store_u64a(void *ptr, u64a value, u32 numBytes) {
         break;
     case 3:
         unaligned_store_u16(ptr, (u16)value);
+        // cppcheck-suppress cstyleCast
         *((u8 *)ptr + 2) = (u8)(value >> 16);
         break;
     case 2:
         unaligned_store_u16(ptr, (u16)value);
         break;
     case 1:
-        *(u8 *)ptr = (u8)value;
+        // cppcheck-suppress cstyleCast
+        *(u8 *)ptr = (u8)value;     //NOLINT (clang-analyzer-cplusplus.NewDelete)
         break;
     case 0:
         break;
@@ -129,15 +139,19 @@ u64a partial_load_u64a(const void *ptr, u32 numBytes) {
         return value;
     case 7:
         value = unaligned_load_u32(ptr);
+        // cppcheck-suppress cstyleCast
         value |= (u64a)unaligned_load_u16((const u8 *)ptr + 4) << 32;
+        // cppcheck-suppress cstyleCast
         value |= (u64a)(*((const u8 *)ptr + 6)) << 48;
         return value;
     case 6:
         value = unaligned_load_u32(ptr);
+        // cppcheck-suppress cstyleCast
         value |= (u64a)unaligned_load_u16((const u8 *)ptr + 4) << 32;
         return value;
     case 5:
         value = unaligned_load_u32(ptr);
+        // cppcheck-suppress cstyleCast
         value |= (u64a)(*((const u8 *)ptr + 4)) << 32;
         return value;
     case 4:
@@ -145,13 +159,15 @@ u64a partial_load_u64a(const void *ptr, u32 numBytes) {
         return value;
     case 3:
         value = unaligned_load_u16(ptr);
+        // cppcheck-suppress cstyleCast
         value |= (u64a)(*((const u8 *)ptr + 2)) << 16;
         return value;
     case 2:
         value = unaligned_load_u16(ptr);
         return value;
     case 1:
-        value = *(const u8 *)ptr;
+        // cppcheck-suppress cstyleCast
+        value = *(const u8 *)ptr; 
         return value;
     case 0:
         break;

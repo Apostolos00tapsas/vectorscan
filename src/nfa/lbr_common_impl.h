@@ -279,6 +279,7 @@ char JOIN(ENGINE_EXEC_NAME, _Q_i)(const struct NFA *nfa, struct mq *q,
                 assert(rv == MO_CONTINUE_MATCHING);
             }
 
+            // cppcheck-suppress knownConditionTrueFalse
             if (escape_found) {
                 DEBUG_PRINTF("clearing repeat due to escape\n");
                 clearRepeat(info, lstate);
@@ -355,6 +356,7 @@ void JOIN(ENGINE_EXEC_NAME, _StreamSilent)(const struct NFA *nfa, struct mq *q,
 
     size_t eloc = 0;
     char escaped = FWDSCAN_FN(nfa, buf, 0, length, &eloc);
+    // cppcheck-suppress knownConditionTrueFalse
     if (escaped) {
         assert(eloc < length);
         DEBUG_PRINTF("escape found at %zu, clearing repeat\n", eloc);

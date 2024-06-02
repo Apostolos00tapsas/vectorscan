@@ -103,6 +103,7 @@ bool checkLongMixedSensitivityLiterals(
         const map<sls_literal, flat_set<ReportID>> &literals) {
     const size_t len = MAX_MASK2_WIDTH;
 
+    // cppcheck-suppress useStlAlgorithm
     for (const sls_literal &lit : literals | map_keys) {
         if (mixed_sensitivity(lit.s) && lit.s.length() > len) {
             return false;
@@ -202,6 +203,7 @@ size_t min_period(const map<sls_literal, flat_set<ReportID>> &literals) {
     size_t rv = SIZE_MAX;
 
     for (const sls_literal &lit : literals | map_keys) {
+        // cppcheck-suppress useStlAlgorithm
         rv = min(rv, minStringPeriod(lit.s));
     }
     DEBUG_PRINTF("min period %zu\n", rv);

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017-2020, Intel Corporation
+ * Copyright (c) 2024, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -41,6 +42,9 @@
 #include "util/arch/arm/arm.h"
 #elif defined(ARCH_PPC64EL)
 #include "util/arch/ppc64el/ppc64el.h"
+#endif
+#ifdef __NetBSD__
+#include <strings.h>
 #endif
 
 #endif // UTIL_ARCH_X86_H_

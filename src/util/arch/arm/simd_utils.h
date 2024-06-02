@@ -270,22 +270,26 @@ static really_inline m128 andnot128(m128 a, m128 b) {
 // aligned load
 static really_inline m128 load128(const void *ptr) {
     assert(ISALIGNED_N(ptr, alignof(m128)));
+    // cppcheck-suppress cstyleCast
     return (m128) vld1q_s32((const int32_t *)ptr);
 }
 
 // aligned store
 static really_inline void store128(void *ptr, m128 a) {
     assert(ISALIGNED_N(ptr, alignof(m128)));
+    // cppcheck-suppress cstyleCast
     vst1q_s32((int32_t *)ptr, a);
 }
 
 // unaligned load
 static really_inline m128 loadu128(const void *ptr) {
+    // cppcheck-suppress cstyleCast
     return (m128) vld1q_s32((const int32_t *)ptr);
 }
 
 // unaligned store
 static really_inline void storeu128(void *ptr, m128 a) {
+    // cppcheck-suppress cstyleCast
     vst1q_s32((int32_t *)ptr, a);
 }
 
@@ -430,12 +434,14 @@ m128 sub_u8_m128(m128 a, m128 b) {
 static really_inline
 m128 set4x32(u32 x3, u32 x2, u32 x1, u32 x0) {
     uint32_t ALIGN_ATTR(16) data[4] = { x0, x1, x2, x3 };
+    // cppcheck-suppress cstyleCast
     return (m128) vld1q_u32((uint32_t *) data);
 }
 
 static really_inline
 m128 set2x64(u64a hi, u64a lo) {
     uint64_t ALIGN_ATTR(16) data[2] = { lo, hi };
+    // cppcheck-suppress cstyleCast
     return (m128) vld1q_u64((uint64_t *) data);
 }
 

@@ -254,8 +254,8 @@ void roseFlushLastByteHistory(const struct RoseEngine *t,
         return;
     }
 
-    struct RoseContext *tctxt = &scratch->tctxt;
-    struct core_info *ci = &scratch->core_info;
+    const struct RoseContext *tctxt = &scratch->tctxt;
+    const struct core_info *ci = &scratch->core_info;
 
     /* currEnd is last byte of string + 1 */
     if (tctxt->lastEndOffset == ci->buf_offset + ci->len

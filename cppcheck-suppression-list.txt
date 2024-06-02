@@ -1,0 +1,12 @@
+unknownMacro:*gtest-all.cc
+knownConditionTrueFalse:*Parser.rl
+knownConditionTrueFalse:*Parser.cpp
+variableScope:*Parser.rl
+unreadVariable:*control_verbs.cpp
+assertWithSideEffect
+syntaxError
+internalError
+checkersReport
+missingInclude
+missingIncludeSystem
+unmatchedSuppression

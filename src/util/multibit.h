@@ -1421,7 +1421,7 @@ uplevel:
             if (level == 0) {
                 return; // we are done
             }
-            u8 *block_ptr =
+            const u8 *block_ptr =
                 mmbit_get_level_root(bits, level) + key * sizeof(MMB_TYPE);
             MMB_TYPE real_block = mmb_load(block_ptr);
             key >>= MMB_KEY_SHIFT;

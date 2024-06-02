@@ -66,6 +66,7 @@ ostream& operator<<(ostream &os, const RepeatInfo &info) {
 
 class RepeatTest : public TestWithParam<RepeatTestInfo> {
 protected:
+    RepeatTest() = default;
     virtual void SetUp() {
         test_info = GetParam();
 
@@ -94,12 +95,12 @@ protected:
         delete [] state_int;
     }
 
-    RepeatTestInfo test_info; // Test params
-    RepeatInfo info; // Repeat info structure
-    RepeatControl *ctrl;
-    char *state;
+    RepeatTestInfo test_info{}; // Test params
+    RepeatInfo info{}; // Repeat info structure
+    RepeatControl *ctrl = nullptr;
+    char *state = nullptr;
 private:
-    char *state_int;
+    char *state_int = nullptr;
 
 };
 
@@ -277,10 +278,9 @@ TEST_P(RepeatTest, FillRing) {
     }
 
     // We should be able to see matches for all of these (beyond the last top offset).
-    enum TriggerResult rv;
     for (u64a i = offset + info.repeatMax;
             i <= offset + info.repeatMax + info.repeatMin; i++) {
-        rv = processTugTrigger(&info, ctrl, state, i);
+        enum TriggerResult rv = processTugTrigger(&info, ctrl, state, i);
         if (rv == TRIGGER_SUCCESS_CACHE) {
             rv = TRIGGER_SUCCESS;
         }
@@ -729,6 +729,7 @@ void test_sparse3entryExpire(const RepeatInfo *info, RepeatControl *ctrl,
 
 class SparseOptimalTest : public TestWithParam<tuple<u32, RepeatTestInfo> > {
 protected:
+    SparseOptimalTest() = default;
     virtual void SetUp() {
         u32 period;
         tie(period, test_info) = GetParam();
@@ -739,7 +740,7 @@ protected:
         ptr = new char[sizeof(RepeatInfo) +
                        sizeof(u64a) * (rsi.patchSize + 2)];
 
-        info = (struct RepeatInfo *)ptr;
+        info = reinterpret_cast<struct RepeatInfo *>(ptr);
 
         info->type = REPEAT_SPARSE_OPTIMAL_P;
         info->repeatMin = test_info.repeatMin;
@@ -757,7 +758,7 @@ protected:
         info->patchesOffset = rsi.patchesOffset;
 
         u32 repeatMax = info->patchSize;
-        u64a *table = (u64a *)(ROUNDUP_PTR((ptr + sizeof(RepeatInfo)),
+        u64a *table = reinterpret_cast<u64a *>(ROUNDUP_PTR((ptr + sizeof(RepeatInfo)),
                                            alignof(u64a)));
         for (u32 i = 0; i < repeatMax + 1; i++) {
             table[i] = rsi.table[i];
@@ -774,13 +775,13 @@ protected:
         delete[] ptr;
     }
 
-    RepeatTestInfo test_info; // Test params
-    RepeatInfo *info; // Repeat info structure
-    RepeatControl *ctrl;
-    char *state;
+    RepeatTestInfo test_info{}; // Test params
+    RepeatInfo *info = nullptr; // Repeat info structure
+    RepeatControl *ctrl = nullptr;
+    char *state = nullptr;
 private:
-    char *ptr;
-    char *state_int;
+    char *ptr = nullptr;
+    char *state_int = nullptr;
 
 };
 
@@ -860,8 +861,8 @@ TEST_P(SparseOptimalTest, TwoTopsNeg) {
         }
     }
 
-    const struct RepeatRingControl *xs = (const struct RepeatRingControl *)
-                                         ctrl;
+    const struct RepeatRingControl *xs = reinterpret_cast<const struct RepeatRingControl *>
+                                         (ctrl);
     ASSERT_EQ(exit2, repeatNextMatch(info, ctrl, state,
                                      MAX(xs->offset, exit)));
     ASSERT_EQ(exit2, repeatNextMatch(info, ctrl, state,
@@ -998,16 +999,14 @@ TEST_P(SparseOptimalTest, FillTops) {
     repeatStore(info, ctrl, state, offset, 0);
     ASSERT_EQ(offset, repeatLastTop(info, ctrl, state));
 
-    u64a offset2;
     for (u32 i = min_period; i < patch_count * patch_size; i += min_period) {
-        offset2 = offset + i;
+        u64a offset2 = offset + i;
         repeatStore(info, ctrl, state, offset2, 1);
         ASSERT_EQ(offset2, repeatLastTop(info, ctrl, state));
     }
 
-    u64a exit2;
     for (u32 i = 0; i < patch_count * patch_size; i += min_period) {
-        exit2 = exit + i;
+        u64a exit2 = exit + i;
         for (u32 j = exit2 + info->repeatMin;
              j <= offset + info->repeatMax; j++) {
             ASSERT_EQ(REPEAT_MATCH, repeatHasMatch(info, ctrl, state, j));

@@ -62,7 +62,7 @@ bool mergeableRoseVertices(const RoseBuildImpl &tbi, RoseVertex u,
 bool mergeableRoseVertices(const RoseBuildImpl &tbi,
                            const std::set<RoseVertex> &v1,
                            const std::set<RoseVertex> &v2);
-bool setDistinctRoseTops(RoseGraph &g, NGHolder &h1, const NGHolder &h2,
+void setDistinctRoseTops(RoseGraph &g, NGHolder &h1, const NGHolder &h2,
                          const std::deque<RoseVertex> &verts1);
 
 } // namespace ue2

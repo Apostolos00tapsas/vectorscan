@@ -77,17 +77,20 @@ static constexpr u32 MAX_TAIL_SHELL_DEPTH = 3;
  * classes.
  */
 bool isAlternationOfClasses(const NGHolder &g) {
+    // cppcheck-suppress useStlAlgorithm
     for (auto v : vertices_range(g)) {
         if (is_special(v, g)) {
             continue;
         }
         // Vertex must have in edges from starts only.
+        // cppcheck-suppress useStlAlgorithm
         for (auto u : inv_adjacent_vertices_range(v, g)) {
             if (!is_any_start(u, g)) {
                 return false;
             }
         }
         // Vertex must have out edges to accepts only.
+        // cppcheck-suppress useStlAlgorithm
         for (auto w : adjacent_vertices_range(v, g)) {
             if (!is_any_accept(w, g)) {
                 return false;

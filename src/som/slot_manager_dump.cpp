@@ -82,6 +82,7 @@ void dumpSomSlotManager(const SomSlotManager &ssm, const Grey &grey) {
             fprintf(f, "\t shared reset (users = %zu)\n", ir.entries.size());
         } else if (contains(by_slot, i)) {
             const SlotCacheEntry &ce = *by_slot.at(i);
+            // cppcheck-suppress knownConditionTrueFalse
             if (ce.parent_slot != SomSlotManager::NO_PARENT) {
                 fprintf(f, "\tparent:%u", ce.parent_slot);
             }

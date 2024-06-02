@@ -34,14 +34,6 @@ using namespace std;
 
 namespace ue2 {
 
-#define UCP_FN(cat)                                                     \
-CodePointSet getUcp##cat(void) {                                        \
-    CodePointSet rv;                                                    \
-    for (u32 i = 0; i < ARRAY_LENGTH(ucp_##cat##_def); i += 2) {        \
-        rv.setRange(ucp_##cat##_def[i], ucp_##cat##_def[i + 1]);        \
-    }                                                                   \
-    return rv;                                                          \
-}
 
 struct unicase {
     unichar base;

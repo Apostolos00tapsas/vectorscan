@@ -51,7 +51,7 @@ static const u32 MATCH_REPORT = 1024;
 
 static
 int onMatch(u64a, u64a, ReportID, void *ctx) {
-    unsigned *matches = (unsigned *)ctx;
+    unsigned *matches = reinterpret_cast<unsigned *>(ctx);
     (*matches)++;
     return MO_CONTINUE_MATCHING;
 }
@@ -87,7 +87,7 @@ protected:
 
         nfa = constructNFA(*g, &rm, fixed_depth_tops, triggers, compress_state,
                            fast_nfa, type, cc);
-        ASSERT_TRUE(nfa != nullptr);
+        ASSERT_TRUE(nfa.get() != nullptr);
 
         full_state = make_bytecode_ptr<char>(nfa->scratchStateSize, 64);
         stream_state = make_bytecode_ptr<char>(nfa->streamStateSize);
@@ -100,7 +100,7 @@ protected:
         q.state = full_state.get();
         q.streamState = stream_state.get();
         q.offset = 0;
-        q.buffer = (const u8 *)SCAN_DATA.c_str();
+        q.buffer = reinterpret_cast<const u8 *>(SCAN_DATA.c_str());
         q.length = SCAN_DATA.size();
         q.history = nullptr;
         q.hlength = 0;
@@ -134,7 +134,7 @@ INSTANTIATE_TEST_CASE_P(
     Range((int)LIMEX_NFA_32, (int)LIMEX_NFA_512));
 
 TEST_P(LimExModelTest, StateSize) {
-    ASSERT_TRUE(nfa != nullptr);
+    ASSERT_TRUE(nfa.get() != nullptr);
 
     hs_platform_info plat;
     hs_error_t err = hs_populate_platform(&plat);
@@ -150,7 +150,7 @@ TEST_P(LimExModelTest, StateSize) {
 }
 
 TEST_P(LimExModelTest, QueueExec) {
-    ASSERT_TRUE(nfa != nullptr);
+    ASSERT_TRUE(nfa.get() != nullptr);
     initQueue();
     nfaQueueInitState(nfa.get(), &q);
 
@@ -165,7 +165,7 @@ TEST_P(LimExModelTest, QueueExec) {
 }
 
 TEST_P(LimExModelTest, CompressExpand) {
-    ASSERT_TRUE(nfa != nullptr);
+    ASSERT_TRUE(nfa.get() != nullptr);
 
     u32 real_state_size = nfa->scratchStateSize;
     /* Only look at 8 bytes for limex 64 (rather than the padding) */
@@ -197,7 +197,7 @@ TEST_P(LimExModelTest, CompressExpand) {
 }
 
 TEST_P(LimExModelTest, InitCompressedState0) {
-    ASSERT_TRUE(nfa != nullptr);
+    ASSERT_TRUE(nfa.get() != nullptr);
 
     // 64-bit NFAs assume during compression that they have >= 5 bytes of
     // compressed NFA state, which isn't true for our 8-state test pattern. We
@@ -212,7 +212,7 @@ TEST_P(LimExModelTest, InitCompressedState0) {
 }
 
 TEST_P(LimExModelTest, QueueExecToMatch) {
-    ASSERT_TRUE(nfa != nullptr);
+    ASSERT_TRUE(nfa.get() != nullptr);
     initQueue();
     nfaQueueInitState(nfa.get(), &q);
 
@@ -256,7 +256,7 @@ TEST_P(LimExModelTest, QueueExecToMatch) {
 }
 
 TEST_P(LimExModelTest, QueueExecRose) {
-    ASSERT_TRUE(nfa != nullptr);
+    ASSERT_TRUE(nfa.get() != nullptr);
     initQueue();
 
     // For rose, there's no callback or context.
@@ -277,7 +277,7 @@ TEST_P(LimExModelTest, QueueExecRose) {
 }
 
 TEST_P(LimExModelTest, CheckFinalState) {
-    ASSERT_TRUE(nfa != nullptr);
+    ASSERT_TRUE(nfa.get() != nullptr);
     initQueue();
     nfaQueueInitState(nfa.get(), &q);
 
@@ -321,7 +321,7 @@ protected:
         }
 
         nfa = constructReversedNFA(g_rev, type, cc);
-        ASSERT_TRUE(nfa != nullptr);
+        ASSERT_TRUE(nfa.get() != nullptr);
     }
 
     // NFA type (enum NFAEngineType)
@@ -338,10 +338,10 @@ INSTANTIATE_TEST_CASE_P(LimExReverse, LimExReverseTest,
                         Range((int)LIMEX_NFA_32, (int)LIMEX_NFA_512));
 
 TEST_P(LimExReverseTest, BlockExecReverse) {
-    ASSERT_TRUE(nfa != nullptr);
+    ASSERT_TRUE(nfa.get() != nullptr);
 
     u64a offset = 0;
-    const u8 *buf = (const u8 *)SCAN_DATA.c_str();
+    const u8 *buf = reinterpret_cast<const u8 *>(SCAN_DATA.c_str());
     const size_t buflen = SCAN_DATA.size();
     const u8 *hbuf = nullptr;
     const size_t hlen = 0;
@@ -381,7 +381,7 @@ protected:
 
         nfa = constructNFA(*g, &rm, fixed_depth_tops, triggers, compress_state,
                            fast_nfa, type, cc);
-        ASSERT_TRUE(nfa != nullptr);
+        ASSERT_TRUE(nfa.get() != nullptr);
 
         full_state = make_bytecode_ptr<char>(nfa->scratchStateSize, 64);
         stream_state = make_bytecode_ptr<char>(nfa->streamStateSize);
@@ -394,7 +394,7 @@ protected:
         q.state = full_state.get();
         q.streamState = stream_state.get();
         q.offset = 0;
-        q.buffer = (const u8 *)ZOMBIE_SCAN_DATA.c_str();
+        q.buffer = reinterpret_cast<const u8 *>(ZOMBIE_SCAN_DATA.c_str());
         q.length = ZOMBIE_SCAN_DATA.length();
         q.history = nullptr;
         q.hlength = 0;
@@ -427,7 +427,7 @@ INSTANTIATE_TEST_CASE_P(LimExZombie, LimExZombieTest,
                         Range((int)LIMEX_NFA_32, (int)LIMEX_NFA_512));
 
 TEST_P(LimExZombieTest, GetZombieStatus) {
-    ASSERT_TRUE(nfa != nullptr);
+    ASSERT_TRUE(nfa.get() != nullptr);
     ASSERT_TRUE(nfa->flags & NFA_ZOMBIE);
 
     initQueue();

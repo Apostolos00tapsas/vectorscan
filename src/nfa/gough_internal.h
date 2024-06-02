@@ -92,6 +92,7 @@ struct gough_info {
 static really_inline
 const struct gough_info *get_gough(const struct mcclellan *m) {
     assert(m->haig_offset);
+    // cppcheck-suppress cstyleCast
     const char *n = (const char *)m - sizeof(struct NFA);
     return (const struct gough_info *)(n + m->haig_offset);
 }
@@ -102,6 +103,7 @@ const u32 *get_gough_top_offsets(const struct mcclellan *m) {
     if (!g->top_prog_offset) {
         return NULL;
     }
+    // cppcheck-suppress cstyleCast
     const char *n = (const char *)m - sizeof(struct NFA);
     return (const u32 *)(n + g->top_prog_offset);
 }

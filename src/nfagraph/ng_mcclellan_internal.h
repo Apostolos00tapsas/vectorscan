@@ -94,7 +94,7 @@ void transition_graph(autom &nfa, const std::vector<NFAVertex> &vByStateId,
     /* generate top transitions, false -> top = selfloop */
     bool top_allowed = is_triggered(graph);
 
-    StateSet succ = nfa.dead;
+    StateSet succr = nfa.dead;
     for (size_t i = in.find_first(); i != in.npos; i = in.find_next(i)) {
         NFAVertex u = vByStateId[i];
 
@@ -102,7 +102,7 @@ void transition_graph(autom &nfa, const std::vector<NFAVertex> &vByStateId,
             if (contains(unused, v)) {
                 continue;
             }
-            succ.set(graph[v].index);
+            succr.set(graph[v].index);
         }
 
         if (top_allowed && !nfa.toppable.test(i)) {
@@ -112,15 +112,15 @@ void transition_graph(autom &nfa, const std::vector<NFAVertex> &vByStateId,
         }
     }
 
-    StateSet active_squash = succ & squash;
+    StateSet active_squash = succr & squash;
     if (active_squash.any()) {
         for (size_t j = active_squash.find_first(); j != active_squash.npos;
              j = active_squash.find_next(j)) {
-            succ &= squash_mask.find(j)->second;
+            succr &= squash_mask.find(j)->second;
         }
     }
 
-    for (size_t j = succ.find_first(); j != succ.npos; j = succ.find_next(j)) {
+    for (size_t j = succr.find_first(); j != succr.npos; j = succr.find_next(j)) {
         const CharReach &cr = cr_by_index[j];
         for (size_t s = cr.find_first(); s != cr.npos; s = cr.find_next(s)) {
             next[s].set(j); /* already alpha'ed */

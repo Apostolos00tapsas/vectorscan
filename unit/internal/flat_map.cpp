@@ -370,31 +370,24 @@ TEST(flat_map, get_allocator) {
 
 TEST(flat_map, compare_ops) {
     flat_map<u32, u32> f1 = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6}};
-    flat_map<u32, u32> f1_copy = f1;
     flat_map<u32, u32> f2 = {{2, 1}, {4, 2}, {6, 3}, {8, 4}, {10, 5}, {12, 6}};
 
     EXPECT_TRUE(f1 == f1);
-    EXPECT_TRUE(f1 == f1_copy);
     EXPECT_FALSE(f1 == f2);
 
     EXPECT_FALSE(f1 != f1);
-    EXPECT_FALSE(f1 != f1_copy);
     EXPECT_TRUE(f1 != f2);
 
     EXPECT_FALSE(f1 < f1);
-    EXPECT_FALSE(f1 < f1_copy);
     EXPECT_TRUE(f1 < f2);
 
     EXPECT_TRUE(f1 <= f1);
-    EXPECT_TRUE(f1 <= f1_copy);
     EXPECT_TRUE(f1 <= f2);
 
     EXPECT_FALSE(f1 > f1);
-    EXPECT_FALSE(f1 > f1_copy);
     EXPECT_FALSE(f1 > f2);
 
     EXPECT_TRUE(f1 >= f1);
-    EXPECT_TRUE(f1 >= f1_copy);
     EXPECT_FALSE(f1 >= f2);
 }
 

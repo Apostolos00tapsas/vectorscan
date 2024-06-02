@@ -55,12 +55,12 @@ unique_ptr<hs_platform_info> xcompileReadMode(const char *s) {
     assert(!err);
 
     string str(s);
-    string mode = str.substr(0, str.find(":"));
     string opt = str.substr(str.find(":")+1, str.npos);
     bool found_mode = false;
 
     if (!opt.empty()) {
         for (const auto &xcompile : xcompile_options) {
+            // cppcheck-suppress useStlAlgorithm
             if (opt == xcompile.name) {
                 rv.cpu_features = xcompile.cpu_features;
                 found_mode = true;

@@ -15,13 +15,21 @@ SYMSFILE=$(mktemp -p /tmp ${PREFIX}_rename.syms.XXXXX)
 KEEPSYMS=$(mktemp -p /tmp keep.syms.XXXXX)
 # find the libc used by gcc
 LIBC_SO=$("$@" --print-file-name=libc.so.6)
+NM_FLAG="-f"
+if [ `uname` = "FreeBSD" ]; then
+    # for freebsd, we will specify the name, 
+    # we will leave it work as is in linux
+    LIBC_SO=/lib/libc.so.7
+    # also, in BSD, the nm flag -F corresponds to the -f flag in linux.
+    NM_FLAG="-F"
+fi
 cp ${KEEPSYMS_IN} ${KEEPSYMS}
 # get all symbols from libc and turn them into patterns
-nm -f p -g -D ${LIBC_SO} | sed -s 's/\([^ @]*\).*/^\1$/' >> ${KEEPSYMS}
+nm ${NM_FLAG} p -g -D ${LIBC_SO} | sed 's/\([^ @]*\).*/^\1$/' >> ${KEEPSYMS}
 # build the object
 "$@"
 # rename the symbols in the object
-nm -f p -g ${OUT} | cut -f1 -d' ' | grep -v -f ${KEEPSYMS} | sed -e "s/\(.*\)/\1\ ${PREFIX}_\1/" >> ${SYMSFILE}
+nm ${NM_FLAG} p -g ${OUT} | cut -f1 -d' ' | grep -v -f ${KEEPSYMS} | sed -e "s/\(.*\)/\1\ ${PREFIX}_\1/" >> ${SYMSFILE}
 if test -s ${SYMSFILE}
 then
     objcopy --redefine-syms=${SYMSFILE} ${OUT}

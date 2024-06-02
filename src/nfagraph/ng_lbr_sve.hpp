@@ -39,7 +39,7 @@ bytecode_ptr<NFA> buildLbrVerm16(const CharReach &cr, const depth &repeatMin,
     const CharReach escapes(~cr);
 
     if (escapes.count() > 16) {
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     enum RepeatType rtype = chooseRepeatType(repeatMin, repeatMax, minPeriod,
@@ -62,7 +62,7 @@ bytecode_ptr<NFA> buildLbrNVerm16(const CharReach &cr, const depth &repeatMin,
     const CharReach escapes(cr);
 
     if (escapes.count() > 16) {
-        return nullptr;
+        return bytecode_ptr<NFA>(nullptr);
     }
 
     enum RepeatType rtype = chooseRepeatType(repeatMin, repeatMax, minPeriod,
