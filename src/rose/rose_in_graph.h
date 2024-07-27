@@ -143,7 +143,7 @@ struct RoseInEdgeProps {
     /* haig rosefixes (prefix/infix) require their corresponding holders */
     RoseInEdgeProps(std::shared_ptr<NGHolder> g, std::shared_ptr<raw_som_dfa> h,
                     u32 lag)
-        : minBound(0), maxBound(ROSE_BOUND_INF), graph(g), haig(h),
+        : minBound(0), maxBound(ROSE_BOUND_INF), graph(std::move(g)), haig(std::move(h)),
           graph_lag(lag) {
         assert(graph);
         assert(haig);
@@ -151,12 +151,12 @@ struct RoseInEdgeProps {
 
     /* haig suffixes do not require their corresponding holders */
     explicit RoseInEdgeProps(std::shared_ptr<raw_som_dfa> h)
-        : minBound(0), maxBound(ROSE_BOUND_INF), haig(h), graph_lag(0) {
+        : minBound(0), maxBound(ROSE_BOUND_INF), haig(std::move(h)), graph_lag(0) {
         assert(haig);
     }
 
     RoseInEdgeProps(std::shared_ptr<NGHolder> g, u32 lag)
-        : minBound(0), maxBound(ROSE_BOUND_INF), graph(g), graph_lag(lag) {
+        : minBound(0), maxBound(ROSE_BOUND_INF), graph(std::move(g)), graph_lag(lag) {
         assert(graph);
     }
 

@@ -190,7 +190,7 @@ void findPaths(const NGHolder &g, NFAVertex v,
 namespace {
 struct SAccelScheme {
     SAccelScheme(CharReach cr_in, u32 offset_in)
-        : cr(std::move(cr_in)), offset(offset_in) {
+        : cr(cr_in), offset(offset_in) {
         assert(offset <= MAX_ACCEL_DEPTH);
     }
 
@@ -254,7 +254,7 @@ void findBestInternal(vector<vector<CharReach>>::const_iterator pb,
             DEBUG_PRINTF("worse\n");
             continue;
         }
-        priority_path.emplace_back(std::move(as));
+        priority_path.emplace_back(as);
     }
 
     sort(priority_path.begin(), priority_path.end());
@@ -300,7 +300,7 @@ SAccelScheme findBest(const vector<vector<CharReach>> &paths,
 namespace {
 struct DAccelScheme {
     DAccelScheme(CharReach cr_in, u32 offset_in)
-        : double_cr(std::move(cr_in)), double_offset(offset_in) {
+        : double_cr(cr_in), double_offset(offset_in) {
         assert(double_offset <= MAX_ACCEL_DEPTH);
     }
 
@@ -570,7 +570,7 @@ AccelScheme findBestAccelScheme(vector<vector<CharReach>> paths,
         DAccelScheme da = findBestDoubleAccelScheme(paths, terminating);
         if (da.double_byte.size() <= DOUBLE_SHUFTI_LIMIT) {
             rv.double_byte = std::move(da.double_byte);
-            rv.double_cr = std::move(da.double_cr);
+            rv.double_cr = da.double_cr;
             rv.double_offset = da.double_offset;
         }
     }

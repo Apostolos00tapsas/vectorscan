@@ -48,7 +48,7 @@ class NGHolder;
 
 struct CorpusGenerationFailure {
     explicit CorpusGenerationFailure(const std::string& s) :
-        message(std::move(s)) {}
+        message(s) {}
     std::string message;
 };
 

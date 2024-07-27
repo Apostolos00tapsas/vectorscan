@@ -130,7 +130,7 @@ public:
         return INVALID_UNICODE;
     }
 
-    void swap(CodePointSet &other) { impl.swap(other.impl); }
+    void swap(CodePointSet &other) noexcept { impl.swap(other.impl); }
 
 private:
     implT impl;

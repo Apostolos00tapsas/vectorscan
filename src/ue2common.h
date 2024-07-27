@@ -112,8 +112,8 @@ typedef u32 ReportID;
 
 // Align ptr to next N-byte boundary
 #if defined(HAVE_TYPEOF)
-#define ROUNDUP_PTR(ptr, n)   (__typeof__(ptr))(ROUNDUP_N((uintptr_t)(ptr), (n)))
-#define ROUNDDOWN_PTR(ptr, n) (__typeof__(ptr))(ROUNDDOWN_N((uintptr_t)(ptr), (n)))
+#define ROUNDUP_PTR(ptr, n)   (__typeof__(ptr))(ROUNDUP_N((uintptr_t)(ptr), (n))) //NOLINT (performance-no-int-to-ptr)
+#define ROUNDDOWN_PTR(ptr, n) (__typeof__(ptr))(ROUNDDOWN_N((uintptr_t)(ptr), (n))) //NOLINT (performance-no-int-to-ptr)
 #else
 #define ROUNDUP_PTR(ptr, n)   (void*)(ROUNDUP_N((uintptr_t)(ptr), (n)))
 #define ROUNDDOWN_PTR(ptr, n) (void*)(ROUNDDOWN_N((uintptr_t)(ptr), (n)))

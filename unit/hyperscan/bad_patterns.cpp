@@ -324,7 +324,7 @@ vector<BadPatternParam> getBadPatterns() {
         string regex;
         hs_expr_ext ext;
         if (!readExpression(expr, regex, &flags, &ext)) {
-            cerr << expr << " failed in readExpression" << endl;
+            cerr << expr << " failed in readExpression\n";
             abort();
         }
         rv.push_back(BadPatternParam(regex, flags, ext, error));

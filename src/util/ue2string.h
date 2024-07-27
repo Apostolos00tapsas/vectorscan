@@ -147,7 +147,7 @@ public:
     ue2_literal(const ue2_literal &) = default;
     ue2_literal(ue2_literal &&) = default;
     ue2_literal &operator=(const ue2_literal &) = default;
-    ue2_literal &operator=(ue2_literal &&) = default;
+    ue2_literal &operator=(ue2_literal &&) noexcept = default;
 
     template<typename InputIt>
     ue2_literal(InputIt b, InputIt e) {
@@ -204,7 +204,7 @@ public:
 
     const std::string &get_string() const { return s; }
 
-    void swap(ue2_literal &other) {
+    void swap(ue2_literal &other) noexcept {
         s.swap(other.s);
         nocase.swap(other.nocase);
     }

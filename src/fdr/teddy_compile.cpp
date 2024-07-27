@@ -597,7 +597,7 @@ bytecode_ptr<FDR> TeddyCompiler::build() {
     assert(ISALIGNED_CL(ptr));
     teddy->floodOffset = verify_u32(ptr - teddy_base);
     memcpy(ptr, floodTable.get(), floodTable.size());
-    ptr += floodTable.size();
+    
 
     // Write teddy masks.
     u8 *baseMsk = teddy_base + ROUNDUP_CL(headerSize);

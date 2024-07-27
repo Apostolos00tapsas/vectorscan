@@ -158,7 +158,7 @@ GlushkovBuildStateImpl::GlushkovBuildStateImpl(NFABuilder &b,
     lasts.emplace_back(startState);
     lasts.emplace_back(startDotstarState);
     firsts.emplace_back(startDotstarState);
-    connectRegions(lasts, firsts);
+    connectRegions(lasts, firsts);  //NOLINT    (cplusplus.VirtualCall)
 
     // accept to acceptEod edges already wired
 
@@ -341,7 +341,7 @@ void GlushkovBuildStateImpl::connectSuccessors(const PositionInfo &from,
             Position fakedot = builder.makePositions(1);
             builder.addCharReach(fakedot, CharReach(0x00, 0xff));
             builder.setNodeReportID(fakedot, -1);
-            addSuccessor(fakedot, acceptState);
+            addSuccessor(fakedot, acceptState); //NOLINT    (cplusplus.VirtualCall)
             *accept = fakedot;
         } else {
             // We might lead to accept via an assertion vertex, so we add the

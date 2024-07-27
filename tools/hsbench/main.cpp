@@ -234,13 +234,13 @@ void processArgs(int argc, char *argv[], vector<BenchmarkSigs> &sigSets,
 #endif
         ;
     int in_sigfile = 0;
-    int do_per_scan = 0;
-    int do_compress = 0;
+    static int do_per_scan = 0;
+    static int do_compress = 0;
     int do_compress_size = 0;
-    int do_echo_matches = 0;
-    int do_sql_output = 0;
+    static int do_echo_matches = 0;
+    static int do_sql_output = 0;
     int option_index = 0;
-    int literalFlag = 0;
+    static int literalFlag = 0;
     vector<string> sigFiles;
 
     static struct option longopts[] = {

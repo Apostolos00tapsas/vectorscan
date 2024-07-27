@@ -1954,7 +1954,7 @@ bool buildSuffixes(const RoseBuildImpl &tbi, build_context &bc,
     vector<pair<u32, suffix_id>> ordered;
     for (const auto &e : bc.suffixes) {
         // cppcheck-suppress useStlAlgorithm
-        ordered.emplace_back(e.second, e.first);
+        ordered.emplace_back(e.second, e.first); //NOLINT (performance-inefficient-vector-operation)
     }
     sort(begin(ordered), end(ordered));
 

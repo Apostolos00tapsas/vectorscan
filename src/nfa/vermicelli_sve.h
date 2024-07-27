@@ -379,7 +379,7 @@ const u8 *vermicelliDoubleExec(char c1, char c2, bool nocase, const u8 *buf,
     }
     /* check for partial match at end */
     u8 mask = nocase ? CASE_CLEAR : 0xff;
-    if ((buf_end[-1] & mask) == (u8)c1) {
+    if ((buf_end[-1] & mask) == (u8)c1) {   //NOLINT (clang-analyzer-core.NullDereference)
         DEBUG_PRINTF("partial!!!\n");
         return buf_end - 1;
     }
@@ -486,7 +486,7 @@ const u8 *vermicelliDoubleMasked16Exec(const m128 mask, char c1, char m1,
         }
     }
     /* check for partial match at end */
-    if ((buf_end[-1] & m1) == (u8)c1) {
+    if ((buf_end[-1] & m1) == (u8)c1) { //NOLINT (clang-analyzer-core.NullDereference)
         DEBUG_PRINTF("partial!!!\n");
         return buf_end - 1;
     }
@@ -523,7 +523,7 @@ const u8 *dvermSearchAlignedMasked(m128 chars1, m128 chars2,
         m128 v2 = eq128(chars2, and128(data, mask2));
         u32 z = movemask128(and128(v1, rshiftbyte_m128(v2, 1)));
 
-        if ((buf[15] & m1) == c1 && (buf[16] & m2) == c2) {
+        if ((buf[15] & m1) == c1 && (buf[16] & m2) == c2) {     //NOLINT (clang-analyzer-core.NullDereference)
             z |= (1 << 15);
         }
         if (unlikely(z)) {
@@ -579,7 +579,7 @@ const u8 *vermicelliDoubleMaskedExec(char c1, char c2, char m1, char m2,
     }
 
     /* check for partial match at end */
-    if ((buf_end[-1] & m1) == (u8)c1) {
+    if ((buf_end[-1] & m1) == (u8)c1) { //NOLINT (clang-analyzer-core.NullDereference)
         DEBUG_PRINTF("partial!!!\n");
         return buf_end - 1;
     }

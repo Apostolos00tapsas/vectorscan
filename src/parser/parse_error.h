@@ -44,7 +44,7 @@ class ParseError : public CompileError {
 public:
     // Note: 'why' should describe why the error occurred and end with a
     // full stop, but no line break.
-    explicit ParseError(std::string why) : CompileError(std::move(why)) {}
+    explicit ParseError(const std::string& why) : CompileError(why) {}
 
     ~ParseError() override;
 };

@@ -39,7 +39,7 @@ namespace ue2 {
 
 #define TEDDY_BUCKET_LOAD 6
 
-struct TeddyEngineDef {
+struct TeddyEngineDef {     //NOLINT (clang-analyzer-optin.performance.Padding)
     u32 id;
     u64a cpu_features;
     u32 numMasks;

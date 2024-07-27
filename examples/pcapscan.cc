@@ -433,7 +433,7 @@ static void databasesFromFile(const char *filename,
     vector<const char*> cstrPatterns;
     for (const auto &pattern : patterns) {
         // cppcheck-suppress useStlAlgorithm
-        cstrPatterns.push_back(pattern.c_str());
+        cstrPatterns.push_back(pattern.c_str()); //NOLINT (performance-inefficient-vector-operation)
     }
 
     cout << "Compiling Hyperscan databases with " << patterns.size()

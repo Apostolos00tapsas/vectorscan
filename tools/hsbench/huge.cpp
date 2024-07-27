@@ -90,7 +90,7 @@ hs_database_t *get_huge(hs_database_t *db) {
     }
 
     shmaddr = shmat(hsdb_shmid, nullptr, SHM_RND);
-    if (shmaddr == (char *)-1) {
+    if (shmaddr == (char *)-1) {                //NOLINT (performance-no-int-to-ptr)
         perror("Shared memory attach failure");
         goto fini;
     }

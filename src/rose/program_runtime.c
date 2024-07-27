@@ -788,7 +788,7 @@ int roseCheckMask32(const struct core_info *ci, const u8 *and_mask,
     DEBUG_PRINTF("h_len %d c_len %d\n", h_len, c_len);
     // we use valid_data_mask to blind bytes before history/in the future.
     u32 valid_data_mask;
-    valid_data_mask = (~0u) << (h_shift + c_shift) >> (c_shift);
+    valid_data_mask = (~0u) << (h_shift + c_shift) >> (c_shift); //NOLINT (clang-analyzer-core.UndefinedBinaryOperatorResult)
 
     m256 and_mask_m256 = loadu256(and_mask);
     m256 cmp_mask_m256 = loadu256(cmp_mask);

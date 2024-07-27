@@ -225,7 +225,7 @@ hs_error_t alloc_scratch(const hs_scratch_t *proto, hs_scratch_t **scratch) {
     assert(ISALIGNED_CL(current));
     s->fullState = (char *)current;
     s->fullStateSize = fullStateSize;
-    current += fullStateSize;
+    current += fullStateSize;   //NOLINT (clang-analyzer-deadcode.DeadStores)
 
     *scratch = s;
 

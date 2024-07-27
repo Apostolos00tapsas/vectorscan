@@ -100,8 +100,8 @@ RoseProgram::RoseProgram() {
 
 RoseProgram::~RoseProgram() = default;
 
-RoseProgram::RoseProgram(RoseProgram &&) = default;
-RoseProgram &RoseProgram::operator=(RoseProgram &&) = default;
+RoseProgram::RoseProgram(RoseProgram &&) noexcept = default;
+RoseProgram &RoseProgram::operator=(RoseProgram &&) noexcept = default;
 
 bool RoseProgram::empty() const {
     assert(!prog.empty());

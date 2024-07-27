@@ -380,7 +380,7 @@ public:
             u32 vert_id = graph[v].index;
             squash.set(vert_id);
             squash_mask[vert_id]
-                = Automaton_Traits::copy_states(std::move(sq.second),
+                = Automaton_Traits::copy_states(sq.second,
                                                 numStates);
         }
 

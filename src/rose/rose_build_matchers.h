@@ -52,11 +52,11 @@ static constexpr u32 INVALID_FRAG_ID = ~0U;
 struct LitFragment {
     LitFragment(u32 fragment_id_in, ue2_literal s_in,
                 rose_group groups_in, u32 lit_id)
-    : fragment_id(fragment_id_in), s(s_in), groups(groups_in),
+    : fragment_id(fragment_id_in), s(std::move(s_in)), groups(groups_in),
       lit_ids({lit_id}) {}
     LitFragment(u32 fragment_id_in, ue2_literal s_in,
                 rose_group groups_in, std::vector<u32> lit_ids_in)
-    : fragment_id(fragment_id_in), s(s_in), groups(groups_in),
+    : fragment_id(fragment_id_in), s(std::move(s_in)), groups(groups_in),
       lit_ids(std::move(lit_ids_in)) {}
     u32 fragment_id;
 

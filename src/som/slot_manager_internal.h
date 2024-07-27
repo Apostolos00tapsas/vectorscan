@@ -46,7 +46,7 @@ struct InitialResetEntry {
                       std::shared_ptr<const NGHolder> body_in,
                       const std::unordered_map<NFAVertex, u32> &body_regions_in,
                       u32 sent_region_in, u32 first_bad_region_in)
-        : sent(sent_in), body(body_in), body_regions(body_regions_in),
+        : sent(sent_in), body(std::move(body_in)), body_regions(body_regions_in),
           sent_region(sent_region_in), first_bad_region(first_bad_region_in) {}
 
     std::shared_ptr<const NGHolder> sent;

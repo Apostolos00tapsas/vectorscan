@@ -345,9 +345,10 @@ void mmbit_clear(u8 *bits, u32 total_bits) {
 /** \brief Specialisation of \ref mmbit_set for flat models. */
 static really_inline
 char mmbit_set_flat(u8 *bits, u32 total_bits, u32 key) {
+    assert(bits);
     bits += mmbit_flat_select_byte(key, total_bits);
     u8 mask = 1U << (key % 8);
-    char was_set = !!(*bits & mask);
+    char was_set = !!(*bits & mask);    //NOLINT (clang-analyzer-core.NullDereference)
     *bits |= mask;
     return was_set;
 }

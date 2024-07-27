@@ -206,8 +206,7 @@ bytecode_ptr<FDR> FDRCompiler::setupFDR() {
     assert(ISALIGNED_CL(ptr));
     fdr->floodOffset = verify_u32(ptr - fdr_base);
     memcpy(ptr, floodTable.get(), floodTable.size());
-    ptr += floodTable.size(); // last write, no need to round up
-
+    
     return fdr;
 }
 

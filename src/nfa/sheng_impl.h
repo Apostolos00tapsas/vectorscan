@@ -143,7 +143,7 @@ char SHENG32_IMPL(u8 *state, NfaCallback cb, void *ctxt,
 
         if (unlikely(ACCEPT_FUNC32(tmp))) {
             DEBUG_PRINTF("Accept state %u reached\n", tmp & SHENG32_STATE_MASK);
-            u64a match_offset = base_offset + (cur_buf - buf) + 1;
+            u64a match_offset = base_offset + (cur_buf - buf) + 1;  //NOLINT (clang-analyzer-deadcode.DeadStores)
             DEBUG_PRINTF("Match @ %llu\n", match_offset);
             if (STOP_AT_MATCH) {
                 DEBUG_PRINTF("Stopping at match @ %lli\n",
@@ -222,7 +222,7 @@ char SHENG64_IMPL(u8 *state, NfaCallback cb, void *ctxt,
 
         if (unlikely(ACCEPT_FUNC64(tmp))) {
             DEBUG_PRINTF("Accept state %u reached\n", tmp & SHENG64_STATE_MASK);
-            u64a match_offset = base_offset + (cur_buf - buf) + 1;
+            u64a match_offset = base_offset + (cur_buf - buf) + 1;  //NOLINT (clang-analyzer-deadcode.DeadStores)
             DEBUG_PRINTF("Match @ %llu\n", match_offset);
             if (STOP_AT_MATCH) {
                 DEBUG_PRINTF("Stopping at match @ %lli\n",

@@ -308,7 +308,7 @@ void do_confirm_fdr(u64a *conf, u8 offset, hwlmcb_rv_t *control,
     /* ptr is currently referring to a location in the zone's buffer, we also
      * need a pointer in the original, main buffer for the final string compare.
      */
-    const u8 *ptr_main = (const u8 *)((uintptr_t)ptr + z->zone_pointer_adjust);
+    const u8 *ptr_main = (const u8 *)((uintptr_t)ptr + z->zone_pointer_adjust); //NOLINT (performance-no-int-to-ptr)
 
     const u8 *confLoc = ptr;
 

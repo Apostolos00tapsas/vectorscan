@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2024, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,6 +38,13 @@
 #define FLOOD_MINIMUM_SIZE 256
 #define FLOOD_BACKOFF_START 32
 
+// this is because this file is included in both fdr.c and teddy.cpp
+#if defined __cplusplus
+#define CU64A_P_CAST(X) reinterpret_cast<const u64a*>(X)
+#else
+#define CU64A_P_CAST(X) (const u64a *)(X)
+#endif
+
 static really_inline
 const u8 * nextFloodDetect(const u8 * buf, size_t len, u32 floodBackoff) {
     // if we don't have a flood at either the start or end,
@@ -47,18 +55,18 @@ const u8 * nextFloodDetect(const u8 * buf, size_t len, u32 floodBackoff) {
 
     /* entry points in runtime.c prefetch relevant data */
 #ifndef FLOOD_32
-    u64a x11 = *(const u64a *)ROUNDUP_PTR(buf, 8);
-    u64a x12 = *(const u64a *)ROUNDUP_PTR(buf+8, 8);
+    u64a x11 = *CU64A_P_CAST(ROUNDUP_PTR(buf, 8));
+    u64a x12 = *CU64A_P_CAST(ROUNDUP_PTR(buf+8, 8));
     if (x11 == x12) {
         return buf + floodBackoff;
     }
-    u64a x21 = *(const u64a *)ROUNDUP_PTR(buf + len/2, 8);
-    u64a x22 = *(const u64a *)ROUNDUP_PTR(buf + len/2 + 8, 8);
+    u64a x21 = *CU64A_P_CAST(ROUNDUP_PTR(buf + len/2, 8));
+    u64a x22 = *CU64A_P_CAST(ROUNDUP_PTR(buf + len/2 + 8, 8));
     if (x21 == x22) {
         return buf + floodBackoff;
     }
-    u64a x31 = *(const u64a *)ROUNDUP_PTR(buf + len - 24, 8);
-    u64a x32 = *(const u64a *)ROUNDUP_PTR(buf + len - 16, 8);
+    u64a x31 = *CU64A_P_CAST(ROUNDUP_PTR(buf + len - 24, 8));
+    u64a x32 = *CU64A_P_CAST(ROUNDUP_PTR(buf + len - 16, 8));
     if (x31 == x32) {
         return buf + floodBackoff;
     }
@@ -106,9 +114,15 @@ const u8 * floodDetect(const struct FDR * fdr,
 
     // go from c to our FDRFlood structure
     u8 c = buf[i];
+#ifdef __cplusplus
+    const u8 * fBase = (reinterpret_cast<const u8 *>(fdr)) + fdr->floodOffset;
+    u32 fIdx = (reinterpret_cast<const u32 *>(fBase))[c];
+    const struct FDRFlood * fsb = reinterpret_cast<const struct FDRFlood *>(fBase + sizeof(u32) * 256);
+#else
     const u8 * fBase = ((const u8 *)fdr) + fdr->floodOffset;
     u32 fIdx = ((const u32 *)fBase)[c];
     const struct FDRFlood * fsb = (const struct FDRFlood *)(fBase + sizeof(u32) * 256);
+#endif
     const struct FDRFlood * fl = &fsb[fIdx];
 
 #ifndef FLOOD_32
@@ -116,7 +130,7 @@ const u8 * floodDetect(const struct FDR * fdr,
     cmpVal |= cmpVal << 8;
     cmpVal |= cmpVal << 16;
     cmpVal |= cmpVal << 32;
-    u64a probe = *(const u64a *)ROUNDUP_PTR(buf+i, 8);
+    u64a probe = *CU64A_P_CAST(ROUNDUP_PTR(buf+i, 8));
 #else
     u32 cmpVal = c;
     cmpVal |= cmpVal << 8;
@@ -139,16 +153,16 @@ const u8 * floodDetect(const struct FDR * fdr,
 #ifndef FLOOD_32
     j -= (u32)((uintptr_t)buf + j) & 0x7; // push j back to yield 8-aligned addrs
     for (; j + 32 < mainLoopLen; j += 32) {
-        u64a v = *(const u64a *)(buf + j);
-        u64a v2 = *(const u64a *)(buf + j + 8);
-        u64a v3 = *(const u64a *)(buf + j + 16);
-        u64a v4 = *(const u64a *)(buf + j + 24);
+        u64a v = *CU64A_P_CAST(buf + j);
+        u64a v2 = *CU64A_P_CAST(buf + j + 8);
+        u64a v3 = *CU64A_P_CAST(buf + j + 16);
+        u64a v4 = *CU64A_P_CAST(buf + j + 24);
         if ((v4 != cmpVal) || (v3 != cmpVal) || (v2 != cmpVal) || (v != cmpVal)) {
             break;
         }
     }
     for (; j + 8 < mainLoopLen; j += 8) {
-        u64a v = *(const u64a *)(buf + j);
+        u64a v = *CU64A_P_CAST(buf + j);
         if (v != cmpVal) {
             break;
         }
@@ -172,7 +186,11 @@ const u8 * floodDetect(const struct FDR * fdr,
     }
 #endif
     for (; j < mainLoopLen; j++) {
+#ifdef __cplusplus
+        u8 v = *(reinterpret_cast<const u8 *>(buf + j));
+#else
         u8 v = *(const u8 *)(buf + j);
+#endif
         if (v != c) {
             break;
         }

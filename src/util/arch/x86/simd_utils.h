@@ -42,6 +42,7 @@
 
 #include <string.h> // for memcpy
 
+
 #define ZEROES_8 0, 0, 0, 0, 0, 0, 0, 0
 #define ZEROES_31 ZEROES_8, ZEROES_8, ZEROES_8, 0, 0, 0, 0, 0, 0, 0
 #define ZEROES_32 ZEROES_8, ZEROES_8, ZEROES_8, ZEROES_8
@@ -178,13 +179,11 @@ m128 load_m128_from_u64a(const u64a *p) {
 
 #define CASE_RSHIFT_VECTOR(a, count)  case count: return _mm_srli_si128((m128)(a), (count)); break;
 
+// we encounter cases where an argument slips past __builtin_constant_p but 
+// still fails to meet the (stricter) criteria demanded by the underlying 
+// intrinsic. in those cases we want to explicitly avoid the optimization.
 static really_inline
-m128 rshiftbyte_m128(const m128 a, int count_immed) {
-#if defined(HAVE__BUILTIN_CONSTANT_P) && !defined(VS_SIMDE_BACKEND)
-    if (__builtin_constant_p(count_immed)) {
-        return _mm_srli_si128(a, count_immed);
-    }
-#endif
+m128 rshiftbyte_m128_nim(const m128 a, int count_immed) {
     switch (count_immed) {
     case 0: return a; break;
     CASE_RSHIFT_VECTOR(a, 1);
@@ -205,17 +204,26 @@ m128 rshiftbyte_m128(const m128 a, int count_immed) {
     default: return zeroes128(); break;
     }
 }
+
+static really_inline
+m128 rshiftbyte_m128(const m128 a, int count_immed) {
+#if defined(HAVE__BUILTIN_CONSTANT_P) && !defined(VS_SIMDE_BACKEND)
+    if (__builtin_constant_p(count_immed)) {
+        return _mm_srli_si128(a, count_immed);
+    }
+#endif
+    return rshiftbyte_m128_nim(a, count_immed);
+}
+
 #undef CASE_RSHIFT_VECTOR
 
 #define CASE_LSHIFT_VECTOR(a, count)  case count: return _mm_slli_si128((m128)(a), (count)); break;
 
+// we encounter cases where an argument slips past __builtin_constant_p but 
+// still fails to meet the (stricter) criteria demanded by the underlying 
+// intrinsic. in those cases we want to explicitly avoid the optimization.
 static really_inline
-m128 lshiftbyte_m128(const m128 a, int count_immed) {
-#if defined(HAVE__BUILTIN_CONSTANT_P) && !defined(VS_SIMDE_BACKEND)
-    if (__builtin_constant_p(count_immed)) {
-        return _mm_slli_si128(a, count_immed);
-    }
-#endif
+m128 lshiftbyte_m128_nim(const m128 a, int count_immed) {
     switch (count_immed) {
     case 0: return a; break;
     CASE_LSHIFT_VECTOR(a, 1);
@@ -235,6 +243,16 @@ m128 lshiftbyte_m128(const m128 a, int count_immed) {
     CASE_LSHIFT_VECTOR(a, 15);
     default: return zeroes128(); break;
     }
+}
+
+static really_inline
+m128 lshiftbyte_m128(const m128 a, int count_immed) {
+#if defined(HAVE__BUILTIN_CONSTANT_P) && !defined(VS_SIMDE_BACKEND)
+    if (__builtin_constant_p(count_immed)) {
+        return _mm_slli_si128(a, count_immed);
+    }
+#endif
+    return lshiftbyte_m128_nim(a, count_immed);
 }
 #undef CASE_LSHIFT_VECTOR
 
@@ -498,6 +516,56 @@ static really_inline m256 zeroes256(void) {
 static really_inline m256 ones256(void) {
     m256 rv = _mm256_set1_epi8(0xFF);
     return rv;
+}
+
+// byte-granularity shifts of the whole 256 bits as a single chunk
+static really_inline m256 lshift_byte_m256(m256 v, u8 n){
+    if(n==0)return v;
+    else {
+        union {
+            u8 c[32];
+            m128 val128[2];
+            m256 val256;
+        } u;
+        u.val256=v;
+        if(n < 16){
+            m128 c = lshiftbyte_m128_nim(u.val128[1], 16-n);
+            u.val128[1] = rshiftbyte_m128_nim(u.val128[1], n);
+            u.val128[0] = or128(c, rshiftbyte_m128_nim(u.val128[0], n));
+            return u.val256;
+        } else if(n==16){
+            u.val128[0] = u.val128[1]; u.val128[1]=zeroes128();
+            return u.val256;
+        } else if(n<32){
+            u.val128[0] = rshiftbyte_m128_nim(u.val128[0], n-16);
+            u.val128[1]=zeroes128();
+            return u.val256;
+        } else return zeroes256();
+    }
+}
+
+static really_inline m256 rshift_byte_m256(m256 v, u8 n){
+    if(n==0)return v;
+    else {
+        union {
+            m128 val128[2];
+            m256 val256;
+        } u;
+        u.val256=v;
+        if(n < 16){
+            m128 c = rshiftbyte_m128_nim(u.val128[0], 16-n);
+            u.val128[0] = lshiftbyte_m128_nim(u.val128[0], n);
+            u.val128[1] = or128(c, lshiftbyte_m128_nim(u.val128[1], n));
+            return u.val256;
+        } else if(n==16){
+            u.val128[1] = u.val128[0]; u.val128[0]=zeroes128();
+            return u.val256;
+        } else if(n<32){
+            u.val128[1] = lshiftbyte_m128_nim(u.val128[1], n-16);
+            u.val128[0]=zeroes128();
+            return u.val256;
+        } else return zeroes256();
+    }
 }
 
 static really_inline m256 add256(m256 a, m256 b) {

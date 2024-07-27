@@ -352,16 +352,20 @@ static really_really_inline
 m128 rshiftbyte_m128(m128 a, unsigned b) {
     if (b == 0) {
         return a;
+    } else if (b > 15) {
+        return zeroes128();
     }
-    return palignr(zeroes128(), a, b);
+    else return palignr(zeroes128(), a, b);
 }
 
 static really_really_inline
 m128 lshiftbyte_m128(m128 a, unsigned b) {
     if (b == 0) {
         return a;
+    } else if (b > 15) {
+        return zeroes128();
     }
-    return palignr(a, zeroes128(), 16 - b);
+    else return palignr(a, zeroes128(), 16 - b);
 }
 
 static really_inline

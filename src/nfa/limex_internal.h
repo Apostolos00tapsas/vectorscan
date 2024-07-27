@@ -163,12 +163,12 @@ struct LimExNFA##size {                                                     \
     m512 exceptionAndMask; /**< exception and mask */                       \
 };
 
-CREATE_NFA_LIMEX(32)
-CREATE_NFA_LIMEX(64)
-CREATE_NFA_LIMEX(128)
-CREATE_NFA_LIMEX(256)
-CREATE_NFA_LIMEX(384)
-CREATE_NFA_LIMEX(512)
+CREATE_NFA_LIMEX(32)        //NOLINT (clang-analyzer-optin.performance.Padding)
+CREATE_NFA_LIMEX(64)        //NOLINT (clang-analyzer-optin.performance.Padding)
+CREATE_NFA_LIMEX(128)       //NOLINT (clang-analyzer-optin.performance.Padding)
+CREATE_NFA_LIMEX(256)       //NOLINT (clang-analyzer-optin.performance.Padding)
+CREATE_NFA_LIMEX(384)       //NOLINT (clang-analyzer-optin.performance.Padding)
+CREATE_NFA_LIMEX(512)       //NOLINT (clang-analyzer-optin.performance.Padding)
 
 /** \brief Structure describing a bounded repeat within the LimEx NFA.
  *

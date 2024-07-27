@@ -56,7 +56,7 @@ sqlite3 *initDB(const string &filename) {
         ostringstream oss;
         oss << "Unable to open database '" << filename
             << "': " << sqlite3_errmsg(db);
-        status = sqlite3_close(db);
+        status = sqlite3_close(db);     //NOLINT (clang-analyzer-deadcode.DeadStores)
         assert(status == SQLITE_OK);
         throw SqlFailure(oss.str());
     }
@@ -115,7 +115,7 @@ sqlite3 *initDB(const string &filename) {
 fail:
     ostringstream oss;
     oss << "Unable to create tables: " << sqlite3_errmsg(db);
-    status = sqlite3_close(db);
+    status = sqlite3_close(db); //NOLINT (clang-analyzer-deadcode.DeadStores)
     assert(status == SQLITE_OK);
     throw SqlFailure(oss.str());
 }

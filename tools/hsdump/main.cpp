@@ -337,7 +337,9 @@ void clearDir(const string &path) {
         if (name == "." || name == "..") {
             continue;
         }
-        string f = path + '/' + name;
+        string f = path;
+        f += '/';
+        f += name;
         if (unlink(f.c_str()) < 0) {
             printf("ERROR: couldn't remove file %s: %s\n", f.c_str(),
                    strerror(errno));

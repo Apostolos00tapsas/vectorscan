@@ -393,7 +393,7 @@ public:
 
     RoseInstrCheckSingleLookaround(s8 offset_in, CharReach reach_in,
                                    const RoseInstruction *target_in)
-        : offset(offset_in), reach(std::move(reach_in)), target(target_in) {}
+        : offset(offset_in), reach(reach_in), target(target_in) {}
 
     bool operator==(const RoseInstrCheckSingleLookaround &ri) const {
         return offset == ri.offset && reach == ri.reach && target == ri.target;
@@ -495,7 +495,7 @@ public:
     RoseInstrCheckMask32(std::array<u8, 32> and_mask_in,
                          std::array<u8, 32> cmp_mask_in, u32 neg_mask_in,
                          s32 offset_in, const RoseInstruction *target_in)
-        : and_mask(std::move(and_mask_in)), cmp_mask(std::move(cmp_mask_in)),
+        : and_mask(and_mask_in), cmp_mask(cmp_mask_in),
           neg_mask(neg_mask_in), offset(offset_in), target(target_in) {}
 
     bool operator==(const RoseInstrCheckMask32 &ri) const {
@@ -533,7 +533,7 @@ public:
     RoseInstrCheckMask64(std::array<u8, 64> and_mask_in,
                          std::array<u8, 64> cmp_mask_in, u64a neg_mask_in,
                          s32 offset_in, const RoseInstruction *target_in)
-        : and_mask(std::move(and_mask_in)), cmp_mask(std::move(cmp_mask_in)),
+        : and_mask(and_mask_in), cmp_mask(cmp_mask_in),
           neg_mask(neg_mask_in), offset(offset_in), target(target_in) {}
     bool operator==(const RoseInstrCheckMask64 &ri) const {
         return and_mask == ri.and_mask && cmp_mask == ri.cmp_mask &&
@@ -608,8 +608,8 @@ public:
                              std::array<u8, 16> bucket_select_mask_in,
                              u32 neg_mask_in, s32 offset_in,
                              const RoseInstruction *target_in)
-        : nib_mask(std::move(nib_mask_in)),
-          bucket_select_mask(std::move(bucket_select_mask_in)),
+        : nib_mask(nib_mask_in),
+          bucket_select_mask(bucket_select_mask_in),
           neg_mask(neg_mask_in), offset(offset_in), target(target_in) {}
 
     bool operator==(const RoseInstrCheckShufti16x8 &ri) const {
@@ -652,8 +652,8 @@ public:
                              std::array<u8, 32> bucket_select_mask_in,
                              u32 neg_mask_in, s32 offset_in,
                              const RoseInstruction *target_in)
-        : hi_mask(std::move(hi_mask_in)), lo_mask(std::move(lo_mask_in)),
-          bucket_select_mask(std::move(bucket_select_mask_in)),
+        : hi_mask(hi_mask_in), lo_mask(lo_mask_in),
+          bucket_select_mask(bucket_select_mask_in),
           neg_mask(neg_mask_in), offset(offset_in), target(target_in) {}
 
     bool operator==(const RoseInstrCheckShufti32x8 &ri) const {
@@ -697,8 +697,8 @@ public:
                               std::array<u8, 32> bucket_select_mask_in,
                               u32 neg_mask_in, s32 offset_in,
                               const RoseInstruction *target_in)
-        : hi_mask(std::move(hi_mask_in)), lo_mask(std::move(lo_mask_in)),
-          bucket_select_mask(std::move(bucket_select_mask_in)),
+        : hi_mask(hi_mask_in), lo_mask(lo_mask_in),
+          bucket_select_mask(bucket_select_mask_in),
           neg_mask(neg_mask_in), offset(offset_in), target(target_in) {}
 
     bool operator==(const RoseInstrCheckShufti16x16 &ri) const {
@@ -744,9 +744,9 @@ public:
                               std::array<u8, 32> bucket_select_mask_lo_in,
                               u32 neg_mask_in, s32 offset_in,
                               const RoseInstruction *target_in)
-        : hi_mask(std::move(hi_mask_in)), lo_mask(std::move(lo_mask_in)),
-          bucket_select_mask_hi(std::move(bucket_select_mask_hi_in)),
-          bucket_select_mask_lo(std::move(bucket_select_mask_lo_in)),
+        : hi_mask(hi_mask_in), lo_mask(lo_mask_in),
+          bucket_select_mask_hi(bucket_select_mask_hi_in),
+          bucket_select_mask_lo(bucket_select_mask_lo_in),
           neg_mask(neg_mask_in), offset(offset_in), target(target_in) {}
 
     bool operator==(const RoseInstrCheckShufti32x16 &ri) const {
@@ -792,8 +792,8 @@ public:
                              std::array<u8, 64> bucket_select_mask_in,
                              u64a neg_mask_in, s32 offset_in,
                              const RoseInstruction *target_in)
-        : hi_mask(std::move(hi_mask_in)), lo_mask(std::move(lo_mask_in)),
-          bucket_select_mask(std::move(bucket_select_mask_in)),
+        : hi_mask(hi_mask_in), lo_mask(lo_mask_in),
+          bucket_select_mask(bucket_select_mask_in),
           neg_mask(neg_mask_in), offset(offset_in), target(target_in) {}
 
     bool operator==(const RoseInstrCheckShufti64x8 &ri) const {
@@ -843,10 +843,10 @@ public:
                               std::array<u8, 64> bucket_select_mask_lo_in,
                               u64a neg_mask_in, s32 offset_in,
                               const RoseInstruction *target_in)
-        : hi_mask_1(std::move(hi_mask_1_in)), hi_mask_2(std::move(hi_mask_2_in)),
-          lo_mask_1(std::move(lo_mask_1_in)), lo_mask_2(std::move(lo_mask_2_in)),
-          bucket_select_mask_hi(std::move(bucket_select_mask_hi_in)),
-          bucket_select_mask_lo(std::move(bucket_select_mask_lo_in)),
+        : hi_mask_1(hi_mask_1_in), hi_mask_2(hi_mask_2_in),
+          lo_mask_1(lo_mask_1_in), lo_mask_2(lo_mask_2_in),
+          bucket_select_mask_hi(bucket_select_mask_hi_in),
+          bucket_select_mask_lo(bucket_select_mask_lo_in),
           neg_mask(neg_mask_in), offset(offset_in), target(target_in) {}
 
     bool operator==(const RoseInstrCheckShufti64x16 &ri) const {
@@ -1978,7 +1978,7 @@ public:
                                  std::array<u8, 16> start_mask_in,
                                  const RoseInstruction *target_in)
         : multi_look(std::move(ml)), last_start(last_start_in),
-          start_mask(std::move(start_mask_in)), target(target_in) {}
+          start_mask(start_mask_in), target(target_in) {}
 
     bool operator==(const RoseInstrMultipathLookaround &ri) const {
         return multi_look == ri.multi_look && last_start == ri.last_start
@@ -2023,9 +2023,9 @@ public:
                                       u16 neg_mask_in, s32 base_offset_in,
                                       s32 last_start_in,
                                       const RoseInstruction *target_in)
-        : nib_mask(std::move(nib_mask_in)),
-          bucket_select_mask(std::move(bucket_select_mask_in)),
-          data_select_mask(std::move(data_select_mask_in)),
+        : nib_mask(nib_mask_in),
+          bucket_select_mask(bucket_select_mask_in),
+          data_select_mask(data_select_mask_in),
           hi_bits_mask(hi_bits_mask_in), lo_bits_mask(lo_bits_mask_in),
           neg_mask(neg_mask_in), base_offset(base_offset_in),
           last_start(last_start_in), target(target_in) {}
@@ -2086,9 +2086,9 @@ public:
                                       u32 neg_mask_in, s32 base_offset_in,
                                       s32 last_start_in,
                                       const RoseInstruction *target_in)
-        : hi_mask(std::move(hi_mask_in)), lo_mask(std::move(lo_mask_in)),
-          bucket_select_mask(std::move(bucket_select_mask_in)),
-          data_select_mask(std::move(data_select_mask_in)),
+        : hi_mask(hi_mask_in), lo_mask(lo_mask_in),
+          bucket_select_mask(bucket_select_mask_in),
+          data_select_mask(data_select_mask_in),
           hi_bits_mask(hi_bits_mask_in), lo_bits_mask(lo_bits_mask_in),
           neg_mask(neg_mask_in), base_offset(base_offset_in),
           last_start(last_start_in), target(target_in) {}
@@ -2151,10 +2151,10 @@ public:
                                        u32 neg_mask_in, s32 base_offset_in,
                                        s32 last_start_in,
                                        const RoseInstruction *target_in)
-        : hi_mask(std::move(hi_mask_in)), lo_mask(std::move(lo_mask_in)),
-          bucket_select_mask_hi(std::move(bucket_select_mask_hi_in)),
-          bucket_select_mask_lo(std::move(bucket_select_mask_lo_in)),
-          data_select_mask(std::move(data_select_mask_in)),
+        : hi_mask(hi_mask_in), lo_mask(lo_mask_in),
+          bucket_select_mask_hi(bucket_select_mask_hi_in),
+          bucket_select_mask_lo(bucket_select_mask_lo_in),
+          data_select_mask(data_select_mask_in),
           hi_bits_mask(hi_bits_mask_in), lo_bits_mask(lo_bits_mask_in),
           neg_mask(neg_mask_in), base_offset(base_offset_in),
           last_start(last_start_in), target(target_in) {}
@@ -2217,9 +2217,9 @@ public:
                                     u64a neg_mask_in, s32 base_offset_in,
                                     s32 last_start_in,
                                     const RoseInstruction *target_in)
-        : hi_mask(std::move(hi_mask_in)), lo_mask(std::move(lo_mask_in)),
-          bucket_select_mask(std::move(bucket_select_mask_in)),
-          data_select_mask(std::move(data_select_mask_in)),
+        : hi_mask(hi_mask_in), lo_mask(lo_mask_in),
+          bucket_select_mask(bucket_select_mask_in),
+          data_select_mask(data_select_mask_in),
           hi_bits_mask(hi_bits_mask_in), lo_bits_mask(lo_bits_mask_in),
           neg_mask(neg_mask_in), base_offset(base_offset_in),
           last_start(last_start_in), target(target_in) {}

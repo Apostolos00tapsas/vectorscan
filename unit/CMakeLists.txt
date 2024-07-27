@@ -50,6 +50,7 @@ set(unit_hyperscan_SOURCES
     hyperscan/main.cpp
     hyperscan/multi.cpp
     hyperscan/order.cpp
+    hyperscan/rebar_tests.cpp
     hyperscan/scratch_op.cpp
     hyperscan/scratch_in_use.cpp
     hyperscan/serialize.cpp

@@ -36,7 +36,9 @@
 #include "ue2common.h"
 
 #if defined(VS_SIMDE_BACKEND)
+#ifndef VECTORSIZE
 #define VECTORSIZE 16
+#endif
 #define SIMDE_ENABLE_NATIVE_ALIASES
 #if !defined(VS_SIMDE_NATIVE)
 #define SIMDE_NO_NATIVE

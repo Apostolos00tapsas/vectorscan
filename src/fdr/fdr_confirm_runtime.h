@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015-2019, Intel Corporation
+ * Copyright (c) 2024, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -54,9 +55,14 @@ void confWithBit(const struct FDRConfirm *fdrc, const struct FDR_Runtime_Args *a
     if (likely(!start)) {
         return;
     }
-
+// these cplusplus checks are needed because this is included in both fdr.c and teddy.cpp
+#ifdef __cplusplus
+    const struct LitInfo *li
+        = reinterpret_cast<const struct LitInfo *>(reinterpret_cast<const u8 *>(fdrc) + start);
+#else
     const struct LitInfo *li
         = (const struct LitInfo *)((const u8 *)fdrc + start);
+#endif
 
     struct hs_scratch *scratch = a->scratch;
     assert(!scratch->fdr_conf);
@@ -74,18 +80,20 @@ void confWithBit(const struct FDRConfirm *fdrc, const struct FDR_Runtime_Args *a
             goto out;
         }
 
-        const u8 *loc = buf + i - li->size + 1;
+        do{  // this do while is to block off the line below from the goto
+            const u8 *loc = buf + i - li->size + 1;
+        
+            if (loc < buf) {
+                u32 full_overhang = buf - loc;
+                size_t len_history = a->len_history;
 
-        if (loc < buf) {
-            u32 full_overhang = buf - loc;
-            size_t len_history = a->len_history;
-
-            // can't do a vectored confirm either if we don't have
-            // the bytes
-            if (full_overhang > len_history) {
-                goto out;
+                // can't do a vectored confirm either if we don't have
+                // the bytes
+                if (full_overhang > len_history) {
+                    goto out;
+                }
             }
-        }
+        }while(0);
         assert(li->size <= sizeof(CONF_TYPE));
 
         if (unlikely(!(li->groups & *control))) {

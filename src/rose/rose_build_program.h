@@ -57,9 +57,9 @@ public:
     RoseProgram();
     ~RoseProgram();
     RoseProgram(const RoseProgram &) = delete;
-    RoseProgram(RoseProgram &&);
+    RoseProgram(RoseProgram &&) noexcept;
     RoseProgram &operator=(const RoseProgram &) = delete;
-    RoseProgram &operator=(RoseProgram &&);
+    RoseProgram &operator=(RoseProgram &&) noexcept;
 
     bool empty() const;
 

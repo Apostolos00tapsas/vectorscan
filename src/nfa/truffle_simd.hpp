@@ -104,9 +104,9 @@ const u8 *scanBlock(svuint8_t shuf_mask_lo_highclear, svuint8_t shuf_mask_lo_hig
     }
     uint64_t index;
     if (forward) {
-        index = first_non_zero(vector_size_int_8, result_mask);
+        index = first_non_zero(vector_size_int_8, result_mask); //NOLINT (clang-analyzer-core.CallAndMessage)
     } else {
-        index = last_non_zero(vector_size_int_8, result_mask);
+        index = last_non_zero(vector_size_int_8, result_mask); //NOLINT (clang-analyzer-core.CallAndMessage)
     }
 
     if (index < vector_size_int_8) {
@@ -311,7 +311,7 @@ const u8 *truffleExecReal(const m128 &shuf_mask_lo_highclear, m128 shuf_mask_lo_
         SuperVector<S> chars = SuperVector<S>::Zeroes();
         const u8* end_buf;
         if (buf_end - buf < S) {
-          memcpy(&chars.u, buf, buf_end - buf);
+          memcpy(&chars.u, buf, buf_end - buf); //NOLINT (clang-analyzer-core.NonNullParamChecker)
           end_buf = buf;
         } else {
           chars = SuperVector<S>::loadu(buf_end - S);

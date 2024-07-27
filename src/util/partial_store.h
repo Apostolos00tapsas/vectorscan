@@ -36,6 +36,7 @@
 
 static really_inline
 void partial_store_u32(void *ptr, u32 value, u32 numBytes) {
+    assert(ptr);
     assert(numBytes <= 4);
     switch (numBytes) {
     case 4:
@@ -61,6 +62,7 @@ void partial_store_u32(void *ptr, u32 value, u32 numBytes) {
 static really_inline
 u32 partial_load_u32(const void *ptr, u32 numBytes) {
     u32 value;
+    assert(ptr);
     assert(numBytes <= 4);
     switch (numBytes) {
     case 4:
@@ -87,6 +89,7 @@ u32 partial_load_u32(const void *ptr, u32 numBytes) {
 
 static really_inline
 void partial_store_u64a(void *ptr, u64a value, u32 numBytes) {
+    assert(ptr);
     assert(numBytes <= 8);
     switch (numBytes) {
     case 8:
@@ -132,6 +135,7 @@ void partial_store_u64a(void *ptr, u64a value, u32 numBytes) {
 static really_inline
 u64a partial_load_u64a(const void *ptr, u32 numBytes) {
     u64a value;
+    assert(ptr);
     assert(numBytes <= 8);
     switch (numBytes) {
     case 8:

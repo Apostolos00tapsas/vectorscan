@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2016-2020, Intel Corporation
+ * Copyright (c) 2024, VectorCamp PC
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -40,10 +41,6 @@
 #include "util/simd_utils.h"
 #include "util/uniform_ops.h"
 
-extern const u8 ALIGN_DIRECTIVE p_mask_arr[17][32];
-#if defined(HAVE_AVX2)
-extern const u8 ALIGN_AVX_DIRECTIVE p_mask_arr256[33][64];
-#endif
 
 #if defined(HAVE_AVX512VBMI)
 static const u8 ALIGN_DIRECTIVE p_sh_mask_arr[80] = {
@@ -142,6 +139,37 @@ void copyRuntBlock128(u8 *dst, const u8 *src, size_t len) {
 //          |----------|-------|----------------|............|
 //          0          start   start+offset     end(<=16)
 // p_mask   ffff.....ffffff..ff0000...........00ffff..........
+
+// replace the p_mask_arr table.
+// m is the length of the zone of bytes==0 , n is
+// the offset where that zone begins. more specifically, there are
+// 16-n bytes of 1's before the zone begins.
+// m,n 4,7  - 4 bytes of 0s, and 16-7 bytes of 1's before that.
+// 00 00 00 00 ff..ff
+// ff ff ff ff ff ff ff ff 00 00 00 00 ff..ff
+// m,n 15,15 - 15 bytes of 0s , f's high, but also with 16-15=1 byte of 1s
+// in the beginning - which push the ff at the end off the high end , leaving
+// ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+// m,n 15,16 - 15 bytes of 0s, ff high , with 16-16 = 0 ones on the low end
+// before that, so,
+// 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ff
+// so to get the one part, with the f's high, we start out with 1's and
+// shift them up (right) by m+n.
+// now to fill in any ones that belong on the low end we have to take
+// some 1's and shift them down. the ones zone there needs to be 16-n long,
+// meaning shifted down by 16-(16-n) , or of course just n.
+// then we should be able to or these together.
+static really_inline
+m128 p_mask_gen(u8 m, u8 n){
+    m128 a = ones128();
+    m128 b = ones128();
+    m%=17; n%=17;
+    m+=(16-n); m%=17;
+    a = rshiftbyte_m128(a, n);
+    b = lshiftbyte_m128(b, m);
+    return or128(a, b);
+}
+
 static really_inline
 m128 vectoredLoad128(m128 *p_mask, const u8 *ptr, const size_t start_offset,
                      const u8 *lo, const u8 *hi,
@@ -161,13 +189,11 @@ m128 vectoredLoad128(m128 *p_mask, const u8 *ptr, const size_t start_offset,
         uintptr_t avail = (uintptr_t)(hi - ptr);
         if (avail >= 16) {
             assert(start_offset - start <= 16);
-            *p_mask = loadu128(p_mask_arr[16 - start_offset + start]
-                               + 16 - start_offset + start);
+            *p_mask = p_mask_gen(16 - start_offset + start, 16 - start_offset + start);
             return loadu128(ptr);
         }
         assert(start_offset - start <= avail);
-        *p_mask = loadu128(p_mask_arr[avail - start_offset + start]
-                           + 16 - start_offset + start);
+        *p_mask = p_mask_gen(avail - start_offset + start, 16 - start_offset + start);
         copy_start = 0;
         copy_len = avail;
     } else { // start zone
@@ -180,8 +206,7 @@ m128 vectoredLoad128(m128 *p_mask, const u8 *ptr, const size_t start_offset,
         }
         uintptr_t end = MIN(16, (uintptr_t)(hi - ptr));
         assert(start + start_offset <= end);
-        *p_mask = loadu128(p_mask_arr[end - start - start_offset]
-                           + 16 - start - start_offset);
+        *p_mask = p_mask_gen(end - start - start_offset, 16 - start - start_offset);
         copy_start = start;
         copy_len = end - start;
     }
@@ -270,6 +295,20 @@ void copyRuntBlock256(u8 *dst, const u8 *src, size_t len) {
 //          |----------|-------|----------------|............|
 //          0          start   start+offset     end(<=32)
 // p_mask   ffff.....ffffff..ff0000...........00ffff..........
+
+// like the pmask gen above this replaces the large array.
+static really_inline
+m256 fat_pmask_gen(u8 m, u8 n){
+    m256 a=ones256();
+    m256 b=ones256();
+    m%=33; n%=33;
+    m+=(32-n); m%=33;
+
+    a = rshift_byte_m256(a, m);
+    b = lshift_byte_m256(b, n);
+    return or256(a, b);
+}
+
 static really_inline
 m256 vectoredLoad256(m256 *p_mask, const u8 *ptr, const size_t start_offset,
                      const u8 *lo, const u8 *hi,
@@ -289,13 +328,11 @@ m256 vectoredLoad256(m256 *p_mask, const u8 *ptr, const size_t start_offset,
         uintptr_t avail = (uintptr_t)(hi - ptr);
         if (avail >= 32) {
             assert(start_offset - start <= 32);
-            *p_mask = loadu256(p_mask_arr256[32 - start_offset + start]
-                               + 32 - start_offset + start);
+            *p_mask = fat_pmask_gen(32 - start_offset + start, 32 - start_offset + start);
             return loadu256(ptr);
         }
         assert(start_offset - start <= avail);
-        *p_mask = loadu256(p_mask_arr256[avail - start_offset + start]
-                           + 32 - start_offset + start);
+        *p_mask = fat_pmask_gen(avail - start_offset + start, 32 - start_offset + start);
         copy_start = 0;
         copy_len = avail;
     } else { //start zone
@@ -308,8 +345,7 @@ m256 vectoredLoad256(m256 *p_mask, const u8 *ptr, const size_t start_offset,
         }
         uintptr_t end = MIN(32, (uintptr_t)(hi - ptr));
         assert(start + start_offset <= end);
-        *p_mask = loadu256(p_mask_arr256[end - start - start_offset]
-                           + 32 - start - start_offset);
+        *p_mask = fat_pmask_gen(end - start - start_offset, 32 - start - start_offset);
         copy_start = start;
         copy_len = end - start;
     }
@@ -428,8 +464,13 @@ void do_confWithBit_teddy(TEDDY_CONF_TYPE *conf, u8 bucket, u8 offset,
         if (!cf) {
             continue;
         }
+#ifdef __cplusplus
+        const struct FDRConfirm *fdrc = reinterpret_cast<const struct FDRConfirm *>
+                                        (reinterpret_cast<const u8 *>(confBase) + cf);
+#else
         const struct FDRConfirm *fdrc = (const struct FDRConfirm *)
                                         ((const u8 *)confBase + cf);
+#endif
         if (!(fdrc->groups & *control)) {
             continue;
         }
@@ -442,18 +483,31 @@ void do_confWithBit_teddy(TEDDY_CONF_TYPE *conf, u8 bucket, u8 offset,
 
 static really_inline
 const m128 *getMaskBase(const struct Teddy *teddy) {
+#ifdef __cplusplus
+    return reinterpret_cast<const m128 *>(reinterpret_cast<const u8 *>(teddy) + ROUNDUP_CL(sizeof(struct Teddy)));
+#else
     return (const m128 *)((const u8 *)teddy + ROUNDUP_CL(sizeof(struct Teddy)));
+#endif
 }
 
 static really_inline
 const u64a *getReinforcedMaskBase(const struct Teddy *teddy, u8 numMask) {
+#ifdef __cplusplus
+    return reinterpret_cast<const u64a *>(reinterpret_cast<const u8 *>(getMaskBase(teddy))
+                          + ROUNDUP_CL(2 * numMask * sizeof(m128)));
+#else
     return (const u64a *)((const u8 *)getMaskBase(teddy)
                           + ROUNDUP_CL(2 * numMask * sizeof(m128)));
+#endif
 }
 
 static really_inline
 const u32 *getConfBase(const struct Teddy *teddy) {
+#ifdef __cplusplus
+    return reinterpret_cast<const u32 *>(reinterpret_cast<const u8 *>(teddy) + teddy->confOffset);
+#else
     return (const u32 *)((const u8 *)teddy + teddy->confOffset);
+#endif
 }
 
 #endif /* TEDDY_RUNTIME_COMMON_H_ */

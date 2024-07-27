@@ -628,7 +628,7 @@ void fillAccelInfo(build_info &bi) {
     vector<NFAVertex> astates;
     for (const auto &m : accel_map) {
         // cppcheck-suppress useStlAlgorithm
-        astates.emplace_back(m.first);
+        astates.emplace_back(m.first);  //NOLINT (performance-inefficient-vector-operation)
     }
 
     NFAStateSet useful(num_states);
@@ -1071,7 +1071,7 @@ void buildAcceptsList(const build_info &args, ReportListCache &reports_cache,
             a.reports = addReports(h[v].reports, reports, reports_cache);
         }
         a.squash = addSquashMask(args, v, squash);
-        accepts.emplace_back(std::move(a));
+        accepts.emplace_back(a);
     }
 }
 

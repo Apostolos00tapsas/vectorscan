@@ -40,36 +40,37 @@
 /// Perform an unaligned 16-bit load
 static really_inline
 u16 unaligned_load_u16(const void *ptr) {
+    assert(ptr);
     struct unaligned { u16 u; } PACKED__MAY_ALIAS;
     // cppcheck-suppress cstyleCast
     const struct unaligned *uptr = (const struct unaligned *)ptr;
-    return uptr->u;
+    return uptr->u;     //NOLINT    (clang-analyzer-core.NullDereference)
 }
 
 /// Perform an unaligned 32-bit load
 static really_inline
 u32 unaligned_load_u32(const void *ptr) {
+    assert(ptr);
     struct unaligned { u32 u; } PACKED__MAY_ALIAS;
     // cppcheck-suppress cstyleCast
     const struct unaligned *uptr = (const struct unaligned *)ptr;
-    return uptr->u;
+    return uptr->u;     //NOLINT    (clang-analyzer-core.NullDereference)
 }
 
 /// Perform an unaligned 64-bit load
 static really_inline
 u64a unaligned_load_u64a(const void *ptr) {
-    if (ptr == NULL) {
-        return 0;  // Return a default value
-    }
+    assert(ptr);
     struct unaligned { u64a u; } PACKED__MAY_ALIAS;
     // cppcheck-suppress cstyleCast
     const struct unaligned *uptr = (const struct unaligned *)ptr;
-    return uptr->u;
+    return uptr->u;     //NOLINT (clang-analyzer-core.uninitialized.UndefReturn)
 }
 
 /// Perform an unaligned 16-bit store
 static really_inline
 void unaligned_store_u16(void *ptr, u16 val) {
+    assert(ptr);
     struct unaligned { u16 u; } PACKED__MAY_ALIAS;
     // cppcheck-suppress cstyleCast
     struct unaligned *uptr = (struct unaligned *)ptr;
@@ -79,6 +80,7 @@ void unaligned_store_u16(void *ptr, u16 val) {
 /// Perform an unaligned 32-bit store
 static really_inline
 void unaligned_store_u32(void *ptr, u32 val) {
+    assert(ptr);
     struct unaligned { u32 u; } PACKED__MAY_ALIAS;
     // cppcheck-suppress cstyleCast
     struct unaligned *uptr = (struct unaligned *)ptr;
@@ -88,6 +90,7 @@ void unaligned_store_u32(void *ptr, u32 val) {
 /// Perform an unaligned 64-bit store
 static really_inline
 void unaligned_store_u64a(void *ptr, u64a val) {
+    assert(ptr);
     struct unaligned { u64a u; } PACKED__MAY_ALIAS;
     // cppcheck-suppress cstyleCast
     struct unaligned *uptr = (struct unaligned *)ptr;

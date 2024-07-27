@@ -55,7 +55,7 @@ unique_ptr<hs_platform_info> xcompileReadMode(const char *s) {
     assert(!err);
 
     string str(s);
-    string opt = str.substr(str.find(":")+1, str.npos);
+    string opt = str.substr(str.find(':')+1, str.npos);
     bool found_mode = false;
 
     if (!opt.empty()) {

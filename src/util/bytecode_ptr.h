@@ -95,7 +95,7 @@ public:
         return p;
     }
 
-    void swap(bytecode_ptr &other) {
+    void swap(bytecode_ptr &other) noexcept {
         using std::swap;
         swap(ptr, other.ptr);
         swap(bytes, other.bytes);

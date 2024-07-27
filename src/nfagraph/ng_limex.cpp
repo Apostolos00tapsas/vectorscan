@@ -677,7 +677,7 @@ constructNFA(const NGHolder &h_in, const ReportManager *rm,
 
     if (has_managed_reports(*h)) {
         assert(rm);
-        remapReportsToPrograms(*h, *rm);
+        remapReportsToPrograms(*h, *rm);    //NOLINT (clang-analyzer-core.NonNullParamChecker)
     }
 
     if (!cc.streaming || !cc.grey.compressNFAState) {

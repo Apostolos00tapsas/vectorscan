@@ -178,7 +178,7 @@ public:
         return data < a.data;
     }
 
-    void swap(element_store &a) {
+    void swap(element_store &a) noexcept {
         using std::swap;
         swap(data, a.data);
         swap(map, a.map);
@@ -278,11 +278,11 @@ public:
         return store < a.store;
     }
 
-    void swap(insertion_ordered_map &a) {
+    void swap(insertion_ordered_map &a) noexcept {
         store.swap(a.store);
     }
 
-    friend void swap(insertion_ordered_map &a, insertion_ordered_map &b) {
+    friend void swap(insertion_ordered_map &a, insertion_ordered_map &b) noexcept {
         a.swap(b);
     }
 };
@@ -355,11 +355,11 @@ public:
         return store < a.store;
     }
 
-    void swap(insertion_ordered_set &a) {
+    void swap(insertion_ordered_set &a) noexcept {
         store.swap(a.store);
     }
 
-    friend void swap(insertion_ordered_set &a, insertion_ordered_set &b) {
+    friend void swap(insertion_ordered_set &a, insertion_ordered_set &b) noexcept {
         a.swap(b);
     }
 };

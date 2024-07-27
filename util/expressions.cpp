@@ -53,7 +53,7 @@ void failLine(unsigned lineNum, const string &file,
               const string &line, const string &error) {
     cerr << "Parse error in file " << file
         << " on line " << lineNum << ": " << error
-        << endl << "Line is: '" << line << "'" << endl;
+        << endl << "Line is: '" << line << "'\n";
     exit(1);
 }
 
@@ -137,7 +137,7 @@ void loadExpressions(const string &inPath, ExpressionMap &exprMap) {
     // Is our input path a file or a directory?
     struct stat st;
     if (stat(inPath.c_str(), &st) != 0) {
-        cerr << "Can't stat path: '" << inPath << "'" << endl;
+        cerr << "Can't stat path: '" << inPath << "'\n";
         exit(1);
     }
     if (S_ISREG(st.st_mode)) {
@@ -145,13 +145,13 @@ void loadExpressions(const string &inPath, ExpressionMap &exprMap) {
         try {
             loadExpressionsFromFile(inPath, exprMap);
         } catch (runtime_error &e) {
-            cerr << e.what() << ": '" << inPath << "'" << endl;
+            cerr << e.what() << ": '" << inPath << "'\n";
             exit(1);
         }
     } else if (S_ISDIR(st.st_mode)) {
         DIR *d = opendir(inPath.c_str());
         if (d == nullptr) {
-            cerr << "Can't open directory: '" << inPath << "'" << endl;
+            cerr << "Can't open directory: '" << inPath << "'\n";
             exit(1);
         }
         for (struct dirent *ent = readdir(d); ent; ent = readdir(d)) {
@@ -174,7 +174,7 @@ void loadExpressions(const string &inPath, ExpressionMap &exprMap) {
             try {
                 loadExpressionsFromFile(fname, exprMap);
             } catch (runtime_error &e) {
-                cerr << e.what() << ": '" << fname << "'" << endl;
+                cerr << e.what() << ": '" << fname << "'\n";
                 exit(1);
             }
         }
@@ -182,7 +182,7 @@ void loadExpressions(const string &inPath, ExpressionMap &exprMap) {
     } else {
         cerr << "Unsupported file type "
 	    << hex << showbase << (st.st_mode & S_IFMT)
-	    << " for path: '" << inPath << "'" << endl;
+	    << " for path: '" << inPath << "'\n";
         exit(1);
     }
 }
@@ -191,7 +191,7 @@ void HS_CDECL loadSignatureList(const string &inFile,
                                 SignatureSet &signatures) {
     ifstream f(inFile.c_str());
     if (!f.good()) {
-        cerr << "Can't open file: '" << inFile << "'" << endl;
+        cerr << "Can't open file: '" << inFile << "'\n";
         exit(1);
     }
 
@@ -223,7 +223,7 @@ ExpressionMap limitToSignatures(const ExpressionMap &exprMap,
         auto match = exprMap.find(id);
         if (match == exprMap.end()) {
             cerr << "Unable to find signature " << id
-                    << " in expression set!" << endl;
+                    << " in expression set!\n";
             exit(1);
         }
         keepers.insert(*match);

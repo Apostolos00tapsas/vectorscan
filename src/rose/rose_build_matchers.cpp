@@ -739,7 +739,7 @@ void addFragmentLiteral(const RoseBuildImpl &build, MatcherProto &mp,
 
     const auto &groups = f.groups;
 
-    mp.lits.emplace_back(std::move(s_final), nocase, noruns, f.fragment_id,
+    mp.lits.emplace_back(s_final, nocase, noruns, f.fragment_id,
                          groups, msk, lcmp);
 }
 
