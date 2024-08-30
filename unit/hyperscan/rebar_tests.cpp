@@ -43,13 +43,18 @@
 
 using namespace std;
 
+#define xstr(s) to_string_literal(s)
+#define to_string_literal(s) #s
+
+#define SRCDIR_PREFIX xstr(SRCDIR)
+
+
 TEST(rebar, leipzig_math_symbols_count) {
     hs_database_t *db = nullptr;
     hs_compile_error_t *compile_err = nullptr;
     CallBackContext c;
     const char *expr = "\\p{Sm}";
     const unsigned flag = HS_FLAG_UCP | HS_FLAG_UTF8;
-    const unsigned id= 1;
     hs_error_t err = hs_compile(expr, flag, HS_MODE_BLOCK,nullptr, &db, &compile_err);
 
     ASSERT_EQ(HS_SUCCESS, err);
@@ -60,8 +65,8 @@ TEST(rebar, leipzig_math_symbols_count) {
     ASSERT_EQ(HS_SUCCESS, err);
     ASSERT_TRUE(scratch != nullptr);
 
-
-    std::ifstream file("../source/unit/hyperscan/datafiles/leipzig-3200.txt");
+    string filename = "unit/hyperscan/datafiles/leipzig-3200.txt";
+    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
     std::stringstream buffer;
     buffer << file.rdbuf(); // Read the file into the buffer
     std::string data = buffer.str(); // Convert the buffer into a std::string
@@ -77,14 +82,54 @@ TEST(rebar, leipzig_math_symbols_count) {
     ASSERT_EQ(HS_SUCCESS, err);
 }
 
+// Function to replace invalid UTF-8 sequences with the replacement character
+std::string utf8_lossy_decode(const std::string &input) {
+    std::string output;
+    for (size_t i = 0; i < input.size(); ++i) {
+        unsigned char c = input[i];
+        if (c < 0x80) {
+            output += c;
+        } else if (c < 0xC0) {
+            output += '\xEF';
+            output += '\xBF';
+            output += '\xBD';
+        } else if (c < 0xE0) {
+            if (i + 1 < input.size() && (input[i + 1] & 0xC0) == 0x80) {
+                output += c;
+                output += input[i + 1];
+                ++i;
+            } else {
+                output += '\xEF';
+                output += '\xBF';
+                output += '\xBD';
+            }
+        } else if (c < 0xF0) {
+            if (i + 2 < input.size() && (input[i + 1] & 0xC0) == 0x80 && (input[i + 2] & 0xC0) == 0x80) {
+                output += c;
+                output += input[i + 1];
+                output += input[i + 2];
+                i += 2;
+            } else {
+                output += '\xEF';
+                output += '\xBF';
+                output += '\xBD';
+            }
+        } else {
+            output += '\xEF';
+            output += '\xBF';
+            output += '\xBD';
+        }
+    }
+    return output;
+}
+
 TEST(rebar, lh3lh3_reb_uri_or_email_grep) {
     hs_database_t *db = nullptr;
     hs_compile_error_t *compile_err = nullptr;
     CallBackContext c;
     const char *expr = "([a-zA-Z][a-zA-Z0-9]*)://([^ /]+)(/[^ ]*)?|([^ @]+)@([^ @]+)";
     const unsigned flag = 0;
-    const unsigned id= 1;
-    hs_error_t err = hs_compile(expr, flag, HS_MODE_BLOCK,nullptr, &db, &compile_err);
+    hs_error_t err = hs_compile(expr, flag, HS_MODE_BLOCK, nullptr, &db, &compile_err);
 
     ASSERT_EQ(HS_SUCCESS, err);
     ASSERT_TRUE(db != nullptr);
@@ -94,14 +139,17 @@ TEST(rebar, lh3lh3_reb_uri_or_email_grep) {
     ASSERT_EQ(HS_SUCCESS, err);
     ASSERT_TRUE(scratch != nullptr);
 
-
-    std::ifstream file("../source/unit/hyperscan/datafiles/lh3lh3-reb-howto.txt");
+    string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
+    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
     std::stringstream buffer;
     buffer << file.rdbuf(); // Read the file into the buffer
     std::string data = buffer.str(); // Convert the buffer into a std::string
 
+    // Decode the data using UTF-8 lossy decoding
+    std::string decoded_data = utf8_lossy_decode(data);
+
     c.halt = 0;
-    err = hs_scan(db, data.c_str(), data.size(), 0, scratch, record_cb,
+    err = hs_scan(db, decoded_data.c_str(), decoded_data.size(), 0, scratch, record_cb,
                   reinterpret_cast<void *>(&c));
     ASSERT_EQ(HS_SUCCESS, err);
     ASSERT_EQ(888987, c.matches.size());
@@ -117,8 +165,7 @@ TEST(rebar, lh3lh3_reb_email_grep) {
     CallBackContext c;
     const char *expr = "([^ @]+)@([^ @]+)";
     const unsigned flag = 0;
-    const unsigned id= 1;
-    hs_error_t err = hs_compile(expr, flag, HS_MODE_BLOCK,nullptr, &db, &compile_err);
+    hs_error_t err = hs_compile(expr, flag, HS_MODE_BLOCK, nullptr, &db, &compile_err);
 
     ASSERT_EQ(HS_SUCCESS, err);
     ASSERT_TRUE(db != nullptr);
@@ -128,14 +175,17 @@ TEST(rebar, lh3lh3_reb_email_grep) {
     ASSERT_EQ(HS_SUCCESS, err);
     ASSERT_TRUE(scratch != nullptr);
 
-
-    std::ifstream file("../source/unit/hyperscan/datafiles/lh3lh3-reb-howto.txt");
+    string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
+    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
     std::stringstream buffer;
     buffer << file.rdbuf(); // Read the file into the buffer
     std::string data = buffer.str(); // Convert the buffer into a std::string
 
+    // Decode the data using UTF-8 lossy decoding
+    std::string decoded_data = utf8_lossy_decode(data);
+
     c.halt = 0;
-    err = hs_scan(db, data.c_str(), data.size(), 0, scratch, record_cb,
+    err = hs_scan(db, decoded_data.c_str(), decoded_data.size(), 0, scratch, record_cb,
                   reinterpret_cast<void *>(&c));
     ASSERT_EQ(HS_SUCCESS, err);
     ASSERT_EQ(232354, c.matches.size());
@@ -152,7 +202,6 @@ TEST(rebar, lh3lh3_reb_date_grep) {
     CallBackContext c;
     const char *expr = "([0-9][0-9]?)/([0-9][0-9]?)/([0-9][0-9]([0-9][0-9])?)";
     const unsigned flag = 0;
-    const unsigned id= 1;
     hs_error_t err = hs_compile(expr, flag, HS_MODE_BLOCK,nullptr, &db, &compile_err);
 
     ASSERT_EQ(HS_SUCCESS, err);
@@ -164,13 +213,14 @@ TEST(rebar, lh3lh3_reb_date_grep) {
     ASSERT_TRUE(scratch != nullptr);
 
 
-    std::ifstream file("../source/unit/hyperscan/datafiles/lh3lh3-reb-howto.txt");
+    string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
+    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
     std::stringstream buffer;
     buffer << file.rdbuf(); // Read the file into the buffer
     std::string data = buffer.str(); // Convert the buffer into a std::string
-
+    std::string decoded_data = utf8_lossy_decode(data);
     c.halt = 0;
-    err = hs_scan(db, data.c_str(), data.size(), 0, scratch, record_cb,
+    err = hs_scan(db, decoded_data.c_str(), decoded_data.size(), 0, scratch, record_cb,
                   reinterpret_cast<void *>(&c));
     ASSERT_EQ(HS_SUCCESS, err);
     ASSERT_EQ(819, c.matches.size());

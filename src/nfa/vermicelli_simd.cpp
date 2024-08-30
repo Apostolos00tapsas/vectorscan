@@ -124,8 +124,8 @@ static const u8 *vermicelliExecReal(SuperVector<S> const chars, SuperVector<S> c
     // finish off tail
 
     if (d != buf_end) {
-        SuperVector<S> data = SuperVector<S>::loadu(buf_end - S);
-        rv = vermicelliBlock(data, chars, casemask, buf_end - S, buf_end - d);
+        SuperVector<S> data = SuperVector<S>::loadu_maskz(d, buf_end - d);
+        rv = vermicelliBlock(data, chars, casemask, d, buf_end - d);
         DEBUG_PRINTF("rv %p \n", rv);
         if (rv && rv < buf_end) return rv;
     }

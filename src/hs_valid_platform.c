@@ -40,10 +40,10 @@
 
 HS_PUBLIC_API
 hs_error_t HS_CDECL hs_valid_platform(void) {
-    /* Hyperscan requires SSSE3, anything else is a bonus */
+    /* Vectorscan requires SSE4.2, anything else is a bonus */
 #if !defined(VS_SIMDE_BACKEND) && (defined(ARCH_IA32) || defined(ARCH_X86_64))
     // cppcheck-suppress knownConditionTrueFalse
-    if (check_ssse3()) {
+    if (check_sse42()) {
         return HS_SUCCESS;
     } else {
         return HS_ARCH_ERROR;

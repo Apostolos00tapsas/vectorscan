@@ -417,7 +417,7 @@ void addLitExpression(NG &ng, unsigned index, const char *expression,
                            "HS_FLAG_SOM_LEFTMOST are supported in literal API.");
     }
 
-    if (!strcmp(expression, "")) {
+    if (expLength == 0) {
         throw CompileError("Pure literal API doesn't support empty string.");
     }
 
